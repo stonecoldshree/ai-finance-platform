@@ -228,14 +228,16 @@ export async function getUserTransactions(query = {}) {
 }
 
 // Scan Receipt
-export async function scanReceipt(file) {
+export async function scanReceipt(fileData) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    console.log("scanReceipt called, fileData keys:", Object.keys(fileData || {}));
+    console.log("mimeType:", fileData?.mimeType);
+    console.log("base64 length:", fileData?.base64?.length);
 
-    // Convert File to ArrayBuffer
-    const arrayBuffer = await file.arrayBuffer();
-    // Convert ArrayBuffer to Base64
-    const base64String = Buffer.from(arrayBuffer).toString("base64");
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    // fileData is { base64, mimeType } from the client
+    const base64String = fileData.base64;
 
     const prompt = `
       Analyze this receipt image and extract the following information in JSON format:
@@ -261,7 +263,7 @@ export async function scanReceipt(file) {
       {
         inlineData: {
           data: base64String,
-          mimeType: file.type,
+          mimeType: fileData.mimeType,
         },
       },
       prompt,
@@ -269,6 +271,7 @@ export async function scanReceipt(file) {
 
     const response = await result.response;
     const text = response.text();
+    console.log("Gemini response:", text);
     const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
 
     try {
@@ -285,7 +288,8 @@ export async function scanReceipt(file) {
       throw new Error("Invalid response format from Gemini");
     }
   } catch (error) {
-    console.error("Error scanning receipt:", error);
+    console.error("Error scanning receipt:", error.message);
+    console.error("Full error:", error);
     throw new Error("Failed to scan receipt");
   }
 }

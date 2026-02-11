@@ -22,7 +22,14 @@ export function ReceiptScanner({ onScanComplete }) {
       return;
     }
 
-    await scanReceiptFn(file);
+    // Convert file to base64 on the client side since File objects
+    // can't be serialized across the client-server boundary
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result.split(",")[1]; // Remove data:... prefix
+      await scanReceiptFn({ base64: base64String, mimeType: file.type });
+    };
+    reader.readAsDataURL(file);
   };
 
   useEffect(() => {
