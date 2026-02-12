@@ -7,7 +7,7 @@ import { Toaster } from "sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Welth",
+  title: "Gullak",
   description: "One stop Finance Platform",
 };
 
@@ -16,11 +16,12 @@ export default function RootLayout({ children }) {
     <ClerkProvider>
       <html lang="en">
         <head>
-          <link rel="icon" href="/logo-sm.png" sizes="any" />
+          <link rel="icon" href="/logo_white.png" sizes="any" />
         </head>
         <body className={`${inter.className}`}>
           <Header />
-          <main className="min-h-screen">{children}</main>
+          {/* Header height is approx 10rem (h-32 logo + padding), so add pt-40 */}
+          <main className="min-h-screen pt-40">{children}</main>
           <Toaster richColors />
         </body>
       </html>

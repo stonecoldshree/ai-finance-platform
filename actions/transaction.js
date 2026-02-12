@@ -229,52 +229,61 @@ export async function getUserTransactions(query = {}) {
 
 // Scan Receipt
 export async function scanReceipt(fileData) {
-  try {
-    console.log("scanReceipt called, fileData keys:", Object.keys(fileData || {}));
-    console.log("mimeType:", fileData?.mimeType);
-    console.log("base64 length:", fileData?.base64?.length);
+  const models = [
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-flash-002",
+    "gemini-1.5-flash-001",
+    "gemini-1.5-flash-8b",
+    "gemini-1.5-pro",
+    "gemini-1.5-pro-002",
+  ];
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-    // fileData is { base64, mimeType } from the client
-    const base64String = fileData.base64;
-
-    const prompt = `
-      Analyze this receipt image and extract the following information in JSON format:
-      - Total amount (just the number)
-      - Date (in ISO format)
-      - Description or items purchased (brief summary)
-      - Merchant/store name
-      - Suggested category (one of: housing,transportation,groceries,utilities,entertainment,food,shopping,healthcare,education,personal,travel,insurance,gifts,bills,other-expense )
-      
-      Only respond with valid JSON in this exact format:
-      {
-        "amount": number,
-        "date": "ISO date string",
-        "description": "string",
-        "merchantName": "string",
-        "category": "string"
-      }
-
-      If its not a recipt, return an empty object
-    `;
-
-    const result = await model.generateContent([
-      {
-        inlineData: {
-          data: base64String,
-          mimeType: fileData.mimeType,
-        },
-      },
-      prompt,
-    ]);
-
-    const response = await result.response;
-    const text = response.text();
-    console.log("Gemini response:", text);
-    const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
-
+  for (const modelName of models) {
     try {
+      console.log(`Trying model: ${modelName}`);
+      console.log("mimeType:", fileData?.mimeType);
+      console.log("base64 length:", fileData?.base64?.length);
+
+      const model = genAI.getGenerativeModel({ model: modelName });
+
+      const base64String = fileData.base64;
+
+      const prompt = `
+        Analyze this receipt image and extract the following information in JSON format:
+        - Total amount (just the number)
+        - Date (in ISO format)
+        - Description or items purchased (brief summary)
+        - Merchant/store name
+        - Suggested category (one of: housing,transportation,groceries,utilities,entertainment,food,shopping,healthcare,education,personal,travel,insurance,gifts,bills,other-expense )
+        
+        Only respond with valid JSON in this exact format:
+        {
+          "amount": number,
+          "date": "ISO date string",
+          "description": "string",
+          "merchantName": "string",
+          "category": "string"
+        }
+
+        If its not a recipt, return an empty object
+      `;
+
+      const result = await model.generateContent([
+        {
+          inlineData: {
+            data: base64String,
+            mimeType: fileData.mimeType,
+          },
+        },
+        prompt,
+      ]);
+
+      const response = await result.response;
+      const text = response.text();
+      console.log("Gemini response:", text);
+      const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+
       const data = JSON.parse(cleanedText);
       return {
         amount: parseFloat(data.amount),
@@ -283,15 +292,25 @@ export async function scanReceipt(fileData) {
         category: data.category,
         merchantName: data.merchantName,
       };
-    } catch (parseError) {
-      console.error("Error parsing JSON response:", parseError);
-      throw new Error("Invalid response format from Gemini");
+    } catch (error) {
+      console.error(`Error with model ${modelName}:`, error.message);
+      // Continue to next model if quota exceeded or model not found
+      if (
+        error.message?.includes("429") ||
+        error.message?.includes("quota") ||
+        error.message?.includes("404") ||
+        error.message?.includes("not found")
+      ) {
+        console.log(`${modelName} failed, trying next model...`);
+        continue;
+      }
+      // For other errors, throw immediately
+      throw new Error(`Failed to scan receipt: ${error.message}`);
     }
-  } catch (error) {
-    console.error("Error scanning receipt:", error.message);
-    console.error("Full error:", error);
-    throw new Error("Failed to scan receipt");
   }
+  throw new Error(
+    "Failed to scan receipt: All models exceeded quota. Please try again later or use a new API key from a different Google Cloud project."
+  );
 }
 
 // Helper function to calculate next recurring date

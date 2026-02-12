@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "./ui/button";
+import { Button, buttonVariants } from "./ui/button";
 import { PenBox, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
@@ -14,11 +14,11 @@ const Header = async () => {
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/">
           <Image
-            src={"/logo.png"}
-            alt="Welth Logo"
-            width={200}
-            height={60}
-            className="h-12 w-auto object-contain"
+            src={"/logo_white.png"}
+            alt="Gullak Logo"
+            width={320}
+            height={128}
+            className="h-32 w-auto object-contain"
           />
         </Link>
 
@@ -40,25 +40,27 @@ const Header = async () => {
         {/* Action Buttons */}
         <div className="flex items-center space-x-4">
           <SignedIn>
-            <Link
-              href="/dashboard"
-              className="text-gray-600 hover:text-blue-600 flex items-center gap-2"
-            >
-              <Button variant="outline">
+            <Button variant="outline" asChild>
+              <Link
+                href="/dashboard"
+                className="text-gray-600 hover:text-blue-600 flex items-center gap-2"
+              >
                 <LayoutDashboard size={18} />
                 <span className="hidden md:inline">Dashboard</span>
-              </Button>
-            </Link>
-            <a href="/transaction/create">
-              <Button className="flex items-center gap-2">
+              </Link>
+            </Button>
+            <Button className="flex items-center gap-2" asChild>
+              <Link href="/transaction/create">
                 <PenBox size={18} />
                 <span className="hidden md:inline">Add Transaction</span>
-              </Button>
-            </a>
+              </Link>
+            </Button>
           </SignedIn>
           <SignedOut>
             <SignInButton forceRedirectUrl="/dashboard">
-              <Button variant="outline">Login</Button>
+              <span className={buttonVariants({ variant: "outline" })}>
+                Login
+              </span>
             </SignInButton>
           </SignedOut>
           <SignedIn>

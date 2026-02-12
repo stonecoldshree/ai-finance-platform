@@ -74,6 +74,22 @@ export async function updateBudget(amount) {
 
     if (!user) throw new Error("User not found");
 
+    // Check if budget exceeds balance
+    const defaultAccount = await db.account.findFirst({
+      where: {
+        userId: user.id,
+        isDefault: true,
+      },
+    });
+
+    if (defaultAccount) {
+      if (amount > defaultAccount.balance.toNumber()) {
+        throw new Error(
+          `Budget cannot exceed your current balance of ₹${defaultAccount.balance.toNumber()}`
+        );
+      }
+    }
+
     // Update or create budget
     const budget = await db.budget.upsert({
       where: {
