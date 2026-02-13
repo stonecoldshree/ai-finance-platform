@@ -153,6 +153,195 @@ export default function EmailTemplate({
       </Html>
     );
   }
+
+  if (type === "welcome") {
+    return (
+      <Html>
+        <Head />
+        <Preview>Welcome to Gullak</Preview>
+        <Body style={styles.body}>
+          <Container style={styles.container}>
+            <Heading style={styles.title}>Welcome to Gullak</Heading>
+            <Text style={styles.text}>Hello {userName},</Text>
+            <Text style={styles.text}>
+              We&rsquo;re excited to have you on board! Gullak helps you track
+              your expenses, set budgets, and achieve your financial goals with
+              the help of AI.
+            </Text>
+            <Section style={styles.section}>
+              <Heading style={styles.heading}>Getting Started</Heading>
+              <Text style={styles.text}>
+                1. Set up your accounts to track balances.
+              </Text>
+              <Text style={styles.text}>
+                2. Add your transactions regularly.
+              </Text>
+              <Text style={styles.text}>
+                3. Create a monthly budget to stay on track.
+              </Text>
+            </Section>
+            <Text style={styles.footer}>
+              If you have any questions, feel free to reply to this email.
+            </Text>
+          </Container>
+        </Body>
+      </Html>
+    );
+  }
+
+  if (type === "account-created") {
+    return (
+      <Html>
+        <Head />
+        <Preview>New Account Created</Preview>
+        <Body style={styles.body}>
+          <Container style={styles.container}>
+            <Heading style={styles.title}>New Account Added</Heading>
+            <Text style={styles.text}>Hello {userName},</Text>
+            <Text style={styles.text}>
+              You have successfully created a new account: <strong>{data?.accountName}</strong>.
+            </Text>
+            <Section style={styles.statsContainer}>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Initial Balance</Text>
+                <Text style={styles.heading}>₹{data?.balance}</Text>
+              </div>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Type</Text>
+                <Text style={styles.heading}>{data?.type}</Text>
+              </div>
+            </Section>
+          </Container>
+        </Body>
+      </Html>
+    );
+  }
+
+  if (type === "transaction-success") {
+    return (
+      <Html>
+        <Head />
+        <Preview>Transaction Logged</Preview>
+        <Body style={styles.body}>
+          <Container style={styles.container}>
+            <Heading style={styles.title}>Transaction Logged</Heading>
+            <Text style={styles.text}>Hello {userName},</Text>
+            <Text style={styles.text}>
+              A new transaction has been successfully logged.
+            </Text>
+            <Section style={styles.statsContainer}>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Amount</Text>
+                <Text style={styles.heading}>₹{data?.amount}</Text>
+              </div>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Detailed Description</Text>
+                <Text style={styles.heading}>{data?.description}</Text>
+              </div>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Category</Text>
+                <Text style={styles.heading}>{data?.category}</Text>
+              </div>
+            </Section>
+
+            {/* AI Advice */}
+            {data?.advice && (
+              <Section style={styles.section}>
+                <Heading style={styles.heading}>Smart Spending Tips</Heading>
+                {data.advice.map((tip, index) => (
+                  <Text key={index} style={styles.text}>
+                    • {tip}
+                  </Text>
+                ))}
+              </Section>
+            )}
+          </Container>
+        </Body>
+      </Html>
+    );
+  }
+
+  if (type === "budget-coach") {
+    return (
+      <Html>
+        <Head />
+        <Preview>Your Weekly Budget Coach</Preview>
+        <Body style={styles.body}>
+          <Container style={styles.container}>
+            <Heading style={styles.title}>Weekly Budget Coach</Heading>
+            <Text style={styles.text}>Hello {userName},</Text>
+            <Text style={styles.text}>
+              Here is your weekly financial advice to keep you on track!
+            </Text>
+
+            {/* Weekly Stats */}
+            <Section style={styles.statsContainer}>
+              <Heading style={styles.heading}>Last Week's Snapshot</Heading>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Total Spent</Text>
+                <Text style={styles.heading}>₹{data?.stats?.totalExpenses}</Text>
+              </div>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Remaining Monthly Budget</Text>
+                <Text style={styles.heading}>₹{data?.stats?.remainingBudget}</Text>
+              </div>
+            </Section>
+
+            {/* AI Advice */}
+            {data?.advice && (
+              <Section style={styles.section}>
+                <Heading style={styles.heading}>Smart Advice</Heading>
+                {data.advice.map((tip, index) => (
+                  <Text key={index} style={styles.text}>
+                    • {tip}
+                  </Text>
+                ))}
+              </Section>
+            )}
+          </Container>
+        </Body>
+      </Html>
+    );
+  }
+  if (type === "budget-created") {
+    return (
+      <Html>
+        <Head />
+        <Preview>Budget Set & AI Advice</Preview>
+        <Body style={styles.body}>
+          <Container style={styles.container}>
+            <Heading style={styles.title}>Budget Set Successfully</Heading>
+            <Text style={styles.text}>Hello {userName},</Text>
+            <Text style={styles.text}>
+              You have successfully set your monthly budget.
+            </Text>
+            <Section style={styles.statsContainer}>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Monthly Budget</Text>
+                <Text style={styles.heading}>₹{data?.budgetAmount}</Text>
+              </div>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Current Account Balance</Text>
+                <Text style={styles.heading}>₹{data?.balance}</Text>
+              </div>
+            </Section>
+
+            {/* AI Advice */}
+            {data?.advice && (
+              <Section style={styles.section}>
+                <Heading style={styles.heading}>AI Financial Advice</Heading>
+                {data.advice.map((tip, index) => (
+                  <Text key={index} style={styles.text}>
+                    • {tip}
+                  </Text>
+                ))}
+              </Section>
+            )}
+          </Container>
+        </Body>
+      </Html>
+    );
+  }
 }
 
 const styles = {

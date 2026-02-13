@@ -4,8 +4,11 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { generateAIContent } from "@/lib/gemini";
 import aj from "@/lib/arcjet";
 import { request } from "@arcjet/next";
+import { sendEmail } from "./send-email";
+import EmailTemplate from "@/emails/template";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -14,16 +17,16 @@ const serializeAmount = (obj) => ({
   amount: obj.amount.toNumber(),
 });
 
-// Create Transaction
+
 export async function createTransaction(data) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    // Get request data for ArcJet
+
     const req = await request();
 
-    // Check rate limit
+
     const decision = await aj.protect(req, {
       userId,
       requested: 1, // Specify how many tokens to consume
@@ -65,11 +68,11 @@ export async function createTransaction(data) {
       throw new Error("Account not found");
     }
 
-    // Calculate new balance
+
     const balanceChange = data.type === "EXPENSE" ? -data.amount : data.amount;
     const newBalance = account.balance.toNumber() + balanceChange;
 
-    // Create transaction and update account balance
+
     const transaction = await db.$transaction(async (tx) => {
       const newTransaction = await tx.transaction.create({
         data: {
@@ -89,6 +92,66 @@ export async function createTransaction(data) {
 
       return newTransaction;
     });
+
+
+
+
+    let advice = [];
+    try {
+
+      const recentTransactions = await db.transaction.findMany({
+        where: {
+          userId: user.id,
+          accountId: data.accountId,
+        },
+        orderBy: { date: "desc" },
+        take: 5,
+      });
+
+      const prompt = `
+        User just spent ₹${transaction.amount.toNumber()} on "${transaction.description}" (Category: ${transaction.category}).
+        Remaining Account Balance: ₹${newBalance}.
+        
+        Recent Spending Context (last 5 transactions):
+        ${recentTransactions.map(t => `- ${t.date.toISOString().split('T')[0]}: ₹${t.amount.toNumber()} (${t.category})`).join('\n')}
+        
+        Based on this single transaction and their recent spending pattern, provide 3 concise, friendly, and actionable financial tips.
+        Focus on how they can use their remaining money effectively or adjust habits.
+        
+        Format as JSON array of strings: ["tip 1", "tip 2", "tip 3"]
+      `;
+
+      const text = await generateAIContent(prompt);
+      const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+      advice = JSON.parse(cleanedText);
+    } catch (aiError) {
+      console.error("AI Advice Error:", aiError);
+
+      advice = [
+        "Track your daily expenses.",
+        "Check your budget regularly.",
+        "Save for upcoming goals.",
+      ];
+    }
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "New Transaction Logged - Gullak",
+        react: EmailTemplate({
+          userName: user.name,
+          type: "transaction-success",
+          data: {
+            amount: transaction.amount.toNumber(),
+            description: transaction.description,
+            category: transaction.category,
+            advice,
+          },
+        }),
+      });
+    } catch (emailError) {
+      console.error("Error sending transaction email:", emailError);
+    }
 
     revalidatePath("/dashboard");
     revalidatePath(`/account/${transaction.accountId}`);
@@ -132,7 +195,7 @@ export async function updateTransaction(id, data) {
 
     if (!user) throw new Error("User not found");
 
-    // Get original transaction to calculate balance change
+
     const originalTransaction = await db.transaction.findUnique({
       where: {
         id,
@@ -145,7 +208,7 @@ export async function updateTransaction(id, data) {
 
     if (!originalTransaction) throw new Error("Transaction not found");
 
-    // Calculate balance changes
+
     const oldBalanceChange =
       originalTransaction.type === "EXPENSE"
         ? -originalTransaction.amount.toNumber()
@@ -156,7 +219,7 @@ export async function updateTransaction(id, data) {
 
     const netBalanceChange = newBalanceChange - oldBalanceChange;
 
-    // Update transaction and account balance in a transaction
+
     const transaction = await db.$transaction(async (tx) => {
       const updated = await tx.transaction.update({
         where: {
@@ -172,7 +235,7 @@ export async function updateTransaction(id, data) {
         },
       });
 
-      // Update account balance
+
       await tx.account.update({
         where: { id: data.accountId },
         data: {
@@ -194,7 +257,7 @@ export async function updateTransaction(id, data) {
   }
 }
 
-// Get User Transactions
+
 export async function getUserTransactions(query = {}) {
   try {
     const { userId } = await auth();
@@ -227,93 +290,54 @@ export async function getUserTransactions(query = {}) {
   }
 }
 
-// Scan Receipt
+
 export async function scanReceipt(fileData) {
-  const models = [
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-flash-002",
-    "gemini-1.5-flash-001",
-    "gemini-1.5-flash-8b",
-    "gemini-1.5-pro",
-    "gemini-1.5-pro-002",
-  ];
-
-  for (const modelName of models) {
-    try {
-      console.log(`Trying model: ${modelName}`);
-      console.log("mimeType:", fileData?.mimeType);
-      console.log("base64 length:", fileData?.base64?.length);
-
-      const model = genAI.getGenerativeModel({ model: modelName });
-
-      const base64String = fileData.base64;
-
-      const prompt = `
-        Analyze this receipt image and extract the following information in JSON format:
-        - Total amount (just the number)
-        - Date (in ISO format)
-        - Description or items purchased (brief summary)
-        - Merchant/store name
-        - Suggested category (one of: housing,transportation,groceries,utilities,entertainment,food,shopping,healthcare,education,personal,travel,insurance,gifts,bills,other-expense )
-        
-        Only respond with valid JSON in this exact format:
-        {
-          "amount": number,
-          "date": "ISO date string",
-          "description": "string",
-          "merchantName": "string",
-          "category": "string"
-        }
-
-        If its not a recipt, return an empty object
-      `;
-
-      const result = await model.generateContent([
-        {
-          inlineData: {
-            data: base64String,
-            mimeType: fileData.mimeType,
-          },
-        },
-        prompt,
-      ]);
-
-      const response = await result.response;
-      const text = response.text();
-      console.log("Gemini response:", text);
-      const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
-
-      const data = JSON.parse(cleanedText);
-      return {
-        amount: parseFloat(data.amount),
-        date: new Date(data.date),
-        description: data.description,
-        category: data.category,
-        merchantName: data.merchantName,
-      };
-    } catch (error) {
-      console.error(`Error with model ${modelName}:`, error.message);
-      // Continue to next model if quota exceeded or model not found
-      if (
-        error.message?.includes("429") ||
-        error.message?.includes("quota") ||
-        error.message?.includes("404") ||
-        error.message?.includes("not found")
-      ) {
-        console.log(`${modelName} failed, trying next model...`);
-        continue;
+  try {
+    const prompt = `
+      Analyze this receipt image and extract the following information in JSON format:
+      - Total amount (just the number)
+      - Date (in ISO format)
+      - Description or items purchased (brief summary)
+      - Merchant/store name
+      - Suggested category (one of: housing,transportation,groceries,utilities,entertainment,food,shopping,healthcare,education,personal,travel,insurance,gifts,bills,other-expense )
+      
+      Only respond with valid JSON in this exact format:
+      {
+        "amount": number,
+        "date": "ISO date string",
+        "description": "string",
+        "merchantName": "string",
+        "category": "string"
       }
-      // For other errors, throw immediately
-      throw new Error(`Failed to scan receipt: ${error.message}`);
-    }
+
+      If its not a recipt, return an empty object
+    `;
+
+    const text = await generateAIContent(prompt, {
+      inlineData: {
+        data: fileData.base64,
+        mimeType: fileData.mimeType,
+      },
+    });
+
+    console.log("Gemini response:", text);
+    const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+
+    const data = JSON.parse(cleanedText);
+    return {
+      amount: parseFloat(data.amount),
+      date: new Date(data.date),
+      description: data.description,
+      category: data.category,
+      merchantName: data.merchantName,
+    };
+  } catch (error) {
+    console.error("Failed to scan receipt:", error);
+    throw new Error("Failed to scan receipt. Please try again.");
   }
-  throw new Error(
-    "Failed to scan receipt: All models exceeded quota. Please try again later or use a new API key from a different Google Cloud project."
-  );
 }
 
-// Helper function to calculate next recurring date
+
 function calculateNextRecurringDate(startDate, interval) {
   const date = new Date(startDate);
 

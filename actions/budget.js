@@ -3,6 +3,9 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { generateAIContent } from "@/lib/gemini";
+import { sendEmail } from "./send-email";
+import EmailTemplate from "@/emails/template";
 
 export async function getCurrentBudget(accountId) {
   try {
@@ -23,7 +26,7 @@ export async function getCurrentBudget(accountId) {
       },
     });
 
-    // Get current month's expenses
+
     const currentDate = new Date();
     const startOfMonth = new Date(
       currentDate.getFullYear(),
@@ -74,7 +77,7 @@ export async function updateBudget(amount) {
 
     if (!user) throw new Error("User not found");
 
-    // Check if budget exceeds balance
+
     const defaultAccount = await db.account.findFirst({
       where: {
         userId: user.id,
@@ -90,7 +93,7 @@ export async function updateBudget(amount) {
       }
     }
 
-    // Update or create budget
+
     const budget = await db.budget.upsert({
       where: {
         userId: user.id,
@@ -105,6 +108,50 @@ export async function updateBudget(amount) {
     });
 
     revalidatePath("/dashboard");
+
+
+    try {
+      const balance = defaultAccount ? defaultAccount.balance.toNumber() : 0;
+
+      const prompt = `
+        A user has set a monthly budget of ₹${amount}.
+        Their current default account balance is ₹${balance}.
+        
+        Provide 3 concise, friendly, and actionable financial tips on how to utilize their budget and balance effectively.
+        Format as JSON array of strings: ["tip 1", "tip 2", "tip 3"]
+      `;
+
+      let advice = [];
+      try {
+        const text = await generateAIContent(prompt);
+        const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+        advice = JSON.parse(cleanedText);
+      } catch (aiError) {
+        console.error("AI Advice Error:", aiError);
+        advice = [
+          "Track your expenses daily.",
+          "Prioritize needs over wants.",
+          "Review your budget weekly.",
+        ];
+      }
+
+      await sendEmail({
+        to: user.email,
+        subject: "Budget Set - Financial Advice",
+        react: EmailTemplate({
+          userName: user.name,
+          type: "budget-created",
+          data: {
+            budgetAmount: amount,
+            balance,
+            advice,
+          },
+        }),
+      });
+    } catch (emailError) {
+      console.error("Error sending budget email:", emailError);
+    }
+
     return {
       success: true,
       data: { ...budget, amount: budget.amount.toNumber() },

@@ -5,6 +5,8 @@ import { db } from "@/lib/prisma";
 import { request } from "@arcjet/next";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { sendEmail } from "./send-email";
+import EmailTemplate from "@/emails/template";
 
 const serializeTransaction = (obj) => {
   const serialized = { ...obj };
@@ -123,6 +125,24 @@ export async function createAccount(data) {
         isDefault: shouldBeDefault, // Override the isDefault based on our logic
       },
     });
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Account Created - Gullak",
+        react: EmailTemplate({
+          userName: user.name,
+          type: "account-created",
+          data: {
+            accountName: account.name,
+            balance: account.balance.toNumber(),
+            type: account.type,
+          },
+        }),
+      });
+    } catch (emailError) {
+      console.error("Error sending account creation email:", emailError);
+    }
 
     // Serialize the account before returning
     const serializedAccount = serializeTransaction(account);
