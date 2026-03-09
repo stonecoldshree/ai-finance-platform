@@ -6,65 +6,126 @@ import { subDays } from "date-fns";
 const ACCOUNT_ID = "account-id";
 const USER_ID = "user-id";
 
-// Categories with their typical amount ranges
+// ─── Expanded Categories with realistic merchant names & amount ranges ───
+
 const CATEGORIES = {
   INCOME: [
-    { name: "salary", range: [5000, 8000] },
-    { name: "freelance", range: [1000, 3000] },
-    { name: "investments", range: [500, 2000] },
-    { name: "other-income", range: [100, 1000] },
+    { name: "salary", range: [5000, 8000], merchants: ["Employer Inc.", "TechCorp Ltd.", "ABC Solutions"] },
+    { name: "freelance", range: [1000, 3000], merchants: ["Upwork Client", "Fiverr Gig", "Direct Client"] },
+    { name: "investments", range: [500, 2000], merchants: ["Zerodha", "Groww", "Mutual Fund SIP"] },
+    { name: "other-income", range: [100, 1000], merchants: ["Cashback", "Refund", "Gift Money"] },
   ],
   EXPENSE: [
-    { name: "housing", range: [1000, 2000] },
-    { name: "transportation", range: [100, 500] },
-    { name: "groceries", range: [200, 600] },
-    { name: "utilities", range: [100, 300] },
-    { name: "entertainment", range: [50, 200] },
-    { name: "food", range: [50, 150] },
-    { name: "shopping", range: [100, 500] },
-    { name: "healthcare", range: [100, 1000] },
-    { name: "education", range: [200, 1000] },
-    { name: "travel", range: [500, 2000] },
+    { name: "housing", range: [8000, 20000], merchants: ["Landlord", "Society Maintenance", "Home Repairs Co."] },
+    { name: "transportation", range: [100, 500], merchants: ["Uber", "Ola", "Metro Card", "Petrol Pump", "Rapido"] },
+    { name: "groceries", range: [200, 2500], merchants: ["BigBasket", "Blinkit", "D-Mart", "Reliance Fresh", "Local Kirana"] },
+    { name: "utilities", range: [100, 800], merchants: ["Electricity Board", "Jio Fiber", "Airtel", "Gas Agency", "Water Board"] },
+    { name: "entertainment", range: [50, 800], merchants: ["Netflix", "BookMyShow", "Spotify", "Amazon Prime", "Hotstar"] },
+    { name: "food", range: [50, 600], merchants: ["Swiggy", "Zomato", "Starbucks", "Dominos", "Local Restaurant"] },
+    { name: "shopping", range: [100, 3000], merchants: ["Amazon", "Flipkart", "Myntra", "Mall Purchase", "Croma"] },
+    { name: "healthcare", range: [100, 2000], merchants: ["Apollo Pharmacy", "Dr. Visit", "Lab Test", "Hospital", "1mg"] },
+    { name: "education", range: [200, 5000], merchants: ["Udemy", "Coursera", "Book Store", "Tuition Fee", "Exam Fee"] },
+    { name: "travel", range: [500, 8000], merchants: ["MakeMyTrip", "IRCTC", "Hotel Booking", "Bus Ticket", "Airlines"] },
+    { name: "personal", range: [100, 1000], merchants: ["Salon", "Gym Membership", "Spa", "Laundry"] },
+    { name: "insurance", range: [500, 3000], merchants: ["LIC", "HDFC Life", "Car Insurance", "Health Insurance"] },
+    { name: "gifts", range: [200, 2000], merchants: ["Gift Shop", "Online Gift", "Donation", "Birthday Gift"] },
+    { name: "bills", range: [100, 1000], merchants: ["Credit Card Bill", "Loan EMI", "Service Charge", "Bank Fee"] },
+    { name: "other-expense", range: [50, 500], merchants: ["Misc Purchase", "ATM Withdrawal", "Other"] },
   ],
 };
 
-// Helper to generate random amount within a range
+// Realistic description templates
+const EXPENSE_DESCRIPTIONS = [
+  "Payment to {merchant}",
+  "Purchase at {merchant}",
+  "{merchant} - monthly",
+  "Paid {merchant}",
+  "{merchant} transaction",
+];
+
+const INCOME_DESCRIPTIONS = [
+  "Received from {merchant}",
+  "{merchant} - credit",
+  "Income: {merchant}",
+  "{merchant} deposit",
+];
+
+// ─── Helpers ───
+
 function getRandomAmount(min, max) {
   return Number((Math.random() * (max - min) + min).toFixed(2));
 }
 
-// Helper to get random category with amount
+function getRandomElement(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 function getRandomCategory(type) {
   const categories = CATEGORIES[type];
-  const category = categories[Math.floor(Math.random() * categories.length)];
+  const category = getRandomElement(categories);
   const amount = getRandomAmount(category.range[0], category.range[1]);
-  return { category: category.name, amount };
+  const merchant = getRandomElement(category.merchants);
+  const templates = type === "INCOME" ? INCOME_DESCRIPTIONS : EXPENSE_DESCRIPTIONS;
+  const description = getRandomElement(templates).replace("{merchant}", merchant);
+  return { category: category.name, amount, description, merchant };
 }
+
+// Inject known anomalous transactions for testing anomaly detection
+function generateAnomalousTransaction(date) {
+  const anomalyTypes = [
+    { category: "shopping", amount: getRandomAmount(15000, 50000), description: "Unusual large purchase at Electronics Store" },
+    { category: "travel", amount: getRandomAmount(20000, 60000), description: "Unexpected international booking" },
+    { category: "healthcare", amount: getRandomAmount(10000, 40000), description: "Emergency hospital payment" },
+    { category: "food", amount: getRandomAmount(5000, 15000), description: "Large party catering order" },
+  ];
+
+  const anomaly = getRandomElement(anomalyTypes);
+  return {
+    id: crypto.randomUUID(),
+    type: "EXPENSE",
+    amount: anomaly.amount,
+    description: `[ANOMALY] ${anomaly.description}`,
+    date,
+    category: anomaly.category,
+    status: "COMPLETED",
+    userId: USER_ID,
+    accountId: ACCOUNT_ID,
+    createdAt: date,
+    updatedAt: date,
+    isAnomaly: true, // metadata flag for evaluation
+  };
+}
+
+// ─── Main Seed Function ───
 
 export async function seedTransactions() {
   try {
-    // Generate 90 days of transactions
     const transactions = [];
     let totalBalance = 0;
+    const DAYS = 365; // Expanded from 90 to 365 days
+    const anomalyIndices = new Set();
 
-    for (let i = 90; i >= 0; i--) {
+    // Pre-select ~5% of days to inject anomalies (~18 anomalous transactions)
+    for (let i = 0; i < Math.floor(DAYS * 0.05); i++) {
+      anomalyIndices.add(Math.floor(Math.random() * DAYS));
+    }
+
+    for (let i = DAYS; i >= 0; i--) {
       const date = subDays(new Date(), i);
 
-      // Generate 1-3 transactions per day
-      const transactionsPerDay = Math.floor(Math.random() * 3) + 1;
+      // Generate 3-8 transactions per day (expanded from 1-3)
+      const transactionsPerDay = Math.floor(Math.random() * 6) + 3;
 
       for (let j = 0; j < transactionsPerDay; j++) {
-        // 40% chance of income, 60% chance of expense
-        const type = Math.random() < 0.4 ? "INCOME" : "EXPENSE";
-        const { category, amount } = getRandomCategory(type);
+        // 35% chance of income, 65% chance of expense
+        const type = Math.random() < 0.35 ? "INCOME" : "EXPENSE";
+        const { category, amount, description } = getRandomCategory(type);
 
         const transaction = {
           id: crypto.randomUUID(),
           type,
           amount,
-          description: `${
-            type === "INCOME" ? "Received" : "Paid for"
-          } ${category}`,
+          description,
           date,
           category,
           status: "COMPLETED",
@@ -77,6 +138,13 @@ export async function seedTransactions() {
         totalBalance += type === "INCOME" ? amount : -amount;
         transactions.push(transaction);
       }
+
+      // Inject anomalous transaction on selected days
+      if (anomalyIndices.has(i)) {
+        const anomaly = generateAnomalousTransaction(date);
+        totalBalance -= anomaly.amount;
+        transactions.push(anomaly);
+      }
     }
 
     // Insert transactions in batches and update account balance
@@ -86,10 +154,16 @@ export async function seedTransactions() {
         where: { accountId: ACCOUNT_ID },
       });
 
-      // Insert new transactions
-      await tx.transaction.createMany({
-        data: transactions,
-      });
+      // Insert new transactions in batches of 500 (Prisma limit)
+      const BATCH_SIZE = 500;
+      for (let i = 0; i < transactions.length; i += BATCH_SIZE) {
+        const batch = transactions.slice(i, i + BATCH_SIZE).map((t) => {
+          // Remove non-schema fields before inserting
+          const { isAnomaly, merchant, ...dbTransaction } = t;
+          return dbTransaction;
+        });
+        await tx.transaction.createMany({ data: batch });
+      }
 
       // Update account balance
       await tx.account.update({
@@ -98,9 +172,18 @@ export async function seedTransactions() {
       });
     });
 
+    // Count anomalies for reporting
+    const anomalyCount = transactions.filter((t) => t.isAnomaly).length;
+
     return {
       success: true,
-      message: `Created ${transactions.length} transactions`,
+      message: `Created ${transactions.length} transactions (${anomalyCount} anomalies) over ${DAYS} days`,
+      stats: {
+        totalTransactions: transactions.length,
+        anomalies: anomalyCount,
+        days: DAYS,
+        avgPerDay: (transactions.length / DAYS).toFixed(1),
+      },
     };
   } catch (error) {
     console.error("Error seeding transactions:", error);
