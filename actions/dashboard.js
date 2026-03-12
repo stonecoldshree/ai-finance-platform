@@ -6,6 +6,8 @@ import { request } from "@arcjet/next";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { sendEmail } from "./send-email";
+import { sendSMS } from "@/lib/twilio";
+import { formatSMS } from "@/lib/sms-templates";
 import EmailTemplate from "@/emails/template";
 
 const serializeTransaction = (obj) => {
@@ -144,6 +146,22 @@ export async function createAccount(data) {
       console.error("Error sending account creation email:", emailError);
     }
 
+    // Send SMS notification
+    if (user.phoneNumber) {
+      try {
+        await sendSMS({
+          to: user.phoneNumber,
+          body: formatSMS("account-created", {
+            accountName: account.name,
+            accountType: account.type,
+            balance: account.balance.toNumber(),
+          }),
+        });
+      } catch (smsError) {
+        console.error("Error sending account creation SMS:", smsError);
+      }
+    }
+
     // Serialize the account before returning
     const serializedAccount = serializeTransaction(account);
 
@@ -166,9 +184,19 @@ export async function getDashboardData() {
     throw new Error("User not found");
   }
 
-  // Get all user transactions
+  // Get current month transactions only
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
   const transactions = await db.transaction.findMany({
-    where: { userId: user.id },
+    where: {
+      userId: user.id,
+      date: {
+        gte: startOfMonth,
+        lte: endOfMonth,
+      },
+    },
     orderBy: { date: "desc" },
   });
 

@@ -8,6 +8,8 @@ import { generateAIContent } from "@/lib/gemini";
 import aj from "@/lib/arcjet";
 import { request } from "@arcjet/next";
 import { sendEmail } from "./send-email";
+import { sendSMS } from "@/lib/twilio";
+import { formatSMS } from "@/lib/sms-templates";
 import EmailTemplate from "@/emails/template";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -150,7 +152,31 @@ export async function createTransaction(data) {
         }),
       });
     } catch (emailError) {
-      console.error("Error sending transaction email:", emailError);
+      console.error("Error sending transaction email:", emailError.message);
+    }
+
+    // Send SMS notification
+    console.log("SMS CHECK - user.phoneNumber:", user.phoneNumber, "user.email:", user.email);
+    if (user.phoneNumber) {
+      try {
+        console.log("Attempting to send SMS to:", user.phoneNumber);
+        const smsResult = await sendSMS({
+          to: user.phoneNumber,
+          body: formatSMS("transaction-success", {
+            amount: transaction.amount.toNumber(),
+            description: transaction.description,
+            category: transaction.category,
+            advice,
+          }),
+        });
+        if (smsResult.success) {
+          console.log("Transaction SMS sent:", smsResult.data?.sid);
+        } else {
+          console.error("SMS failed:", smsResult.error);
+        }
+      } catch (smsError) {
+        console.error("Error sending transaction SMS:", smsError.message);
+      }
     }
 
     revalidatePath("/dashboard");
@@ -294,7 +320,7 @@ export async function getUserTransactions(query = {}) {
 export async function scanReceipt(fileData) {
   try {
     const prompt = `
-      Analyze this receipt image and extract the following information in JSON format:
+      Analyze this receipt image or PDF and extract the following information in JSON format:
       - Total amount (just the number)
       - Date (in ISO format)
       - Description or items purchased (brief summary)
@@ -332,7 +358,7 @@ export async function scanReceipt(fileData) {
       merchantName: data.merchantName,
     };
   } catch (error) {
-    console.error("Failed to scan receipt:", error);
+    console.error("Failed to scan receipt:", error.message, error.stack);
     throw new Error("Failed to scan receipt. Please try again.");
   }
 }

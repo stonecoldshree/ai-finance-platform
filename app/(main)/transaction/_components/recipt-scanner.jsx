@@ -22,6 +22,19 @@ export function ReceiptScanner({ onScanComplete }) {
       return;
     }
 
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "application/pdf",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Please upload an image or PDF file");
+      return;
+    }
+
     // Convert file to base64 on the client side since File objects
     // can't be serialized across the client-server boundary
     const reader = new FileReader();
@@ -45,8 +58,7 @@ export function ReceiptScanner({ onScanComplete }) {
         type="file"
         ref={fileInputRef}
         className="hidden"
-        accept="image/*"
-        capture="environment"
+        accept="image/*,.pdf,application/pdf"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handleReceiptScan(file);
@@ -55,7 +67,7 @@ export function ReceiptScanner({ onScanComplete }) {
       <Button
         type="button"
         variant="outline"
-        className="w-full h-10 bg-gradient-to-br from-orange-500 via-pink-500 to-purple-500 animate-gradient hover:opacity-90 transition-opacity text-white hover:text-white"
+        className="w-full h-10 bg-gradient-to-br from-orange-500 to-orange-600 hover:opacity-90 transition-opacity text-white hover:text-white"
         onClick={() => fileInputRef.current?.click()}
         disabled={scanReceiptLoading}
       >
@@ -67,7 +79,7 @@ export function ReceiptScanner({ onScanComplete }) {
         ) : (
           <>
             <Camera className="mr-2" />
-            <span>Scan Receipt with AI</span>
+            <span>Scan Receipt with AI (Image or PDF)</span>
           </>
         )}
       </Button>

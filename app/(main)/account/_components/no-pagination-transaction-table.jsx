@@ -356,7 +356,7 @@ export function NoPaginationTransactionTable({ transactions }) {
                           <TooltipTrigger>
                             <Badge
                               variant="secondary"
-                              className="gap-1 bg-purple-100 text-purple-700 hover:bg-purple-200"
+                              className="gap-1 bg-orange-100 text-orange-700 hover:bg-orange-200"
                             >
                               <RefreshCw className="h-3 w-3" />
                               {

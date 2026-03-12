@@ -12,6 +12,7 @@ import {
   ChevronRight,
   RefreshCw,
   Clock,
+  Calendar,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -76,9 +77,35 @@ export function TransactionTable({ transactions }) {
   const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
 
+  // Default to current month (YYYY-MM format)
+  const now = new Date();
+  const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const [monthFilter, setMonthFilter] = useState(currentMonthStr);
+
+  // Build list of available months from transactions
+  const availableMonths = useMemo(() => {
+    const months = new Set();
+    transactions.forEach((t) => {
+      const d = new Date(t.date);
+      months.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    });
+    // Always include current month
+    months.add(currentMonthStr);
+    return Array.from(months).sort().reverse();
+  }, [transactions, currentMonthStr]);
+
   // Memoized filtered and sorted transactions
   const filteredAndSortedTransactions = useMemo(() => {
     let result = [...transactions];
+
+    // Apply month filter
+    if (monthFilter && monthFilter !== "all") {
+      const [year, month] = monthFilter.split("-").map(Number);
+      result = result.filter((t) => {
+        const d = new Date(t.date);
+        return d.getFullYear() === year && d.getMonth() + 1 === month;
+      });
+    }
 
     // Apply search filter
     if (searchTerm) {
@@ -123,7 +150,7 @@ export function TransactionTable({ transactions }) {
     });
 
     return result;
-  }, [transactions, searchTerm, typeFilter, recurringFilter, sortConfig]);
+  }, [transactions, searchTerm, typeFilter, recurringFilter, sortConfig, monthFilter]);
 
   // Pagination calculations
   const totalPages = Math.ceil(
@@ -188,6 +215,7 @@ export function TransactionTable({ transactions }) {
     setSearchTerm("");
     setTypeFilter("");
     setRecurringFilter("");
+    setMonthFilter(currentMonthStr);
     setCurrentPage(1);
   };
 
@@ -216,6 +244,34 @@ export function TransactionTable({ transactions }) {
           />
         </div>
         <div className="flex gap-2">
+          <Select
+            value={monthFilter}
+            onValueChange={(value) => {
+              setMonthFilter(value);
+              setCurrentPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[150px]">
+              <Calendar className="h-4 w-4 mr-1" />
+              <SelectValue placeholder="Select Month" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Months</SelectItem>
+              {availableMonths.map((m) => {
+                const [y, mo] = m.split("-");
+                const label = new Date(y, mo - 1).toLocaleDateString("en-US", {
+                  month: "short",
+                  year: "numeric",
+                });
+                return (
+                  <SelectItem key={m} value={m}>
+                    {label}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+
           <Select
             value={typeFilter}
             onValueChange={(value) => {
@@ -262,7 +318,7 @@ export function TransactionTable({ transactions }) {
             </div>
           )}
 
-          {(searchTerm || typeFilter || recurringFilter) && (
+          {(searchTerm || typeFilter || recurringFilter || monthFilter !== currentMonthStr) && (
             <Button
               variant="outline"
               size="icon"
@@ -387,7 +443,7 @@ export function TransactionTable({ transactions }) {
                           <TooltipTrigger>
                             <Badge
                               variant="secondary"
-                              className="gap-1 bg-purple-100 text-purple-700 hover:bg-purple-200"
+                              className="gap-1 bg-orange-100 text-orange-700 hover:bg-orange-200"
                             >
                               <RefreshCw className="h-3 w-3" />
                               {

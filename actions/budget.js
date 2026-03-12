@@ -23,6 +23,7 @@ export async function getCurrentBudget(accountId) {
     const budget = await db.budget.findFirst({
       where: {
         userId: user.id,
+        accountId,
       },
     });
 
@@ -66,7 +67,7 @@ export async function getCurrentBudget(accountId) {
   }
 }
 
-export async function updateBudget(amount) {
+export async function updateBudget(amount, accountId) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
@@ -77,32 +78,37 @@ export async function updateBudget(amount) {
 
     if (!user) throw new Error("User not found");
 
+    if (!accountId) throw new Error("Account is required");
 
-    const defaultAccount = await db.account.findFirst({
+    const account = await db.account.findFirst({
       where: {
+        id: accountId,
         userId: user.id,
-        isDefault: true,
       },
     });
 
-    if (defaultAccount) {
-      if (amount > defaultAccount.balance.toNumber()) {
-        throw new Error(
-          `Budget cannot exceed your current balance of ₹${defaultAccount.balance.toNumber()}`
-        );
-      }
+    if (!account) throw new Error("Account not found");
+
+    if (amount > account.balance.toNumber()) {
+      throw new Error(
+        `Budget cannot exceed your current balance of ₹${account.balance.toNumber()}`
+      );
     }
 
 
     const budget = await db.budget.upsert({
       where: {
-        userId: user.id,
+        userId_accountId: {
+          userId: user.id,
+          accountId,
+        },
       },
       update: {
         amount,
       },
       create: {
         userId: user.id,
+        accountId,
         amount,
       },
     });
@@ -111,7 +117,7 @@ export async function updateBudget(amount) {
 
 
     try {
-      const balance = defaultAccount ? defaultAccount.balance.toNumber() : 0;
+      const balance = account.balance.toNumber();
 
       const prompt = `
         A user has set a monthly budget of ₹${amount}.

@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateBudget } from "@/actions/budget";
 
-export function BudgetProgress({ initialBudget, currentExpenses }) {
+export function BudgetProgress({ initialBudget, currentExpenses, accountId, accountName }) {
   const [isEditing, setIsEditing] = useState(false);
   const [newBudget, setNewBudget] = useState(
     initialBudget?.amount?.toString() || ""
@@ -42,13 +42,18 @@ export function BudgetProgress({ initialBudget, currentExpenses }) {
       return;
     }
 
-    await updateBudgetFn(amount);
+    await updateBudgetFn(amount, accountId);
   };
 
   const handleCancel = () => {
     setNewBudget(initialBudget?.amount?.toString() || "");
     setIsEditing(false);
   };
+
+  useEffect(() => {
+    setNewBudget(initialBudget?.amount?.toString() || "");
+    setIsEditing(false);
+  }, [initialBudget, accountId]);
 
   useEffect(() => {
     if (updatedBudget?.success) {
@@ -68,7 +73,7 @@ export function BudgetProgress({ initialBudget, currentExpenses }) {
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex-1">
           <CardTitle className="text-sm font-medium">
-            Monthly Budget (Default Account)
+            Monthly Budget{accountName ? ` - ${accountName}` : ""}
           </CardTitle>
           <div className="flex items-center gap-2 mt-1">
             {isEditing ? (

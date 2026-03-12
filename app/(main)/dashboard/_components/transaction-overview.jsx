@@ -82,7 +82,7 @@ export function DashboardOverview({ accounts, transactions }) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="text-base font-normal">
-            Recent Transactions
+            Recent Transactions (This Month)
           </CardTitle>
           <Select
             value={selectedAccountId}

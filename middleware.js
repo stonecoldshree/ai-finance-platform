@@ -5,7 +5,9 @@ import { NextResponse } from "next/server";
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
   "/account(.*)",
+  "/account-analytics(.*)",
   "/transaction(.*)",
+  "/settings(.*)",
 ]);
 
 // Create Arcjet middleware
@@ -35,6 +37,11 @@ const clerk = clerkMiddleware(async (auth, req) => {
   if (!userId && isProtectedRoute(req)) {
     const { redirectToSignIn } = await auth();
     return redirectToSignIn();
+  }
+
+  // Redirect logged-in users from landing page to dashboard
+  if (userId && req.nextUrl.pathname === "/") {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
   return NextResponse.next();
