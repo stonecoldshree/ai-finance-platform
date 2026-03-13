@@ -6,10 +6,10 @@ import {
   Html,
   Preview,
   Section,
-  Text,
-} from "@react-email/components";
+  Text } from
+"@react-email/components";
 
-// Dummy data for preview
+
 const PREVIEW_DATA = {
   monthlyReport: {
     userName: "Rahul Sharma",
@@ -24,15 +24,15 @@ const PREVIEW_DATA = {
           groceries: 600,
           transportation: 400,
           entertainment: 300,
-          utilities: 700,
-        },
+          utilities: 700
+        }
       },
       insights: [
-        "Your housing expenses are 43% of your total spending - consider reviewing your housing costs.",
-        "Great job keeping entertainment expenses under control this month!",
-        "Setting up automatic savings could help you save 20% more of your income.",
-      ],
-    },
+      "Your housing expenses are 43% of your total spending - consider reviewing your housing costs.",
+      "Great job keeping entertainment expenses under control this month!",
+      "Setting up automatic savings could help you save 20% more of your income."]
+
+    }
   },
   budgetAlert: {
     userName: "Rahul Sharma",
@@ -40,15 +40,15 @@ const PREVIEW_DATA = {
     data: {
       percentageUsed: 85,
       budgetAmount: 4000,
-      totalExpenses: 3400,
-    },
-  },
+      totalExpenses: 3400
+    }
+  }
 };
 
 export default function EmailTemplate({
   userName = "",
   type = "monthly-report",
-  data = {},
+  data = {}
 }) {
   if (type === "monthly-report") {
     return (
@@ -64,7 +64,7 @@ export default function EmailTemplate({
               Here&rsquo;s your financial summary for {data?.month}:
             </Text>
 
-            {/* Main Stats */}
+            {}
             <Section style={styles.statsContainer}>
               <div style={styles.stat}>
                 <Text style={styles.text}>Total Income</Text>
@@ -82,32 +82,32 @@ export default function EmailTemplate({
               </div>
             </Section>
 
-            {/* Category Breakdown */}
-            {data?.stats?.byCategory && (
-              <Section style={styles.section}>
+            {}
+            {data?.stats?.byCategory &&
+            <Section style={styles.section}>
                 <Heading style={styles.heading}>Expenses by Category</Heading>
                 {Object.entries(data?.stats.byCategory).map(
-                  ([category, amount]) => (
-                    <div key={category} style={styles.row}>
+                ([category, amount]) =>
+                <div key={category} style={styles.row}>
                       <Text style={styles.text}>{category}</Text>
                       <Text style={styles.text}>₹{amount}</Text>
                     </div>
-                  )
-                )}
-              </Section>
-            )}
 
-            {/* AI Insights */}
-            {data?.insights && (
-              <Section style={styles.section}>
+              )}
+              </Section>
+            }
+
+            {}
+            {data?.insights &&
+            <Section style={styles.section}>
                 <Heading style={styles.heading}>Gullak Insights</Heading>
-                {data.insights.map((insight, index) => (
-                  <Text key={index} style={styles.text}>
+                {data.insights.map((insight, index) =>
+              <Text key={index} style={styles.text}>
                     • {insight}
                   </Text>
-                ))}
+              )}
               </Section>
-            )}
+            }
 
             <Text style={styles.footer}>
               Thank you for using Gullak. Keep tracking your finances for better
@@ -115,8 +115,8 @@ export default function EmailTemplate({
             </Text>
           </Container>
         </Body>
-      </Html>
-    );
+      </Html>);
+
   }
 
   if (type === "budget-alert") {
@@ -150,8 +150,8 @@ export default function EmailTemplate({
             </Section>
           </Container>
         </Body>
-      </Html>
-    );
+      </Html>);
+
   }
 
   if (type === "welcome") {
@@ -185,8 +185,8 @@ export default function EmailTemplate({
             </Text>
           </Container>
         </Body>
-      </Html>
-    );
+      </Html>);
+
   }
 
   if (type === "account-created") {
@@ -213,8 +213,8 @@ export default function EmailTemplate({
             </Section>
           </Container>
         </Body>
-      </Html>
-    );
+      </Html>);
+
   }
 
   if (type === "transaction-success") {
@@ -244,21 +244,21 @@ export default function EmailTemplate({
               </div>
             </Section>
 
-            {/* AI Advice */}
-            {data?.advice && (
-              <Section style={styles.section}>
+            {}
+            {data?.advice &&
+            <Section style={styles.section}>
                 <Heading style={styles.heading}>Smart Spending Tips</Heading>
-                {data.advice.map((tip, index) => (
-                  <Text key={index} style={styles.text}>
+                {data.advice.map((tip, index) =>
+              <Text key={index} style={styles.text}>
                     • {tip}
                   </Text>
-                ))}
+              )}
               </Section>
-            )}
+            }
           </Container>
         </Body>
-      </Html>
-    );
+      </Html>);
+
   }
 
   if (type === "budget-coach") {
@@ -274,7 +274,7 @@ export default function EmailTemplate({
               Here is your weekly financial advice to keep you on track!
             </Text>
 
-            {/* Weekly Stats */}
+            {}
             <Section style={styles.statsContainer}>
               <Heading style={styles.heading}>Last Week's Snapshot</Heading>
               <div style={styles.stat}>
@@ -287,21 +287,21 @@ export default function EmailTemplate({
               </div>
             </Section>
 
-            {/* AI Advice */}
-            {data?.advice && (
-              <Section style={styles.section}>
+            {}
+            {data?.advice &&
+            <Section style={styles.section}>
                 <Heading style={styles.heading}>Smart Advice</Heading>
-                {data.advice.map((tip, index) => (
-                  <Text key={index} style={styles.text}>
+                {data.advice.map((tip, index) =>
+              <Text key={index} style={styles.text}>
                     • {tip}
                   </Text>
-                ))}
+              )}
               </Section>
-            )}
+            }
           </Container>
         </Body>
-      </Html>
-    );
+      </Html>);
+
   }
   if (type === "budget-created") {
     return (
@@ -326,79 +326,79 @@ export default function EmailTemplate({
               </div>
             </Section>
 
-            {/* AI Advice */}
-            {data?.advice && (
-              <Section style={styles.section}>
+            {}
+            {data?.advice &&
+            <Section style={styles.section}>
                 <Heading style={styles.heading}>AI Financial Advice</Heading>
-                {data.advice.map((tip, index) => (
-                  <Text key={index} style={styles.text}>
+                {data.advice.map((tip, index) =>
+              <Text key={index} style={styles.text}>
                     • {tip}
                   </Text>
-                ))}
+              )}
               </Section>
-            )}
+            }
           </Container>
         </Body>
-      </Html>
-    );
+      </Html>);
+
   }
 }
 
 const styles = {
   body: {
     backgroundColor: "#f6f9fc",
-    fontFamily: "-apple-system, sans-serif",
+    fontFamily: "-apple-system, sans-serif"
   },
   container: {
     backgroundColor: "#ffffff",
     margin: "0 auto",
     padding: "20px",
     borderRadius: "5px",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"
   },
   title: {
     color: "#1f2937",
     fontSize: "32px",
     fontWeight: "bold",
     textAlign: "center",
-    margin: "0 0 20px",
+    margin: "0 0 20px"
   },
   heading: {
     color: "#1f2937",
     fontSize: "20px",
     fontWeight: "600",
-    margin: "0 0 16px",
+    margin: "0 0 16px"
   },
   text: {
     color: "#4b5563",
     fontSize: "16px",
-    margin: "0 0 16px",
+    margin: "0 0 16px"
   },
   section: {
     marginTop: "32px",
     padding: "20px",
     backgroundColor: "#f9fafb",
     borderRadius: "5px",
-    border: "1px solid #e5e7eb",
+    border: "1px solid #e5e7eb"
   },
   statsContainer: {
     margin: "32px 0",
     padding: "20px",
     backgroundColor: "#f9fafb",
-    borderRadius: "5px",
+    borderRadius: "5px"
   },
   stat: {
     marginBottom: "16px",
     padding: "12px",
     backgroundColor: "#fff",
     borderRadius: "4px",
-    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)"
   },
   row: {
     display: "flex",
     justifyContent: "space-between",
     padding: "12px 0",
-    borderBottom: "1px solid #e5e7eb",
+    borderBottom: "1px solid #e5e7eb"
   },
   footer: {
     color: "#6b7280",
@@ -406,6 +406,6 @@ const styles = {
     textAlign: "center",
     marginTop: "32px",
     paddingTop: "16px",
-    borderTop: "1px solid #e5e7eb",
-  },
+    borderTop: "1px solid #e5e7eb"
+  }
 };

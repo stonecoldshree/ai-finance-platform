@@ -13,7 +13,7 @@ export async function getCurrentBudget(accountId) {
     if (!userId) throw new Error("Unauthorized");
 
     const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
+      where: { clerkUserId: userId }
     });
 
     if (!user) {
@@ -23,8 +23,8 @@ export async function getCurrentBudget(accountId) {
     const budget = await db.budget.findFirst({
       where: {
         userId: user.id,
-        accountId,
-      },
+        accountId
+      }
     });
 
 
@@ -46,20 +46,20 @@ export async function getCurrentBudget(accountId) {
         type: "EXPENSE",
         date: {
           gte: startOfMonth,
-          lte: endOfMonth,
+          lte: endOfMonth
         },
-        accountId,
+        accountId
       },
       _sum: {
-        amount: true,
-      },
+        amount: true
+      }
     });
 
     return {
       budget: budget ? { ...budget, amount: budget.amount.toNumber() } : null,
-      currentExpenses: expenses._sum.amount
-        ? expenses._sum.amount.toNumber()
-        : 0,
+      currentExpenses: expenses._sum.amount ?
+      expenses._sum.amount.toNumber() :
+      0
     };
   } catch (error) {
     console.error("Error fetching budget:", error);
@@ -73,7 +73,7 @@ export async function updateBudget(amount, accountId) {
     if (!userId) throw new Error("Unauthorized");
 
     const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
+      where: { clerkUserId: userId }
     });
 
     if (!user) throw new Error("User not found");
@@ -83,8 +83,8 @@ export async function updateBudget(amount, accountId) {
     const account = await db.account.findFirst({
       where: {
         id: accountId,
-        userId: user.id,
-      },
+        userId: user.id
+      }
     });
 
     if (!account) throw new Error("Account not found");
@@ -100,17 +100,17 @@ export async function updateBudget(amount, accountId) {
       where: {
         userId_accountId: {
           userId: user.id,
-          accountId,
-        },
+          accountId
+        }
       },
       update: {
-        amount,
+        amount
       },
       create: {
         userId: user.id,
         accountId,
-        amount,
-      },
+        amount
+      }
     });
 
     revalidatePath("/dashboard");
@@ -135,10 +135,10 @@ export async function updateBudget(amount, accountId) {
       } catch (aiError) {
         console.error("AI Advice Error:", aiError);
         advice = [
-          "Track your expenses daily.",
-          "Prioritize needs over wants.",
-          "Review your budget weekly.",
-        ];
+        "Track your expenses daily.",
+        "Prioritize needs over wants.",
+        "Review your budget weekly."];
+
       }
 
       await sendEmail({
@@ -150,9 +150,9 @@ export async function updateBudget(amount, accountId) {
           data: {
             budgetAmount: amount,
             balance,
-            advice,
-          },
-        }),
+            advice
+          }
+        })
       });
     } catch (emailError) {
       console.error("Error sending budget email:", emailError);
@@ -160,7 +160,7 @@ export async function updateBudget(amount, accountId) {
 
     return {
       success: true,
-      data: { ...budget, amount: budget.amount.toNumber() },
+      data: { ...budget, amount: budget.amount.toNumber() }
     };
   } catch (error) {
     console.error("Error updating budget:", error);

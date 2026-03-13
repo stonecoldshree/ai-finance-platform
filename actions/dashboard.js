@@ -26,7 +26,7 @@ export async function getUserAccounts() {
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { clerkUserId: userId }
   });
 
   if (!user) {
@@ -40,13 +40,13 @@ export async function getUserAccounts() {
       include: {
         _count: {
           select: {
-            transactions: true,
-          },
-        },
-      },
+            transactions: true
+          }
+        }
+      }
     });
 
-    // Serialize accounts before sending to client
+
     const serializedAccounts = accounts.map(serializeTransaction);
 
     return serializedAccounts;
@@ -60,13 +60,13 @@ export async function createAccount(data) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    // Get request data for ArcJet
+
     const req = await request();
 
-    // Check rate limit
+
     const decision = await aj.protect(req, {
       userId,
-      requested: 1, // Specify how many tokens to consume
+      requested: 1
     });
 
     if (decision.isDenied()) {
@@ -76,8 +76,8 @@ export async function createAccount(data) {
           code: "RATE_LIMIT_EXCEEDED",
           details: {
             remaining,
-            resetInSeconds: reset,
-          },
+            resetInSeconds: reset
+          }
         });
 
         throw new Error("Too many requests. Please try again later.");
@@ -87,45 +87,45 @@ export async function createAccount(data) {
     }
 
     const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
+      where: { clerkUserId: userId }
     });
 
     if (!user) {
       throw new Error("User not found");
     }
 
-    // Convert balance to float before saving
+
     const balanceFloat = parseFloat(data.balance);
     if (isNaN(balanceFloat)) {
       throw new Error("Invalid balance amount");
     }
 
-    // Check if this is the user's first account
+
     const existingAccounts = await db.account.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id }
     });
 
-    // If it's the first account, make it default regardless of user input
-    // If not, use the user's preference
-    const shouldBeDefault =
-      existingAccounts.length === 0 ? true : data.isDefault;
 
-    // If this account should be default, unset other default accounts
+
+    const shouldBeDefault =
+    existingAccounts.length === 0 ? true : data.isDefault;
+
+
     if (shouldBeDefault) {
       await db.account.updateMany({
         where: { userId: user.id, isDefault: true },
-        data: { isDefault: false },
+        data: { isDefault: false }
       });
     }
 
-    // Create new account
+
     const account = await db.account.create({
       data: {
         ...data,
         balance: balanceFloat,
         userId: user.id,
-        isDefault: shouldBeDefault, // Override the isDefault based on our logic
-      },
+        isDefault: shouldBeDefault
+      }
     });
 
     try {
@@ -138,15 +138,15 @@ export async function createAccount(data) {
           data: {
             accountName: account.name,
             balance: account.balance.toNumber(),
-            type: account.type,
-          },
-        }),
+            type: account.type
+          }
+        })
       });
     } catch (emailError) {
       console.error("Error sending account creation email:", emailError);
     }
 
-    // Send SMS notification
+
     if (user.phoneNumber) {
       try {
         await sendSMS({
@@ -154,15 +154,15 @@ export async function createAccount(data) {
           body: formatSMS("account-created", {
             accountName: account.name,
             accountType: account.type,
-            balance: account.balance.toNumber(),
-          }),
+            balance: account.balance.toNumber()
+          })
         });
       } catch (smsError) {
         console.error("Error sending account creation SMS:", smsError);
       }
     }
 
-    // Serialize the account before returning
+
     const serializedAccount = serializeTransaction(account);
 
     revalidatePath("/dashboard");
@@ -172,32 +172,46 @@ export async function createAccount(data) {
   }
 }
 
-export async function getDashboardData() {
+export async function getDashboardData(options = {}) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { clerkUserId: userId }
   });
 
   if (!user) {
     throw new Error("User not found");
   }
 
-  // Get current month transactions only
+  const { includePreviousMonth = false, includeAllMonths = false } = options;
+
+
   const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfMonth = includeAllMonths ?
+  undefined :
+  includePreviousMonth ?
+  new Date(now.getFullYear(), now.getMonth() - 1, 1) :
+  new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
   const transactions = await db.transaction.findMany({
     where: {
       userId: user.id,
-      date: {
-        gte: startOfMonth,
-        lte: endOfMonth,
-      },
+      ...(includeAllMonths ?
+      {
+        date: {
+          lte: endOfMonth
+        }
+      } :
+      {
+        date: {
+          gte: startOfMonth,
+          lte: endOfMonth
+        }
+      })
     },
-    orderBy: { date: "desc" },
+    orderBy: { date: "desc" }
   });
 
   return transactions.map(serializeTransaction);

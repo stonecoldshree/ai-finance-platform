@@ -10,16 +10,17 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  SelectValue } from
+"@/components/ui/select";
 import { toast } from "sonner";
 import { updatePhoneNumber, getPhoneNumber } from "@/actions/settings";
 import { sendTestSMS } from "@/actions/test-send-sms";
 import { getUserAccounts } from "@/actions/dashboard";
-import { deleteAccount } from "@/actions/account";
+import { deleteAccount, updateDefaultAccount } from "@/actions/account";
 import { Trash2, Sun, Moon, Monitor, Phone, Mail, Plus } from "lucide-react";
 import useFetch from "@/hooks/use-fetch";
 import { CreateAccountDrawer } from "@/components/create-account-drawer";
+import { Switch } from "@/components/ui/switch";
 
 export default function SettingsPage() {
   const [phone, setPhone] = useState("");
@@ -51,8 +52,15 @@ export default function SettingsPage() {
     loading: deleteLoading,
     fn: deleteFn,
     data: deleteResult,
-    error: deleteError,
+    error: deleteError
   } = useFetch(deleteAccount);
+
+  const {
+    loading: defaultLoading,
+    fn: updateDefaultFn,
+    data: updateDefaultResult,
+    error: defaultError
+  } = useFetch(updateDefaultAccount);
 
   useEffect(() => {
     if (deleteResult?.success) {
@@ -62,10 +70,23 @@ export default function SettingsPage() {
   }, [deleteResult]);
 
   useEffect(() => {
+    if (updateDefaultResult?.success) {
+      toast.success("Default account updated successfully");
+      loadAccounts();
+    }
+  }, [updateDefaultResult]);
+
+  useEffect(() => {
     if (deleteError) {
       toast.error(deleteError.message || "Failed to delete account");
     }
   }, [deleteError]);
+
+  useEffect(() => {
+    if (defaultError) {
+      toast.error(defaultError.message || "Failed to update default account");
+    }
+  }, [defaultError]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -108,15 +129,23 @@ export default function SettingsPage() {
       return;
     }
     if (!window.confirm(`Delete "${name}"? All transactions will be lost.`))
-      return;
+    return;
     await deleteFn(id);
+  };
+
+  const handleSetDefaultAccount = async (account) => {
+    if (account.isDefault) {
+      return;
+    }
+
+    await updateDefaultFn(account.id);
   };
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
       <h1 className="text-4xl font-bold gradient-title">Settings</h1>
 
-      {/* Appearance */}
+      {}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Appearance</CardTitle>
@@ -125,30 +154,30 @@ export default function SettingsPage() {
           <p className="text-sm text-muted-foreground mb-4">
             Choose your preferred theme
           </p>
-          {mounted && (
-            <div className="flex gap-3">
+          {mounted &&
+          <div className="flex gap-3">
               {[
-                { value: "light", icon: Sun, label: "Light" },
-                { value: "dark", icon: Moon, label: "Dark" },
-                { value: "system", icon: Monitor, label: "System" },
-              ].map((opt) => (
-                <Button
-                  key={opt.value}
-                  variant={theme === opt.value ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setTheme(opt.value)}
-                  className="flex items-center gap-2"
-                >
+            { value: "light", icon: Sun, label: "Light" },
+            { value: "dark", icon: Moon, label: "Dark" },
+            { value: "system", icon: Monitor, label: "System" }].
+            map((opt) =>
+            <Button
+              key={opt.value}
+              variant={theme === opt.value ? "default" : "outline"}
+              size="sm"
+              onClick={() => setTheme(opt.value)}
+              className="flex items-center gap-2">
+              
                   <opt.icon className="h-4 w-4" />
                   {opt.label}
                 </Button>
-              ))}
+            )}
             </div>
-          )}
+          }
         </CardContent>
       </Card>
 
-      {/* SMS Notifications */}
+      {}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
@@ -166,8 +195,8 @@ export default function SettingsPage() {
               type="tel"
               placeholder="+919876543210"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
+              onChange={(e) => setPhone(e.target.value)} />
+            
             <p className="text-xs text-muted-foreground mt-1">
               International format with country code (e.g. +91 for India)
             </p>
@@ -176,37 +205,37 @@ export default function SettingsPage() {
             <Button onClick={handleSave} disabled={saving}>
               {saving ? "Saving..." : "Save"}
             </Button>
-            {hasPhone && (
-              <Button
-                variant="outline"
-                onClick={handleTestSMS}
-                disabled={testing}
-              >
+            {hasPhone &&
+            <Button
+              variant="outline"
+              onClick={handleTestSMS}
+              disabled={testing}>
+              
                 {testing ? "Sending..." : "Send Test SMS"}
               </Button>
-            )}
-            {phone && (
-              <Button
-                variant="ghost"
-                className="text-red-500 hover:text-red-700"
-                onClick={() => {
-                  setPhone("");
-                  updatePhoneNumber("").then((result) => {
-                    if (result.success) {
-                      toast.success("Phone number removed.");
-                      setHasPhone(false);
-                    }
-                  });
-                }}
-              >
+            }
+            {phone &&
+            <Button
+              variant="ghost"
+              className="text-red-500 hover:text-red-700"
+              onClick={() => {
+                setPhone("");
+                updatePhoneNumber("").then((result) => {
+                  if (result.success) {
+                    toast.success("Phone number removed.");
+                    setHasPhone(false);
+                  }
+                });
+              }}>
+              
                 Remove
               </Button>
-            )}
+            }
           </div>
         </CardContent>
       </Card>
 
-      {/* Manage Accounts */}
+      {}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-lg">Manage Accounts</CardTitle>
@@ -218,56 +247,66 @@ export default function SettingsPage() {
           </CreateAccountDrawer>
         </CardHeader>
         <CardContent>
-          {accounts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+          {accounts.length === 0 ?
+          <p className="text-sm text-muted-foreground">
               No accounts found.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {accounts.map((account) => (
-                <div
-                  key={account.id}
-                  className="flex items-center justify-between p-3 rounded-lg border"
-                >
+            </p> :
+
+          <div className="space-y-3">
+              {accounts.map((account) =>
+            <div
+              key={account.id}
+              className="flex items-center justify-between p-3 rounded-lg border">
+              
                   <div>
                     <p className="font-medium capitalize">
                       {account.name}
-                      {account.isDefault && (
-                        <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                      {account.isDefault &&
+                  <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
                           Default
                         </span>
-                      )}
+                  }
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {account.type} &middot; ₹
                       {parseFloat(account.balance).toFixed(2)}
                     </p>
                   </div>
-                  {!account.isDefault && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() =>
-                        handleDeleteAccount(
-                          account.id,
-                          account.name,
-                          account.isDefault
-                        )
-                      }
-                      disabled={deleteLoading}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">Default</span>
+                      <Switch
+                    checked={account.isDefault}
+                    onCheckedChange={() => handleSetDefaultAccount(account)}
+                    disabled={defaultLoading} />
+                  
+                    </div>
+                    {!account.isDefault &&
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  onClick={() =>
+                  handleDeleteAccount(
+                    account.id,
+                    account.name,
+                    account.isDefault
+                  )
+                  }
+                  disabled={deleteLoading}>
+                  
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                }
+                  </div>
                 </div>
-              ))}
+            )}
             </div>
-          )}
+          }
         </CardContent>
       </Card>
 
-      {/* Contact Us */}
+      {}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
@@ -284,8 +323,8 @@ export default function SettingsPage() {
               Email:{" "}
               <a
                 href="mailto:support@gullak.app"
-                className="text-orange-600 hover:underline"
-              >
+                className="text-orange-600 hover:underline">
+                
                 support@gullak.app
               </a>
             </p>
@@ -295,6 +334,6 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }

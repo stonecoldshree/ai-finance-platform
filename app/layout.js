@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Gullak",
-  description: "One stop Finance Platform",
+  description: "One stop Finance Platform"
 };
 
 export default function RootLayout({ children }) {
@@ -24,14 +24,14 @@ export default function RootLayout({ children }) {
             attribute="class"
             defaultTheme="system"
             enableSystem
-            disableTransitionOnChange
-          >
+            disableTransitionOnChange>
+            
             <Header />
             <main className="min-h-screen">{children}</main>
             <Toaster richColors />
           </ThemeProvider>
         </body>
       </html>
-    </ClerkProvider>
-  );
+    </ClerkProvider>);
+
 }

@@ -11,7 +11,7 @@ const Header = async () => {
 
   return (
     <>
-      {/* Landing page header — only visible when signed out */}
+      {}
       <SignedOut>
         <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b">
           <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -21,8 +21,8 @@ const Header = async () => {
                 alt="Gullak Logo"
                 width={320}
                 height={128}
-                className="h-32 w-auto object-contain"
-              />
+                className="h-32 w-auto object-contain" />
+              
             </Link>
 
             <div className="hidden md:flex items-center space-x-8">
@@ -31,8 +31,8 @@ const Header = async () => {
               </a>
               <a
                 href="#testimonials"
-                className="text-gray-600 hover:text-orange-600"
-              >
+                className="text-gray-600 hover:text-orange-600">
+                
                 Testimonials
               </a>
             </div>
@@ -48,7 +48,7 @@ const Header = async () => {
         </header>
       </SignedOut>
 
-      {/* App top bar — only visible when signed in */}
+      {}
       <SignedIn>
         <header className="fixed top-0 right-0 left-0 md:left-64 h-16 bg-background/80 backdrop-blur-md z-30 border-b flex items-center justify-between px-4">
           <AppSidebar />
@@ -56,15 +56,15 @@ const Header = async () => {
             <UserButton
               appearance={{
                 elements: {
-                  avatarBox: "w-10 h-10",
-                },
-              }}
-            />
+                  avatarBox: "w-10 h-10"
+                }
+              }} />
+            
           </div>
         </header>
       </SignedIn>
-    </>
-  );
+    </>);
+
 };
 
 export default Header;

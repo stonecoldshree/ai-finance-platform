@@ -35,18 +35,18 @@ export default function PhonePromptBanner({ hasPhone }) {
       <div className="flex items-center gap-2 ml-4">
         <Button
           size="sm"
-          onClick={() => router.push("/settings")}
-        >
+          onClick={() => router.push("/settings")}>
+          
           Add Phone Number
         </Button>
         <button
           onClick={handleDismiss}
           className="text-orange-400 hover:text-orange-600 p-1"
-          aria-label="Dismiss"
-        >
+          aria-label="Dismiss">
+          
           <X size={18} />
         </button>
       </div>
-    </div>
-  );
+    </div>);
+
 }

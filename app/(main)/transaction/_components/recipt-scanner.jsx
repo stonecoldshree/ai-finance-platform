@@ -13,7 +13,7 @@ export function ReceiptScanner({ onScanComplete }) {
   const {
     loading: scanReceiptLoading,
     fn: scanReceiptFn,
-    data: scannedData,
+    data: scannedData
   } = useFetch(scanReceipt);
 
   const handleReceiptScan = async (file) => {
@@ -23,23 +23,23 @@ export function ReceiptScanner({ onScanComplete }) {
     }
 
     const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "application/pdf",
-    ];
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "application/pdf"];
+
 
     if (!allowedTypes.includes(file.type)) {
       toast.error("Please upload an image or PDF file");
       return;
     }
 
-    // Convert file to base64 on the client side since File objects
-    // can't be serialized across the client-server boundary
+
+
     const reader = new FileReader();
     reader.onloadend = async () => {
-      const base64String = reader.result.split(",")[1]; // Remove data:... prefix
+      const base64String = reader.result.split(",")[1];
       await scanReceiptFn({ base64: base64String, mimeType: file.type });
     };
     reader.readAsDataURL(file);
@@ -62,27 +62,27 @@ export function ReceiptScanner({ onScanComplete }) {
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handleReceiptScan(file);
-        }}
-      />
+        }} />
+      
       <Button
         type="button"
         variant="outline"
         className="w-full h-10 bg-gradient-to-br from-orange-500 to-orange-600 hover:opacity-90 transition-opacity text-white hover:text-white"
         onClick={() => fileInputRef.current?.click()}
-        disabled={scanReceiptLoading}
-      >
-        {scanReceiptLoading ? (
-          <>
+        disabled={scanReceiptLoading}>
+        
+        {scanReceiptLoading ?
+        <>
             <Loader2 className="mr-2 animate-spin" />
             <span>Scanning Receipt...</span>
-          </>
-        ) : (
-          <>
+          </> :
+
+        <>
             <Camera className="mr-2" />
             <span>Scan Receipt with AI (Image or PDF)</span>
           </>
-        )}
+        }
       </Button>
-    </div>
-  );
+    </div>);
+
 }

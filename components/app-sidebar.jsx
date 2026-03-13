@@ -11,39 +11,39 @@ import {
   Settings,
   Menu,
   X,
-  Mail,
-} from "lucide-react";
+  Mail } from
+"lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  SheetTitle } from
+"@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    label: "Add Transaction",
-    href: "/transaction/create",
-    icon: PenBox,
-  },
-  {
-    label: "Account Analytics",
-    href: "/account-analytics",
-    icon: BarChart3,
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: Settings,
-  },
-];
+{
+  label: "Dashboard",
+  href: "/dashboard",
+  icon: LayoutDashboard
+},
+{
+  label: "Add Transaction",
+  href: "/transaction/create",
+  icon: PenBox
+},
+{
+  label: "Account Analytics",
+  href: "/account-analytics",
+  icon: BarChart3
+},
+{
+  label: "Settings",
+  href: "/settings",
+  icon: Settings
+}];
+
 
 export function AppSidebar() {
   const [open, setOpen] = useState(false);
@@ -60,8 +60,8 @@ export function AppSidebar() {
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <SidebarContent pathname={pathname} onNavigate={() => setOpen(false)} />
       </SheetContent>
-    </Sheet>
-  );
+    </Sheet>);
+
 }
 
 export function DesktopSidebar() {
@@ -70,14 +70,14 @@ export function DesktopSidebar() {
   return (
     <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 border-r bg-card z-40">
       <SidebarContent pathname={pathname} />
-    </aside>
-  );
+    </aside>);
+
 }
 
 function SidebarContent({ pathname, onNavigate }) {
   return (
     <div className="flex flex-col h-full">
-      {/* Logo */}
+      {}
       <div className="flex items-center px-4 py-4 border-b">
         <Link href="/dashboard" onClick={onNavigate}>
           <Image
@@ -85,16 +85,16 @@ function SidebarContent({ pathname, onNavigate }) {
             alt="Gullak Logo"
             width={160}
             height={64}
-            className="h-12 w-auto object-contain dark:invert"
-          />
+            className="h-12 w-auto object-contain dark:invert" />
+          
         </Link>
       </div>
 
-      {/* Navigation */}
+      {}
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map((item) => {
           const isActive =
-            pathname === item.href || pathname.startsWith(item.href + "/");
+          pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.href}
@@ -102,25 +102,25 @@ function SidebarContent({ pathname, onNavigate }) {
               onClick={onNavigate}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              )}
-            >
+                isActive ?
+                "bg-primary text-primary-foreground" :
+                "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              )}>
+              
               <item.icon className="h-5 w-5" />
               {item.label}
-            </Link>
-          );
+            </Link>);
+
         })}
       </nav>
 
-      {/* Footer */}
+      {}
       <div className="px-3 py-4 border-t">
         <Link
           href="/settings"
           onClick={onNavigate}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground transition-colors">
+          
           <Mail className="h-4 w-4" />
           Contact Us
         </Link>
@@ -128,6 +128,6 @@ function SidebarContent({ pathname, onNavigate }) {
           Gullak v1.0
         </p>
       </div>
-    </div>
-  );
+    </div>);
+
 }

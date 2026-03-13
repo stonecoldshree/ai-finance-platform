@@ -10,7 +10,7 @@ export async function sendEmail({ to, subject, react }) {
       from: "Finance App <onboarding@resend.dev>",
       to,
       subject,
-      react,
+      react
     });
 
     return { success: true, data };

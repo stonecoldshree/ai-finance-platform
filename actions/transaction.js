@@ -16,7 +16,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const serializeAmount = (obj) => ({
   ...obj,
-  amount: obj.amount.toNumber(),
+  amount: obj.amount.toNumber()
 });
 
 
@@ -31,7 +31,7 @@ export async function createTransaction(data) {
 
     const decision = await aj.protect(req, {
       userId,
-      requested: 1, // Specify how many tokens to consume
+      requested: 1
     });
 
     if (decision.isDenied()) {
@@ -41,8 +41,8 @@ export async function createTransaction(data) {
           code: "RATE_LIMIT_EXCEEDED",
           details: {
             remaining,
-            resetInSeconds: reset,
-          },
+            resetInSeconds: reset
+          }
         });
 
         throw new Error("Too many requests. Please try again later.");
@@ -52,7 +52,7 @@ export async function createTransaction(data) {
     }
 
     const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
+      where: { clerkUserId: userId }
     });
 
     if (!user) {
@@ -62,8 +62,8 @@ export async function createTransaction(data) {
     const account = await db.account.findUnique({
       where: {
         id: data.accountId,
-        userId: user.id,
-      },
+        userId: user.id
+      }
     });
 
     if (!account) {
@@ -81,15 +81,15 @@ export async function createTransaction(data) {
           ...data,
           userId: user.id,
           nextRecurringDate:
-            data.isRecurring && data.recurringInterval
-              ? calculateNextRecurringDate(data.date, data.recurringInterval)
-              : null,
-        },
+          data.isRecurring && data.recurringInterval ?
+          calculateNextRecurringDate(data.date, data.recurringInterval) :
+          null
+        }
       });
 
       await tx.account.update({
         where: { id: data.accountId },
-        data: { balance: newBalance },
+        data: { balance: newBalance }
       });
 
       return newTransaction;
@@ -104,10 +104,10 @@ export async function createTransaction(data) {
       const recentTransactions = await db.transaction.findMany({
         where: {
           userId: user.id,
-          accountId: data.accountId,
+          accountId: data.accountId
         },
         orderBy: { date: "desc" },
-        take: 5,
+        take: 5
       });
 
       const prompt = `
@@ -115,7 +115,7 @@ export async function createTransaction(data) {
         Remaining Account Balance: ₹${newBalance}.
         
         Recent Spending Context (last 5 transactions):
-        ${recentTransactions.map(t => `- ${t.date.toISOString().split('T')[0]}: ₹${t.amount.toNumber()} (${t.category})`).join('\n')}
+        ${recentTransactions.map((t) => `- ${t.date.toISOString().split('T')[0]}: ₹${t.amount.toNumber()} (${t.category})`).join('\n')}
         
         Based on this single transaction and their recent spending pattern, provide 3 concise, friendly, and actionable financial tips.
         Focus on how they can use their remaining money effectively or adjust habits.
@@ -130,10 +130,10 @@ export async function createTransaction(data) {
       console.error("AI Advice Error:", aiError);
 
       advice = [
-        "Track your daily expenses.",
-        "Check your budget regularly.",
-        "Save for upcoming goals.",
-      ];
+      "Track your daily expenses.",
+      "Check your budget regularly.",
+      "Save for upcoming goals."];
+
     }
 
     try {
@@ -147,15 +147,15 @@ export async function createTransaction(data) {
             amount: transaction.amount.toNumber(),
             description: transaction.description,
             category: transaction.category,
-            advice,
-          },
-        }),
+            advice
+          }
+        })
       });
     } catch (emailError) {
       console.error("Error sending transaction email:", emailError.message);
     }
 
-    // Send SMS notification
+
     console.log("SMS CHECK - user.phoneNumber:", user.phoneNumber, "user.email:", user.email);
     if (user.phoneNumber) {
       try {
@@ -166,8 +166,8 @@ export async function createTransaction(data) {
             amount: transaction.amount.toNumber(),
             description: transaction.description,
             category: transaction.category,
-            advice,
-          }),
+            advice
+          })
         });
         if (smsResult.success) {
           console.log("Transaction SMS sent:", smsResult.data?.sid);
@@ -193,7 +193,7 @@ export async function getTransaction(id) {
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { clerkUserId: userId }
   });
 
   if (!user) throw new Error("User not found");
@@ -201,8 +201,8 @@ export async function getTransaction(id) {
   const transaction = await db.transaction.findUnique({
     where: {
       id,
-      userId: user.id,
-    },
+      userId: user.id
+    }
   });
 
   if (!transaction) throw new Error("Transaction not found");
@@ -216,7 +216,7 @@ export async function updateTransaction(id, data) {
     if (!userId) throw new Error("Unauthorized");
 
     const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
+      where: { clerkUserId: userId }
     });
 
     if (!user) throw new Error("User not found");
@@ -225,23 +225,23 @@ export async function updateTransaction(id, data) {
     const originalTransaction = await db.transaction.findUnique({
       where: {
         id,
-        userId: user.id,
+        userId: user.id
       },
       include: {
-        account: true,
-      },
+        account: true
+      }
     });
 
     if (!originalTransaction) throw new Error("Transaction not found");
 
 
     const oldBalanceChange =
-      originalTransaction.type === "EXPENSE"
-        ? -originalTransaction.amount.toNumber()
-        : originalTransaction.amount.toNumber();
+    originalTransaction.type === "EXPENSE" ?
+    -originalTransaction.amount.toNumber() :
+    originalTransaction.amount.toNumber();
 
     const newBalanceChange =
-      data.type === "EXPENSE" ? -data.amount : data.amount;
+    data.type === "EXPENSE" ? -data.amount : data.amount;
 
     const netBalanceChange = newBalanceChange - oldBalanceChange;
 
@@ -250,15 +250,15 @@ export async function updateTransaction(id, data) {
       const updated = await tx.transaction.update({
         where: {
           id,
-          userId: user.id,
+          userId: user.id
         },
         data: {
           ...data,
           nextRecurringDate:
-            data.isRecurring && data.recurringInterval
-              ? calculateNextRecurringDate(data.date, data.recurringInterval)
-              : null,
-        },
+          data.isRecurring && data.recurringInterval ?
+          calculateNextRecurringDate(data.date, data.recurringInterval) :
+          null
+        }
       });
 
 
@@ -266,9 +266,9 @@ export async function updateTransaction(id, data) {
         where: { id: data.accountId },
         data: {
           balance: {
-            increment: netBalanceChange,
-          },
-        },
+            increment: netBalanceChange
+          }
+        }
       });
 
       return updated;
@@ -290,7 +290,7 @@ export async function getUserTransactions(query = {}) {
     if (!userId) throw new Error("Unauthorized");
 
     const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
+      where: { clerkUserId: userId }
     });
 
     if (!user) {
@@ -300,14 +300,14 @@ export async function getUserTransactions(query = {}) {
     const transactions = await db.transaction.findMany({
       where: {
         userId: user.id,
-        ...query,
+        ...query
       },
       include: {
-        account: true,
+        account: true
       },
       orderBy: {
-        date: "desc",
-      },
+        date: "desc"
+      }
     });
 
     return { success: true, data: transactions };
@@ -342,8 +342,8 @@ export async function scanReceipt(fileData) {
     const text = await generateAIContent(prompt, {
       inlineData: {
         data: fileData.base64,
-        mimeType: fileData.mimeType,
-      },
+        mimeType: fileData.mimeType
+      }
     });
 
     console.log("Gemini response:", text);
@@ -355,7 +355,7 @@ export async function scanReceipt(fileData) {
       date: new Date(data.date),
       description: data.description,
       category: data.category,
-      merchantName: data.merchantName,
+      merchantName: data.merchantName
     };
   } catch (error) {
     console.error("Failed to scan receipt:", error.message, error.stack);

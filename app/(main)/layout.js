@@ -16,8 +16,8 @@ const MainLayout = async ({ children }) => {
           {children}
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default MainLayout;

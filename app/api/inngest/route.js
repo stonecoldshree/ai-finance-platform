@@ -6,16 +6,16 @@ import {
   generateMonthlyReports,
   processRecurringTransaction,
   triggerRecurringTransactions,
-  generateBudgetCoach,
-} from "@/lib/inngest/function";
+  generateBudgetCoach } from
+"@/lib/inngest/function";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
-    processRecurringTransaction,
-    triggerRecurringTransactions,
-    generateMonthlyReports,
-    checkBudgetAlerts,
-    generateBudgetCoach,
-  ],
+  processRecurringTransaction,
+  triggerRecurringTransactions,
+  generateMonthlyReports,
+  checkBudgetAlerts,
+  generateBudgetCoach]
+
 });

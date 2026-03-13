@@ -9,25 +9,25 @@ export async function updatePhoneNumber(phoneNumber) {
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { clerkUserId: userId }
   });
 
   if (!user) throw new Error("User not found");
 
-  // Allow clearing the phone number
+
   const sanitized = phoneNumber?.trim() || null;
 
-  // Basic E.164 format validation if a number is provided
+
   if (sanitized && !/^\+[1-9]\d{6,14}$/.test(sanitized)) {
     return {
       success: false,
-      error: "Please enter a valid phone number in international format (e.g. +919876543210)",
+      error: "Please enter a valid phone number in international format (e.g. +919876543210)"
     };
   }
 
   await db.user.update({
     where: { id: user.id },
-    data: { phoneNumber: sanitized },
+    data: { phoneNumber: sanitized }
   });
 
   revalidatePath("/settings");
@@ -40,7 +40,7 @@ export async function getPhoneNumber() {
 
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },
-    select: { phoneNumber: true },
+    select: { phoneNumber: true }
   });
 
   return user?.phoneNumber || null;

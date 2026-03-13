@@ -7,23 +7,23 @@ async function main() {
 
   for (const b of budgets) {
     const defaultAcc = await db.account.findFirst({
-      where: { userId: b.userId, isDefault: true },
+      where: { userId: b.userId, isDefault: true }
     });
 
     if (defaultAcc) {
       await db.budget.update({
         where: { id: b.id },
-        data: { accountId: defaultAcc.id },
+        data: { accountId: defaultAcc.id }
       });
       console.log("Updated budget", b.id, "with account", defaultAcc.id);
     } else {
       const anyAcc = await db.account.findFirst({
-        where: { userId: b.userId },
+        where: { userId: b.userId }
       });
       if (anyAcc) {
         await db.budget.update({
           where: { id: b.id },
-          data: { accountId: anyAcc.id },
+          data: { accountId: anyAcc.id }
         });
         console.log("Updated budget", b.id, "with account", anyAcc.id);
       } else {

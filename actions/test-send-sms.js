@@ -10,7 +10,7 @@ export async function sendTestSMS() {
     if (!userId) throw new Error("Unauthorized");
 
     const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
+      where: { clerkUserId: userId }
     });
 
     if (!user) throw new Error("User not found");
@@ -18,13 +18,13 @@ export async function sendTestSMS() {
     if (!user.phoneNumber) {
       return {
         success: false,
-        error: "No phone number found. Please add one in Settings.",
+        error: "No phone number found. Please add one in Settings."
       };
     }
 
     const result = await sendSMS({
       to: user.phoneNumber,
-      body: `Test SMS from Gullak! Hello ${user.name || "User"}, your SMS configuration is working correctly. 🎉`,
+      body: `Test SMS from Gullak! Hello ${user.name || "User"}, your SMS configuration is working correctly. 🎉`
     });
 
     if (!result.success) {

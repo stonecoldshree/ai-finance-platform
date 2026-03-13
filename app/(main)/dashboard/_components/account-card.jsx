@@ -10,8 +10,8 @@ import {
   CardContent,
   CardFooter,
   CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  CardTitle } from
+"@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,8 +21,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  AlertDialogTrigger } from
+"@/components/ui/alert-dialog";
 import Link from "next/link";
 import { updateDefaultAccount, deleteAccount } from "@/actions/account";
 import { toast } from "sonner";
@@ -34,22 +34,22 @@ export function AccountCard({ account }) {
     loading: updateDefaultLoading,
     fn: updateDefaultFn,
     data: updatedAccount,
-    error,
+    error
   } = useFetch(updateDefaultAccount);
 
   const {
     loading: deleteLoading,
     fn: deleteFn,
     data: deleteResult,
-    error: deleteError,
+    error: deleteError
   } = useFetch(deleteAccount);
 
   const handleDefaultChange = async (event) => {
-    event.preventDefault(); // Prevent navigation
+    event.preventDefault();
 
     if (isDefault) {
       toast.warning("You need atleast 1 default account");
-      return; // Don't allow toggling off the default account
+      return;
     }
 
     await updateDefaultFn(id);
@@ -99,8 +99,8 @@ export function AccountCard({ account }) {
           <Switch
             checked={isDefault}
             onClick={handleDefaultChange}
-            disabled={updateDefaultLoading}
-          />
+            disabled={updateDefaultLoading} />
+          
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
@@ -122,14 +122,14 @@ export function AccountCard({ account }) {
         </CardFooter>
       </Link>
 
-      {/* Delete Button - hidden for default accounts */}
-      {!isDefault && (
-        <div className="absolute top-2 right-24 z-10" onClick={(e) => e.stopPropagation()}>
+      {}
+      {!isDefault &&
+      <div className="absolute top-2 right-24 z-10" onClick={(e) => e.stopPropagation()}>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <button
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-              >
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+              
                 <Trash2 className="h-4 w-4" />
               </button>
             </AlertDialogTrigger>
@@ -144,17 +144,17 @@ export function AccountCard({ account }) {
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={handleDelete}
-                  disabled={deleteLoading}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                
                   {deleteLoading ? "Deleting..." : "Delete"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
         </div>
-      )}
-    </Card>
-  );
+      }
+    </Card>);
+
 }

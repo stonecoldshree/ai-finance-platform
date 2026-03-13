@@ -23,8 +23,8 @@ export default async function AddTransactionPage({ searchParams }) {
         accounts={accounts}
         categories={defaultCategories}
         editMode={!!editId}
-        initialData={initialData}
-      />
-    </div>
-  );
+        initialData={initialData} />
+      
+    </div>);
+
 }

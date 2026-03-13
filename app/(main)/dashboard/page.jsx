@@ -1,27 +1,14 @@
 import { getUserAccounts } from "@/actions/dashboard";
 import { getDashboardData } from "@/actions/dashboard";
-import { DashboardOverview } from "./_components/transaction-overview";
-import { DashboardSummary } from "./_components/dashboard-summary";
+import DashboardClient from "./_components/dashboard-client";
 
 export default async function DashboardPage() {
   const [accounts, transactions] = await Promise.all([
-    getUserAccounts(),
-    getDashboardData(),
-  ]);
+  getUserAccounts(),
+  getDashboardData({ includeAllMonths: true })]
+  );
 
   return (
-    <div className="space-y-8">
-      {/* Summary Cards */}
-      <DashboardSummary
-        accounts={accounts}
-        transactions={transactions || []}
-      />
+    <DashboardClient accounts={accounts} transactions={transactions || []} />);
 
-      {/* Dashboard Overview */}
-      <DashboardOverview
-        accounts={accounts}
-        transactions={transactions || []}
-      />
-    </div>
-  );
 }
