@@ -1,51 +1,43 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import Image from "next/image";
 import {
   featuresData,
   howItWorksData,
-  statsData,
   testimonialsData } from
 "@/data/landing";
 import HeroSection from "@/components/hero";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 const LandingPage = () => {
-  return (
-    <div className="min-h-screen bg-white pt-40">
-      {}
-      <HeroSection />
+  const topFeatures = featuresData.slice(0, 4);
 
-      {}
-      <section className="py-20 bg-orange-50">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {statsData.map((stat, index) =>
-            <div key={index} className="text-center">
-                <div className="text-4xl font-bold text-orange-600 mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-gray-600">{stat.label}</div>
-              </div>
-            )}
-          </div>
-        </div>
+  return (
+    <div className="landing-shell min-h-screen pt-24 md:pt-20">
+      <section className="landing-section px-2 md:px-4">
+        <HeroSection />
       </section>
 
-      {}
-      <section id="features" className="py-20">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Everything you need to manage your finances
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuresData.map((feature, index) =>
-            <Card className="p-6" key={index}>
-                <CardContent className="space-y-4 pt-4">
-                  {feature.icon}
-                  <h3 className="text-xl font-semibold">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.description}</p>
+      <section id="features" className="landing-section px-4 py-14 md:flex md:items-center md:py-0">
+        <div className="container mx-auto">
+          <div className="landing-fade-up mx-auto max-w-3xl text-center">
+            <p className="text-xs uppercase tracking-[0.18em] text-orange-600">Product signal</p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-5xl">Everything essential. Nothing noisy.</h2>
+            <p className="mt-4 text-muted-foreground">
+              Built for short attention spans: fast capture, clear analytics, and actionable feedback.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            {topFeatures.map((feature, index) =>
+            <Card key={index} className={`landing-fade-up landing-hover-lift border-orange-100/80 bg-card/80 backdrop-blur dark:border-orange-900/40 ${index % 2 === 0 ? "landing-delay-1" : "landing-delay-2"}`}>
+                <CardContent className="space-y-3 p-5">
+                  <div className="inline-flex rounded-lg bg-orange-100 p-2 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-lg font-semibold">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground">{feature.description}</p>
                 </CardContent>
               </Card>
             )}
@@ -53,75 +45,49 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {}
-      <section className="py-20 bg-orange-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-16">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+      <section id="proof" className="landing-section px-4 py-14 md:flex md:items-center md:py-0">
+        <div className="container mx-auto space-y-10">
+          <div className="landing-fade-up mx-auto max-w-3xl text-center">
+            <p className="text-xs uppercase tracking-[0.18em] text-orange-600">Trust and conversion</p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-5xl">See the value in under a minute.</h2>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
             {howItWorksData.map((step, index) =>
-            <div key={index} className="text-center">
-                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div key={index} className={`landing-fade-up landing-hover-lift rounded-2xl border bg-card/70 p-5 text-center landing-delay-${Math.min(index + 1, 3)}`}>
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">
                   {step.icon}
                 </div>
-                <h3 className="text-xl font-semibold mb-4">{step.title}</h3>
-                <p className="text-gray-600">{step.description}</p>
+                <h3 className="text-lg font-semibold">{step.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{step.description}</p>
               </div>
             )}
           </div>
-        </div>
-      </section>
 
-      {}
-      <section id="testimonials" className="py-20">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-16">
-            What Our Users Say
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonialsData.map((testimonial, index) =>
-            <Card key={index} className="p-6">
-                <CardContent className="pt-4">
-                  <div className="flex items-center mb-4">
-                    <Image
-                    src={testimonial.image}
-                    alt={testimonial.name}
-                    width={40}
-                    height={40}
-                    className="rounded-full" />
-                  
-                    <div className="ml-4">
-                      <div className="font-semibold">{testimonial.name}</div>
-                      <div className="text-sm text-gray-600">
-                        {testimonial.role}
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-gray-600">{testimonial.quote}</p>
+          <div id="testimonials" className="grid gap-4 md:grid-cols-2">
+            {testimonialsData.slice(0, 2).map((testimonial, index) =>
+            <Card key={index} className={`landing-fade-up landing-hover-lift border bg-card/80 ${index === 0 ? "landing-delay-1" : "landing-delay-2"}`}>
+                <CardContent className="p-5">
+                  <p className="text-sm leading-relaxed text-muted-foreground">"{testimonial.quote}"</p>
+                  <p className="mt-3 text-sm font-semibold">{testimonial.name}</p>
+                  <p className="text-xs text-muted-foreground">{testimonial.role}</p>
                 </CardContent>
               </Card>
             )}
           </div>
-        </div>
-      </section>
 
-      {}
-      <section className="py-20 bg-orange-600">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to Take Control of Your Finances?
-          </h2>
-          <p className="text-orange-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of users who are already managing their finances
-            smarter with Gullak
-          </p>
-          <Link href="/dashboard">
-            <Button
-              size="lg"
-              className="bg-white text-orange-600 hover:bg-orange-50 animate-bounce">
-              
-              Get Started Now
-            </Button>
-          </Link>
+          <div className="landing-fade-up landing-delay-3 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-500 p-6 text-center text-white md:p-8">
+            <h3 className="text-2xl font-bold">Ready to run your money like a control room?</h3>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-orange-50 md:text-base">
+              Jump in, log your first transactions, and watch real insights kick in.
+            </p>
+            <Link href="/dashboard" className="mt-5 inline-flex">
+              <Button size="lg" className="landing-pulse bg-white text-orange-700 hover:bg-orange-100">
+                Launch Gullak
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
     </div>);

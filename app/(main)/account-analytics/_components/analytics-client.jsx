@@ -20,7 +20,8 @@ import {
   ArrowDownRight,
   TrendingUp,
   TrendingDown,
-  Wallet } from
+  Wallet,
+  Minus } from
 "lucide-react";
 
 import {
@@ -74,6 +75,11 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
   split("-").
   map(Number);
 
+  const previousMonthDate = new Date(analysisYear, analysisMonth - 1, 1);
+  previousMonthDate.setMonth(previousMonthDate.getMonth() - 1);
+  const previousYear = previousMonthDate.getFullYear();
+  const previousMonth = previousMonthDate.getMonth() + 1;
+
   const periodLabel = formatMonthValue(selectedMonth);
 
   const isInAnalysisMonth = (dateValue) => {
@@ -81,6 +87,14 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
     return (
       date.getMonth() + 1 === analysisMonth &&
       date.getFullYear() === analysisYear);
+
+  };
+
+  const isInPreviousMonth = (dateValue) => {
+    const date = new Date(dateValue);
+    return (
+      date.getMonth() + 1 === previousMonth &&
+      date.getFullYear() === previousYear);
 
   };
 
@@ -119,6 +133,17 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
     sort((a, b) => b.value - a.value);
   }, [accountTransactions, analysisMonth, analysisYear]);
 
+  const previousCategoryTotals = useMemo(() => {
+    const previousExpenses = accountTransactions.filter(
+      (t) => t.type === "EXPENSE" && isInPreviousMonth(t.date)
+    );
+
+    return previousExpenses.reduce((totals, transaction) => {
+      totals[transaction.category] = (totals[transaction.category] || 0) + transaction.amount;
+      return totals;
+    }, {});
+  }, [accountTransactions, previousMonth, previousYear]);
+
 
   const dailyData = useMemo(() => {
     const monthTxns = accountTransactions.filter((t) => isInAnalysisMonth(t.date));
@@ -146,6 +171,38 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
   }, [accountTransactions, analysisMonth, analysisYear]);
 
   const selectedAccount = accounts.find((a) => a.id === selectedAccountId);
+
+  const analyticsInsights = useMemo(() => {
+    const expenseDays = dailyData.filter((day) => day.expense > 0);
+    const averageDailyExpense =
+      expenseDays.length > 0 ?
+      expenseDays.reduce((sum, day) => sum + day.expense, 0) / expenseDays.length :
+      0;
+
+    const peakExpenseDay =
+      expenseDays.length > 0 ?
+      expenseDays.reduce((peak, day) => day.expense > peak.expense ? day : peak, expenseDays[0]) :
+      null;
+
+    const savingsRate =
+      monthStats.income > 0 ?
+      ((monthStats.income - monthStats.expense) / monthStats.income) * 100 :
+      0;
+
+    const topCategory = categoryData[0];
+    const topCategoryShare =
+      monthStats.expense > 0 && topCategory ?
+      topCategory.value / monthStats.expense * 100 :
+      0;
+
+    return {
+      averageDailyExpense,
+      peakExpenseDay,
+      savingsRate,
+      topCategory,
+      topCategoryShare
+    };
+  }, [dailyData, monthStats.income, monthStats.expense, categoryData]);
 
   return (
     <div className="space-y-6">
@@ -254,6 +311,66 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
           </CardContent>
         </Card>
       </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">Average Daily Expense</p>
+            <p className="mt-1 text-2xl font-bold text-red-500">
+              ₹{analyticsInsights.averageDailyExpense.toFixed(2)}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Based on active spending days in {periodLabel}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">Peak Spending Day</p>
+            <p className="mt-1 text-2xl font-bold text-orange-500">
+              {analyticsInsights.peakExpenseDay ?
+              analyticsInsights.peakExpenseDay.date :
+              "N/A"
+              }
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {analyticsInsights.peakExpenseDay ?
+              `₹${analyticsInsights.peakExpenseDay.expense.toFixed(2)} spent` :
+              "No expense data yet"
+              }
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">Savings Rate</p>
+            <p
+              className={cn(
+                "mt-1 text-2xl font-bold",
+                analyticsInsights.savingsRate >= 20 ? "text-green-500" : "text-orange-500"
+              )}>
+
+              {analyticsInsights.savingsRate.toFixed(1)}%
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Income retained after monthly spending</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {analyticsInsights.topCategory &&
+      <Card className="border-orange-200/60 bg-orange-50/40 dark:border-orange-900/40 dark:bg-orange-950/10">
+          <CardContent className="pt-6">
+            <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Insight of the month</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {analyticsInsights.topCategory.name} contributes {analyticsInsights.topCategoryShare.toFixed(1)}% of your monthly expense total.
+              {analyticsInsights.topCategoryShare >= 35 ?
+              " This category is highly concentrated, so optimizing it can quickly improve net cashflow." :
+              " Your category distribution is fairly balanced this month."
+              }
+            </p>
+          </CardContent>
+        </Card>
+      }
 
       {}
       <div className="grid gap-4 md:grid-cols-2">
@@ -372,6 +489,10 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
               {categoryData.slice(0, 5).map((cat, i) => {
               const total = categoryData.reduce((s, c) => s + c.value, 0);
               const pct = (cat.value / total * 100).toFixed(1);
+              const previousValue = previousCategoryTotals[cat.name] || 0;
+              const delta = cat.value - previousValue;
+              const deltaPct = previousValue > 0 ? delta / previousValue * 100 : delta > 0 ? 100 : 0;
+              const trendState = Math.abs(delta) < 0.01 ? "stable" : delta > 0 ? "up" : "down";
               return (
                 <div key={cat.name} className="flex items-center gap-3">
                     <div
@@ -386,6 +507,26 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
                         <span className="text-muted-foreground">
                           ₹{cat.value.toFixed(2)} ({pct}%)
                         </span>
+                      </div>
+                      <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                        {trendState === "up" &&
+                        <>
+                            <ArrowUpRight className="h-3.5 w-3.5 text-red-500" />
+                            <span className="text-red-500">+{deltaPct.toFixed(1)}% vs previous month</span>
+                          </>
+                        }
+                        {trendState === "down" &&
+                        <>
+                            <ArrowDownRight className="h-3.5 w-3.5 text-green-500" />
+                            <span className="text-green-500">{deltaPct.toFixed(1)}% vs previous month</span>
+                          </>
+                        }
+                        {trendState === "stable" &&
+                        <>
+                            <Minus className="h-3.5 w-3.5" />
+                            <span>Stable vs previous month</span>
+                          </>
+                        }
                       </div>
                       <div className="mt-1 h-2 bg-muted rounded-full overflow-hidden">
                         <div

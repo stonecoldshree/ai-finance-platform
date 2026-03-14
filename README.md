@@ -21,4 +21,43 @@ GEMINI_API_KEY=
 RESEND_API_KEY=
 
 ARCJET_KEY=
+
+ENABLE_EMAIL_NOTIFICATIONS=true
+ENABLE_SMS_NOTIFICATIONS=false
+SMS_CRITICAL_ONLY=true
+
+ENABLE_REALTIME_AI_ADVICE=false
+ENABLE_SCHEDULED_AI_INSIGHTS=false
+GEMINI_DAILY_LIMIT=250
+GEMINI_PER_MINUTE_LIMIT=20
+INNGEST_MAX_USERS_PER_RUN=25
+
+ENABLE_BENCHMARK_API=false
+BENCHMARK_API_TOKEN=
+
+EMAIL_FROM_ADDRESS=
+
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_PHONE_NUMBER=
 ```
+
+### Launch Readiness
+
+Run launch checks locally:
+
+```bash
+npm run check:launch
+```
+
+Health endpoint for deployment verification:
+
+```bash
+GET /api/health
+```
+
+Expected behavior in launch mode:
+
+- Email is the primary channel for weekly/monthly digests.
+- SMS is reserved for critical alerts by default.
+- Dashboard insights continue with rule-based logic if AI quota is exhausted.

@@ -7,7 +7,10 @@ const isProtectedRoute = createRouteMatcher([
 "/account(.*)",
 "/account-analytics(.*)",
 "/transaction(.*)",
-"/settings(.*)"]
+"/settings(.*)",
+"/goals(.*)",
+"/recurring-transactions(.*)",
+"/reports(.*)"]
 );
 
 

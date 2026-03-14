@@ -8,9 +8,12 @@ import {
   LayoutDashboard,
   PenBox,
   BarChart3,
+  Target,
+  Repeat,
+  FileSpreadsheet,
   Settings,
   Menu,
-  X,
+  Sparkles,
   Mail } from
 "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,26 +25,49 @@ import {
 "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+const navGroups = [
 {
-  label: "Dashboard",
-  href: "/dashboard",
-  icon: LayoutDashboard
+  title: "Workspace",
+  items: [
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard
+  },
+  {
+    label: "Analytics",
+    href: "/account-analytics",
+    icon: BarChart3
+  },
+  {
+    label: "Goals",
+    href: "/goals",
+    icon: Target
+  },
+  {
+    label: "Recurring Center",
+    href: "/recurring-transactions",
+    icon: Repeat
+  },
+  {
+    label: "Reports",
+    href: "/reports",
+    icon: FileSpreadsheet
+  }]
 },
 {
-  label: "Add Transaction",
-  href: "/transaction/create",
-  icon: PenBox
-},
-{
-  label: "Account Analytics",
-  href: "/account-analytics",
-  icon: BarChart3
-},
-{
-  label: "Settings",
-  href: "/settings",
-  icon: Settings
+  title: "Actions",
+  items: [
+  {
+    label: "Quick Add",
+    href: "/transaction/create",
+    icon: PenBox
+  },
+  {
+    label: "Preferences",
+    href: "/settings",
+    icon: Settings
+  }]
 }];
 
 
@@ -91,27 +117,44 @@ function SidebarContent({ pathname, onNavigate }) {
       </div>
 
       {}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) => {
-          const isActive =
-          pathname === item.href || pathname.startsWith(item.href + "/");
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                isActive ?
-                "bg-primary text-primary-foreground" :
-                "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              )}>
-              
-              <item.icon className="h-5 w-5" />
-              {item.label}
-            </Link>);
+      <nav className="flex-1 px-3 py-4 space-y-5">
+        <div className="rounded-xl border bg-gradient-to-r from-orange-100/70 to-amber-100/70 p-3 dark:from-orange-900/20 dark:to-amber-900/10">
+          <p className="flex items-center gap-2 text-sm font-medium text-orange-800 dark:text-orange-300">
+            <Sparkles className="h-4 w-4" />
+            This Week's Focus
+          </p>
+          <p className="mt-1 text-xs text-orange-700/90 dark:text-orange-200/80">
+            Keep expenses below income and log every transaction on the same day.
+          </p>
+        </div>
 
-        })}
+        {navGroups.map((group) =>
+        <div key={group.title} className="space-y-1">
+            <p className="px-3 pb-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+              {group.title}
+            </p>
+            {group.items.map((item) => {
+            const isActive =
+            pathname === item.href || pathname.startsWith(item.href + "/");
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onNavigate}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  isActive ?
+                  "bg-primary text-primary-foreground" :
+                  "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}>
+
+                  <item.icon className="h-5 w-5" />
+                  {item.label}
+                </Link>);
+
+          })}
+          </div>
+        )}
       </nav>
 
       {}
@@ -125,7 +168,7 @@ function SidebarContent({ pathname, onNavigate }) {
           Contact Us
         </Link>
         <p className="text-xs text-muted-foreground px-3 mt-2">
-          Gullak v1.0
+          Gullak v1.1 Premium Preview
         </p>
       </div>
     </div>);

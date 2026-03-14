@@ -83,7 +83,7 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="text-base font-normal">
-            Recent Transactions ({selectedMonthLabel})
+            Latest Activity ({selectedMonthLabel})
           </CardTitle>
           <div className="flex items-center gap-2">
             <Select
@@ -107,7 +107,7 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
           <div className="space-y-4">
             {recentTransactions.length === 0 ?
             <p className="text-center text-muted-foreground py-4">
-                No recent transactions
+                No activity for this month yet. Add your first entry to start insight tracking.
               </p> :
 
             recentTransactions.map((transaction) =>
@@ -151,13 +151,13 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-normal">
-            Expense Breakdown ({selectedMonthLabel})
+            Expense Mix ({selectedMonthLabel})
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0 pb-5">
           {pieChartData.length === 0 ?
           <p className="text-center text-muted-foreground py-4">
-              No expenses for this month
+              Expense data will appear here once you record expense transactions.
             </p> :
 
           <div className="h-[300px]">

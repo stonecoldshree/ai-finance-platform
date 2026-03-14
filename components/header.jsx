@@ -13,7 +13,7 @@ const Header = async () => {
     <>
       {}
       <SignedOut>
-        <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b">
+        <header className="fixed top-0 w-full bg-background/75 backdrop-blur-xl z-50 border-b border-orange-100/70 dark:border-orange-900/30">
           <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
             <Link href="/">
               <Image
@@ -21,19 +21,19 @@ const Header = async () => {
                 alt="Gullak Logo"
                 width={320}
                 height={128}
-                className="h-32 w-auto object-contain" />
+                className="h-20 w-auto object-contain" />
               
             </Link>
 
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-gray-600 hover:text-orange-600">
+              <a href="#features" className="text-muted-foreground hover:text-orange-600">
                 Features
               </a>
               <a
-                href="#testimonials"
-                className="text-gray-600 hover:text-orange-600">
+                href="#proof"
+                className="text-muted-foreground hover:text-orange-600">
                 
-                Testimonials
+                Proof
               </a>
             </div>
 

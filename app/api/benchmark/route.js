@@ -33,7 +33,26 @@ async function timedRun(label, fn, runs = 5) {
   };
 }
 
-export async function GET() {
+export async function GET(request) {
+  const benchmarkEnabled = String(process.env.ENABLE_BENCHMARK_API || "false").toLowerCase() === "true";
+  if (!benchmarkEnabled) {
+    return NextResponse.json(
+      { error: "Benchmark API is disabled in this environment" },
+      { status: 403 }
+    );
+  }
+
+  const benchmarkToken = process.env.BENCHMARK_API_TOKEN;
+  if (benchmarkToken) {
+    const providedToken = new URL(request.url).searchParams.get("token");
+    if (providedToken !== benchmarkToken) {
+    return NextResponse.json(
+      { error: "Benchmark API token required. Use /api/benchmark?token=<BENCHMARK_API_TOKEN>" },
+      { status: 401 }
+    );
+    }
+  }
+
   const results = {
     metrics: {},
     benchmarks: [],

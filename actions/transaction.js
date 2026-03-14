@@ -3,16 +3,52 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { generateAIContent } from "@/lib/gemini";
 import aj from "@/lib/arcjet";
 import { request } from "@arcjet/next";
-import { sendEmail } from "./send-email";
-import { sendSMS } from "@/lib/twilio";
+import { sendEmailWithRetry, sendSMSWithRetry } from "@/lib/notification-delivery";
+import { shouldSendEmail, shouldSendSMS } from "@/lib/notification-policy";
 import { formatSMS } from "@/lib/sms-templates";
 import EmailTemplate from "@/emails/template";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+function buildRuleBasedAdvice({ transaction, newBalance, recentTransactions }) {
+  const tips = [];
+  const amount = transaction.amount.toNumber();
+
+  if (transaction.type === "EXPENSE") {
+    if (amount >= 2000) {
+      tips.push("Large expense logged. Review if this category needs a weekly cap.");
+    } else {
+      tips.push("Good habit: keep logging expenses daily to improve forecast accuracy.");
+    }
+  } else {
+    tips.push("Great income update. Consider allocating a fixed percentage to savings immediately.");
+  }
+
+  if (newBalance < 1000) {
+    tips.push("Your account balance is getting low. Prioritize essentials for the next few days.");
+  } else {
+    tips.push("Your current balance is stable. Keep discretionary spending planned, not reactive.");
+  }
+
+  const recentExpenseCount = recentTransactions.filter((t) => t.type === "EXPENSE").length;
+  if (recentExpenseCount >= 4) {
+    tips.push("Recent spending frequency is high. Recheck subscriptions and repeat purchases.");
+  } else {
+    tips.push("Spending frequency is controlled. Continue this consistency through the month.");
+  }
+
+  return tips.slice(0, 3);
+}
+
+function shouldUseRealtimeAIAdvice(transaction) {
+  if (process.env.ENABLE_REALTIME_AI_ADVICE !== "true") {
+    return false;
+  }
+
+  const amount = transaction.amount.toNumber();
+  return transaction.type === "EXPENSE" && amount >= 1000;
+}
 
 const serializeAmount = (obj) => ({
   ...obj,
@@ -95,72 +131,72 @@ export async function createTransaction(data) {
       return newTransaction;
     });
 
-
-
-
     let advice = [];
-    try {
+    const recentTransactions = await db.transaction.findMany({
+      where: {
+        userId: user.id,
+        accountId: data.accountId
+      },
+      orderBy: { date: "desc" },
+      take: 8
+    });
 
-      const recentTransactions = await db.transaction.findMany({
-        where: {
-          userId: user.id,
-          accountId: data.accountId
-        },
-        orderBy: { date: "desc" },
-        take: 5
-      });
+    advice = buildRuleBasedAdvice({ transaction, newBalance, recentTransactions });
 
-      const prompt = `
-        User just spent ₹${transaction.amount.toNumber()} on "${transaction.description}" (Category: ${transaction.category}).
-        Remaining Account Balance: ₹${newBalance}.
-        
-        Recent Spending Context (last 5 transactions):
-        ${recentTransactions.map((t) => `- ${t.date.toISOString().split('T')[0]}: ₹${t.amount.toNumber()} (${t.category})`).join('\n')}
-        
-        Based on this single transaction and their recent spending pattern, provide 3 concise, friendly, and actionable financial tips.
-        Focus on how they can use their remaining money effectively or adjust habits.
-        
-        Format as JSON array of strings: ["tip 1", "tip 2", "tip 3"]
-      `;
+    if (shouldUseRealtimeAIAdvice(transaction)) {
+      try {
+        const prompt = `
+          Rewrite these financial tips in a concise and friendly way. Keep 3 bullet points.
+          User Context:
+          - Amount: ₹${transaction.amount.toNumber()}
+          - Type: ${transaction.type}
+          - Category: ${transaction.category}
+          - Current Balance: ₹${newBalance}
 
-      const text = await generateAIContent(prompt);
-      const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
-      advice = JSON.parse(cleanedText);
-    } catch (aiError) {
-      console.error("AI Advice Error:", aiError);
+          Base Tips:
+          ${advice.map((tip) => `- ${tip}`).join("\n")}
 
-      advice = [
-      "Track your daily expenses.",
-      "Check your budget regularly.",
-      "Save for upcoming goals."];
+          Return a JSON array of exactly 3 strings.
+        `;
 
+        const text = await generateAIContent(prompt);
+        const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+        const rewrittenAdvice = JSON.parse(cleanedText);
+        if (Array.isArray(rewrittenAdvice) && rewrittenAdvice.length > 0) {
+          advice = rewrittenAdvice.slice(0, 3);
+        }
+      } catch (aiError) {
+        console.error("AI Advice Error:", aiError.message);
+      }
     }
 
     try {
-      await sendEmail({
-        to: user.email,
-        subject: "New Transaction Logged - Gullak",
-        react: EmailTemplate({
-          userName: user.name,
-          type: "transaction-success",
-          data: {
-            amount: transaction.amount.toNumber(),
-            description: transaction.description,
-            category: transaction.category,
-            advice
-          }
-        })
-      });
+      if (shouldSendEmail("transaction-success")) {
+        await sendEmailWithRetry({
+          to: user.email,
+          subject: "New Transaction Logged - Gullak",
+          react: EmailTemplate({
+            userName: user.name,
+            type: "transaction-success",
+            data: {
+              amount: transaction.amount.toNumber(),
+              description: transaction.description,
+              category: transaction.category,
+              advice
+            }
+          })
+        });
+      }
     } catch (emailError) {
       console.error("Error sending transaction email:", emailError.message);
     }
 
 
     console.log("SMS CHECK - user.phoneNumber:", user.phoneNumber, "user.email:", user.email);
-    if (user.phoneNumber) {
+    if (shouldSendSMS("transaction-success", Boolean(user.phoneNumber))) {
       try {
         console.log("Attempting to send SMS to:", user.phoneNumber);
-        const smsResult = await sendSMS({
+        const smsResult = await sendSMSWithRetry({
           to: user.phoneNumber,
           body: formatSMS("transaction-success", {
             amount: transaction.amount.toNumber(),
@@ -314,6 +350,220 @@ export async function getUserTransactions(query = {}) {
   } catch (error) {
     throw new Error(error.message);
   }
+}
+
+export async function getRecurringTransactions() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId }
+  });
+
+  if (!user) throw new Error("User not found");
+
+  const recurringTransactions = await db.transaction.findMany({
+    where: {
+      userId: user.id,
+      isRecurring: true
+    },
+    include: {
+      account: true
+    },
+    orderBy: [
+    { status: "asc" },
+    { nextRecurringDate: "asc" },
+    { createdAt: "desc" }]
+
+  });
+
+  const serialized = recurringTransactions.map((item) => ({
+    ...item,
+    amount: item.amount.toNumber(),
+    account: item.account ? { ...item.account, balance: item.account.balance.toNumber() } : null
+  }));
+
+  return { success: true, data: serialized };
+}
+
+export async function pauseRecurringTransaction(id) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({ where: { clerkUserId: userId } });
+  if (!user) throw new Error("User not found");
+
+  await db.transaction.update({
+    where: {
+      id,
+      userId: user.id
+    },
+    data: {
+      status: "PENDING"
+    }
+  });
+
+  revalidatePath("/recurring-transactions");
+  return { success: true };
+}
+
+export async function resumeRecurringTransaction(id) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({ where: { clerkUserId: userId } });
+  if (!user) throw new Error("User not found");
+
+  const transaction = await db.transaction.findUnique({
+    where: {
+      id,
+      userId: user.id
+    }
+  });
+
+  if (!transaction) throw new Error("Recurring transaction not found");
+
+  await db.transaction.update({
+    where: {
+      id,
+      userId: user.id
+    },
+    data: {
+      status: "COMPLETED",
+      nextRecurringDate: transaction.nextRecurringDate || calculateNextRecurringDate(new Date(), transaction.recurringInterval)
+    }
+  });
+
+  revalidatePath("/recurring-transactions");
+  return { success: true };
+}
+
+export async function updateRecurringInterval(id, interval) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const validIntervals = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"];
+  if (!validIntervals.includes(interval)) {
+    throw new Error("Invalid recurring interval");
+  }
+
+  const user = await db.user.findUnique({ where: { clerkUserId: userId } });
+  if (!user) throw new Error("User not found");
+
+  await db.transaction.update({
+    where: {
+      id,
+      userId: user.id
+    },
+    data: {
+      recurringInterval: interval,
+      nextRecurringDate: calculateNextRecurringDate(new Date(), interval),
+      status: "COMPLETED"
+    }
+  });
+
+  revalidatePath("/recurring-transactions");
+  return { success: true };
+}
+
+export async function disableRecurringTransaction(id) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({ where: { clerkUserId: userId } });
+  if (!user) throw new Error("User not found");
+
+  await db.transaction.update({
+    where: {
+      id,
+      userId: user.id
+    },
+    data: {
+      isRecurring: false,
+      recurringInterval: null,
+      nextRecurringDate: null,
+      lastProcessed: null,
+      status: "COMPLETED"
+    }
+  });
+
+  revalidatePath("/recurring-transactions");
+  return { success: true };
+}
+
+function escapeCsvCell(value) {
+  const raw = value ?? "";
+  const str = String(raw);
+  if (str.includes(",") || str.includes("\n") || str.includes("\"")) {
+    return `"${str.replace(/\"/g, '""')}"`;
+  }
+  return str;
+}
+
+export async function exportTransactionsCsv({ monthValue = null, accountId = null, type = null } = {}) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({ where: { clerkUserId: userId } });
+  if (!user) throw new Error("User not found");
+
+  let dateFilter = {};
+  if (monthValue) {
+    const [year, month] = monthValue.split("-").map(Number);
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+    dateFilter = { gte: startDate, lte: endDate };
+  }
+
+  const transactions = await db.transaction.findMany({
+    where: {
+      userId: user.id,
+      ...(accountId ? { accountId } : {}),
+      ...(type ? { type } : {}),
+      ...(monthValue ? { date: dateFilter } : {})
+    },
+    include: {
+      account: true
+    },
+    orderBy: {
+      date: "desc"
+    }
+  });
+
+  const headers = [
+  "Date",
+  "Type",
+  "Account",
+  "Category",
+  "Description",
+  "Amount",
+  "Recurring",
+  "Status"];
+
+
+  const rows = transactions.map((transaction) => [
+  new Date(transaction.date).toISOString().split("T")[0],
+  transaction.type,
+  transaction.account?.name || "",
+  transaction.category,
+  transaction.description || "",
+  transaction.amount.toNumber().toFixed(2),
+  transaction.isRecurring ? "Yes" : "No",
+  transaction.status]);
+
+
+  const csv = [headers, ...rows].
+  map((row) => row.map(escapeCsvCell).join(",")).
+  join("\n");
+
+  const suffix = monthValue || "all-months";
+  return {
+    success: true,
+    data: {
+      filename: `gullak-report-${suffix}.csv`,
+      csv
+    }
+  };
 }
 
 

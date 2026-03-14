@@ -17,10 +17,18 @@ import { updatePhoneNumber, getPhoneNumber } from "@/actions/settings";
 import { sendTestSMS } from "@/actions/test-send-sms";
 import { getUserAccounts } from "@/actions/dashboard";
 import { deleteAccount, updateDefaultAccount } from "@/actions/account";
-import { Trash2, Sun, Moon, Monitor, Phone, Mail, Plus } from "lucide-react";
+import { Trash2, Sun, Moon, Monitor, Phone, Mail, Plus, Bell, SlidersHorizontal } from "lucide-react";
 import useFetch from "@/hooks/use-fetch";
 import { CreateAccountDrawer } from "@/components/create-account-drawer";
 import { Switch } from "@/components/ui/switch";
+
+const QUICK_ADD_PREFS_KEY = "gullak.quickAddPrefs";
+const DEFAULT_QUICK_PREFS = {
+  rememberLast: true,
+  defaultType: "EXPENSE",
+  amountProfile: "standard",
+  defaultAccountId: "auto"
+};
 
 export default function SettingsPage() {
   const [phone, setPhone] = useState("");
@@ -28,6 +36,7 @@ export default function SettingsPage() {
   const [testing, setTesting] = useState(false);
   const [hasPhone, setHasPhone] = useState(false);
   const [accounts, setAccounts] = useState([]);
+  const [quickPrefs, setQuickPrefs] = useState(DEFAULT_QUICK_PREFS);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -39,6 +48,16 @@ export default function SettingsPage() {
         setHasPhone(true);
       }
     });
+
+    try {
+      const savedPrefs = localStorage.getItem(QUICK_ADD_PREFS_KEY);
+      if (savedPrefs) {
+        setQuickPrefs({ ...DEFAULT_QUICK_PREFS, ...JSON.parse(savedPrefs) });
+      }
+    } catch (error) {
+      console.error("Failed to load quick-add preferences:", error.message);
+    }
+
     loadAccounts();
   }, []);
 
@@ -141,6 +160,27 @@ export default function SettingsPage() {
     await updateDefaultFn(account.id);
   };
 
+  const handleSaveQuickPrefs = () => {
+    try {
+      localStorage.setItem(QUICK_ADD_PREFS_KEY, JSON.stringify(quickPrefs));
+      toast.success("Quick-add preferences saved");
+    } catch (error) {
+      toast.error("Failed to save preferences");
+      console.error("Failed to save quick-add preferences:", error.message);
+    }
+  };
+
+  const handleResetQuickPrefs = () => {
+    setQuickPrefs(DEFAULT_QUICK_PREFS);
+    try {
+      localStorage.setItem(QUICK_ADD_PREFS_KEY, JSON.stringify(DEFAULT_QUICK_PREFS));
+      toast.success("Quick-add preferences reset to default");
+    } catch (error) {
+      toast.error("Failed to reset preferences");
+      console.error("Failed to reset quick-add preferences:", error.message);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
       <h1 className="text-4xl font-bold gradient-title">Settings</h1>
@@ -231,6 +271,103 @@ export default function SettingsPage() {
                 Remove
               </Button>
             }
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            Notification Delivery Mode
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <p className="text-muted-foreground">
+            Launch mode is optimized for reliability and free-tier limits.
+          </p>
+          <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
+            <li>Weekly and monthly digests are delivered primarily by email.</li>
+            <li>SMS is reserved for critical alerts like budget/anomaly warnings.</li>
+            <li>If AI quotas are reached, rule-based insights continue automatically.</li>
+          </ul>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <SlidersHorizontal className="h-5 w-5" />
+            Quick Add Preferences
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div>
+              <p className="text-sm font-medium">Remember last draft</p>
+              <p className="text-xs text-muted-foreground">Reuse your last selected account and type in quick-add.</p>
+            </div>
+            <Switch
+              checked={quickPrefs.rememberLast}
+              onCheckedChange={(checked) => setQuickPrefs((prev) => ({ ...prev, rememberLast: checked }))} />
+
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Default transaction type</p>
+              <Select
+                value={quickPrefs.defaultType}
+                onValueChange={(value) => setQuickPrefs((prev) => ({ ...prev, defaultType: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select default type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="EXPENSE">Expense</SelectItem>
+                  <SelectItem value="INCOME">Income</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Quick amount profile</p>
+              <Select
+                value={quickPrefs.amountProfile}
+                onValueChange={(value) => setQuickPrefs((prev) => ({ ...prev, amountProfile: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select amount profile" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="compact">Compact</SelectItem>
+                  <SelectItem value="standard">Standard</SelectItem>
+                  <SelectItem value="premium">Premium</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Default quick-add account</p>
+            <Select
+              value={quickPrefs.defaultAccountId}
+              onValueChange={(value) => setQuickPrefs((prev) => ({ ...prev, defaultAccountId: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose default account" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">Auto (current default account)</SelectItem>
+                {accounts.map((account) =>
+                <SelectItem key={account.id} value={account.id}>
+                    {account.name}
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex gap-3">
+            <Button onClick={handleSaveQuickPrefs}>Save Preferences</Button>
+            <Button variant="outline" onClick={handleResetQuickPrefs}>Reset</Button>
           </div>
         </CardContent>
       </Card>
