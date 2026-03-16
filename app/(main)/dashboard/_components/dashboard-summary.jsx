@@ -15,6 +15,7 @@ import {
   formatMonthValue,
   toMonthValue } from
 "@/lib/month-range";
+import { useLanguage } from "@/components/language-provider";
 
 function getPreviousMonthValue(monthValue) {
   const [year, month] = monthValue.split("-").map(Number);
@@ -44,6 +45,7 @@ function calculateTrend(current, previous) {
 }
 
 export function DashboardSummary({ accounts, transactions, selectedMonth }) {
+  const { t, locale } = useLanguage();
 
   const stats = useMemo(() => {
     const totalBalance = accounts.reduce(
@@ -91,32 +93,32 @@ export function DashboardSummary({ accounts, transactions, selectedMonth }) {
     };
   }, [accounts, transactions, selectedMonth]);
 
-  const selectedMonthLabel = formatMonthValue(selectedMonth);
+  const selectedMonthLabel = formatMonthValue(selectedMonth, locale);
 
   const cards = [
   {
-    label: "Total Balance",
+    label: t("dashboard.totalBalance"),
     value: `₹${stats.totalBalance.toFixed(2)}`,
     icon: Wallet,
     color: "text-orange-500",
     trend: null
   },
   {
-    label: `${selectedMonthLabel} Income`,
+    label: `${selectedMonthLabel} ${t("dashboard.incomeLabel")}`,
     value: `₹${stats.income.toFixed(2)}`,
     icon: TrendingUp,
     color: "text-green-500",
     trend: stats.trends.income
   },
   {
-    label: `${selectedMonthLabel} Expenses`,
+    label: `${selectedMonthLabel} ${t("dashboard.expensesLabel")}`,
     value: `₹${stats.expenses.toFixed(2)}`,
     icon: TrendingDown,
     color: "text-red-500",
     trend: stats.trends.expenses
   },
   {
-    label: `${selectedMonthLabel} Net Cashflow`,
+    label: `${selectedMonthLabel} ${t("dashboard.netCashflow")}`,
     value: `₹${(stats.income - stats.expenses).toFixed(2)}`,
     icon: CreditCard,
     color: "text-orange-400",
@@ -146,13 +148,13 @@ export function DashboardSummary({ accounts, transactions, selectedMonth }) {
                     !card.trend.isNeutral && !card.trend.isPositive && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
                   )}>
                     {card.trend.isNeutral ?
-                  <span>Stable vs last month</span> :
+                  <span>{t("dashboard.stableVsLastMonth")}</span> :
                   <>
                         {card.trend.isPositive ?
                     <ArrowUpRight className="h-3.5 w-3.5" /> :
                     <ArrowDownRight className="h-3.5 w-3.5" />
                     }
-                        <span>{card.trend.value.toFixed(1)}% vs last month</span>
+                        <span>{card.trend.value.toFixed(1)}% {t("dashboard.vsLastMonth")}</span>
                       </>
                   }
                   </div>

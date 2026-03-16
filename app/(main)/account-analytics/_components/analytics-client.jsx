@@ -39,6 +39,7 @@ import {
   formatMonthValue,
   getCurrentMonthValue } from
 "@/lib/month-range";
+import { useLanguage } from "@/components/language-provider";
 
 const COLORS = [
 "#FF6B6B",
@@ -51,6 +52,7 @@ const COLORS = [
 
 
 export default function AccountAnalyticsClient({ accounts, transactions, budgetsByAccount = {} }) {
+  const { locale } = useLanguage();
   const [selectedAccountId, setSelectedAccountId] = useState(
     accounts.find((a) => a.isDefault)?.id || accounts[0]?.id
   );
@@ -80,7 +82,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
   const previousYear = previousMonthDate.getFullYear();
   const previousMonth = previousMonthDate.getMonth() + 1;
 
-  const periodLabel = formatMonthValue(selectedMonth);
+  const periodLabel = formatMonthValue(selectedMonth, locale);
 
   const isInAnalysisMonth = (dateValue) => {
     const date = new Date(dateValue);
@@ -230,7 +232,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
           <SelectContent>
             {monthOptions.map((monthValue) =>
             <SelectItem key={monthValue} value={monthValue}>
-                {formatMonthValue(monthValue)}
+                {formatMonthValue(monthValue, locale)}
               </SelectItem>
             )}
           </SelectContent>

@@ -9,7 +9,6 @@ import {
   Tooltip,
   Legend } from
 "recharts";
-import { format } from "date-fns";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 import {
@@ -21,7 +20,8 @@ import {
 "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { formatMonthValue, toMonthValue } from "@/lib/month-range";
+import { formatDateValue, formatMonthValue, toMonthValue } from "@/lib/month-range";
+import { useLanguage } from "@/components/language-provider";
 
 const COLORS = [
 "#FF6B6B",
@@ -34,6 +34,7 @@ const COLORS = [
 
 
 export function DashboardOverview({ accounts, transactions, selectedMonth }) {
+  const { t, locale } = useLanguage();
   const [selectedAccountId, setSelectedAccountId] = useState(
     accounts.find((a) => a.isDefault)?.id || accounts[0]?.id
   );
@@ -75,7 +76,7 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
     })
   );
 
-  const selectedMonthLabel = formatMonthValue(selectedMonth);
+  const selectedMonthLabel = formatMonthValue(selectedMonth, locale);
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -83,7 +84,7 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="text-base font-normal">
-            Latest Activity ({selectedMonthLabel})
+            {t("dashboard.latestActivity")} ({selectedMonthLabel})
           </CardTitle>
           <div className="flex items-center gap-2">
             <Select
@@ -91,7 +92,7 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
               onValueChange={setSelectedAccountId}>
               
               <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Select account" />
+                <SelectValue placeholder={t("dashboard.selectAccount")} />
               </SelectTrigger>
               <SelectContent>
                 {accounts.map((account) =>
@@ -107,7 +108,7 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
           <div className="space-y-4">
             {recentTransactions.length === 0 ?
             <p className="text-center text-muted-foreground py-4">
-                No activity for this month yet. Add your first entry to start insight tracking.
+                {t("dashboard.noActivity")}
               </p> :
 
             recentTransactions.map((transaction) =>
@@ -117,10 +118,10 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
               
                   <div className="space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {transaction.description || "Untitled Transaction"}
+                      {transaction.description || t("dashboard.untitledTransaction")}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {format(new Date(transaction.date), "PP")}
+                      {formatDateValue(transaction.date, locale)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -151,13 +152,13 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-normal">
-            Expense Mix ({selectedMonthLabel})
+            {t("dashboard.expenseMix")} ({selectedMonthLabel})
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0 pb-5">
           {pieChartData.length === 0 ?
           <p className="text-center text-muted-foreground py-4">
-              Expense data will appear here once you record expense transactions.
+              {t("dashboard.noExpenseData")}
             </p> :
 
           <div className="h-[300px]">

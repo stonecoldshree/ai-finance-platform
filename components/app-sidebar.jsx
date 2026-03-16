@@ -24,56 +24,12 @@ import {
   SheetTitle } from
 "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-
-const navGroups = [
-{
-  title: "Workspace",
-  items: [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard
-  },
-  {
-    label: "Analytics",
-    href: "/account-analytics",
-    icon: BarChart3
-  },
-  {
-    label: "Goals",
-    href: "/goals",
-    icon: Target
-  },
-  {
-    label: "Recurring Center",
-    href: "/recurring-transactions",
-    icon: Repeat
-  },
-  {
-    label: "Reports",
-    href: "/reports",
-    icon: FileSpreadsheet
-  }]
-},
-{
-  title: "Actions",
-  items: [
-  {
-    label: "Quick Add",
-    href: "/transaction/create",
-    icon: PenBox
-  },
-  {
-    label: "Preferences",
-    href: "/settings",
-    icon: Settings
-  }]
-}];
-
+import { useLanguage } from "@/components/language-provider";
 
 export function AppSidebar() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -83,8 +39,8 @@ export function AppSidebar() {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0">
-        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-        <SidebarContent pathname={pathname} onNavigate={() => setOpen(false)} />
+        <SheetTitle className="sr-only">{t("sidebar.navigationMenu")}</SheetTitle>
+        <SidebarContent pathname={pathname} onNavigate={() => setOpen(false)} t={t} />
       </SheetContent>
     </Sheet>);
 
@@ -92,15 +48,61 @@ export function AppSidebar() {
 
 export function DesktopSidebar() {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   return (
     <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 border-r bg-card z-40">
-      <SidebarContent pathname={pathname} />
+      <SidebarContent pathname={pathname} t={t} />
     </aside>);
 
 }
 
-function SidebarContent({ pathname, onNavigate }) {
+function SidebarContent({ pathname, onNavigate, t }) {
+  const navGroups = [
+  {
+    title: t("sidebar.workspace"),
+    items: [
+    {
+      label: t("sidebar.dashboard"),
+      href: "/dashboard",
+      icon: LayoutDashboard
+    },
+    {
+      label: t("sidebar.analytics"),
+      href: "/account-analytics",
+      icon: BarChart3
+    },
+    {
+      label: t("sidebar.goals"),
+      href: "/goals",
+      icon: Target
+    },
+    {
+      label: t("sidebar.recurringCenter"),
+      href: "/recurring-transactions",
+      icon: Repeat
+    },
+    {
+      label: t("sidebar.reports"),
+      href: "/reports",
+      icon: FileSpreadsheet
+    }]
+  },
+  {
+    title: t("sidebar.actions"),
+    items: [
+    {
+      label: t("sidebar.quickAdd"),
+      href: "/transaction/create",
+      icon: PenBox
+    },
+    {
+      label: t("sidebar.preferences"),
+      href: "/settings",
+      icon: Settings
+    }]
+  }];
+
   return (
     <div className="flex flex-col h-full">
       {}
@@ -121,10 +123,10 @@ function SidebarContent({ pathname, onNavigate }) {
         <div className="rounded-xl border bg-gradient-to-r from-orange-100/70 to-amber-100/70 p-3 dark:from-orange-900/20 dark:to-amber-900/10">
           <p className="flex items-center gap-2 text-sm font-medium text-orange-800 dark:text-orange-300">
             <Sparkles className="h-4 w-4" />
-            This Week's Focus
+            {t("sidebar.weekFocus")}
           </p>
           <p className="mt-1 text-xs text-orange-700/90 dark:text-orange-200/80">
-            Keep expenses below income and log every transaction on the same day.
+            {t("sidebar.weekFocusHint")}
           </p>
         </div>
 
@@ -165,10 +167,10 @@ function SidebarContent({ pathname, onNavigate }) {
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground transition-colors">
           
           <Mail className="h-4 w-4" />
-          Contact Us
+          {t("sidebar.contactUs")}
         </Link>
         <p className="text-xs text-muted-foreground px-3 mt-2">
-          Gullak v1.1 Premium Preview
+          {t("sidebar.versionLabel")}
         </p>
       </div>
     </div>);

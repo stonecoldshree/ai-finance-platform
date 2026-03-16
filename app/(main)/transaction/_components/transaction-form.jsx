@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { createTransaction, updateTransaction } from "@/actions/transaction";
 import { transactionSchema } from "@/app/lib/schema";
 import { ReceiptScanner } from "./recipt-scanner";
+import { useLanguage } from "@/components/language-provider";
 
 const QUICK_ADD_PREFS_KEY = "gullak.quickAddPrefs";
 const LAST_DRAFT_KEY = "gullak.lastTransactionDraft";
@@ -65,6 +66,7 @@ export function AddTransactionForm({
   editMode = false,
   initialData = null
 }) {
+  const { t } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
@@ -134,7 +136,7 @@ export function AddTransactionForm({
       if (scannedData.category) {
         setValue("category", scannedData.category);
       }
-      toast.success("Receipt scanned successfully");
+      toast.success(t("transaction.scanSuccess"));
     }
   };
 
@@ -142,8 +144,8 @@ export function AddTransactionForm({
     if (transactionResult?.success && !transactionLoading) {
       toast.success(
         editMode ?
-        "Transaction updated successfully" :
-        "Transaction created successfully"
+        t("transaction.updatedSuccess") :
+        t("transaction.createdSuccess")
       );
       reset();
       router.push(`/account/${transactionResult.data.accountId}`);
@@ -265,17 +267,17 @@ export function AddTransactionForm({
 
       {}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Type</label>
+        <label className="text-sm font-medium">{t("transaction.type")}</label>
         <Select
           onValueChange={(value) => setValue("type", value)}
           defaultValue={type}>
           
           <SelectTrigger>
-            <SelectValue placeholder="Select type" />
+            <SelectValue placeholder={t("transaction.selectType")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="EXPENSE">Expense</SelectItem>
-            <SelectItem value="INCOME">Income</SelectItem>
+            <SelectItem value="EXPENSE">{t("transaction.expense")}</SelectItem>
+            <SelectItem value="INCOME">{t("transaction.income")}</SelectItem>
           </SelectContent>
         </Select>
         {errors.type &&
@@ -286,14 +288,14 @@ export function AddTransactionForm({
       {}
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Amount</label>
+          <label className="text-sm font-medium">{t("transaction.amount")}</label>
           <Input
             type="number"
             step="0.01"
             placeholder="0.00"
             {...register("amount")} />
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            <p className="text-xs text-muted-foreground">Quick picks:</p>
+            <p className="text-xs text-muted-foreground">{t("transaction.quickPicks")}</p>
             {quickAmounts.map((value) =>
             <Button
               key={value}
@@ -314,13 +316,13 @@ export function AddTransactionForm({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Account</label>
+          <label className="text-sm font-medium">{t("transaction.account")}</label>
           <Select
             onValueChange={(value) => setValue("accountId", value)}
             defaultValue={getValues("accountId")}>
             
             <SelectTrigger>
-              <SelectValue placeholder="Select account" />
+              <SelectValue placeholder={t("transaction.selectAccount")} />
             </SelectTrigger>
             <SelectContent>
               {accounts.map((account) =>
@@ -333,7 +335,7 @@ export function AddTransactionForm({
                   variant="ghost"
                   className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground">
                   
-                  Create Account
+                  {t("transaction.createAccount")}
                 </Button>
               </CreateAccountDrawer>
             </SelectContent>
@@ -346,10 +348,10 @@ export function AddTransactionForm({
 
       {}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Category</label>
+        <label className="text-sm font-medium">{t("transaction.category")}</label>
         {recentCategories.length > 0 &&
         <div className="flex flex-wrap items-center gap-2">
-            <p className="text-xs text-muted-foreground">Recent:</p>
+            <p className="text-xs text-muted-foreground">{t("transaction.recent")}</p>
             {recentCategories.map((recentCategoryId) => {
             const categoryMeta = categories.find((item) => item.id === recentCategoryId);
             return (
@@ -372,7 +374,7 @@ export function AddTransactionForm({
           defaultValue={getValues("category")}>
           
           <SelectTrigger>
-            <SelectValue placeholder="Select category" />
+            <SelectValue placeholder={t("transaction.selectCategory")} />
           </SelectTrigger>
           <SelectContent>
             {filteredCategories.map((category) =>
@@ -383,7 +385,7 @@ export function AddTransactionForm({
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          Choose the closest category now. You can refine analytics from your transaction history later.
+          {t("transaction.categoryHint")}
         </p>
         {errors.category &&
         <p className="text-sm text-red-500">{errors.category.message}</p>
@@ -392,13 +394,13 @@ export function AddTransactionForm({
 
       {}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Date</label>
+        <label className="text-sm font-medium">{t("transaction.date")}</label>
         <div className="flex flex-wrap items-center gap-2">
           <Button type="button" size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={setToday}>
-            Today
+            {t("transaction.today")}
           </Button>
           <Button type="button" size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={setYesterday}>
-            Yesterday
+            {t("transaction.yesterday")}
           </Button>
         </div>
         <Popover>
@@ -410,7 +412,7 @@ export function AddTransactionForm({
                 !date && "text-muted-foreground"
               )}>
               
-              {date ? format(date, "PPP") : <span>Pick a date</span>}
+              {date ? format(date, "PPP") : <span>{t("transaction.pickDate")}</span>}
               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -433,14 +435,14 @@ export function AddTransactionForm({
 
       {}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Description</label>
-        <Input placeholder="Enter description" {...register("description")} />
+        <label className="text-sm font-medium">{t("transaction.description")}</label>
+        <Input placeholder={t("transaction.enterDescription")} {...register("description")} />
         <p className="text-xs text-muted-foreground">
-          Tip: Add merchant or purpose like "Swiggy dinner" for better insights.
+          {t("transaction.descriptionTip")}
         </p>
         {description && description.length >= 3 &&
         <p className="text-xs text-muted-foreground">
-            Looks good. This description will improve your category and trend insights.
+            {t("transaction.descriptionGood")}
           </p>
         }
         {errors.description &&
@@ -451,19 +453,19 @@ export function AddTransactionForm({
       <div className="rounded-lg border bg-orange-50/60 p-3 text-sm dark:bg-orange-950/20">
         <p className="flex items-center gap-2 font-medium text-orange-700 dark:text-orange-300">
           <Sparkles className="h-4 w-4" />
-          Premium habit for this week
+          {t("transaction.premiumHabit")}
         </p>
         <p className="mt-1 text-muted-foreground">
-          Log transactions on the same day to keep your forecast and weekly coaching accurate.
+          {t("transaction.premiumHabitHint")}
         </p>
       </div>
 
       {}
       <div className="flex flex-row items-center justify-between rounded-lg border p-4">
         <div className="space-y-0.5">
-          <label className="text-base font-medium">Recurring Transaction</label>
+          <label className="text-base font-medium">{t("transaction.recurringTransaction")}</label>
           <div className="text-sm text-muted-foreground">
-            Set up a recurring schedule for this transaction
+            {t("transaction.recurringHint")}
           </div>
         </div>
         <Switch
@@ -475,19 +477,19 @@ export function AddTransactionForm({
       {}
       {isRecurring &&
       <div className="space-y-2">
-          <label className="text-sm font-medium">Recurring Interval</label>
+          <label className="text-sm font-medium">{t("transaction.recurringInterval")}</label>
           <Select
           onValueChange={(value) => setValue("recurringInterval", value)}
           defaultValue={getValues("recurringInterval")}>
           
             <SelectTrigger>
-              <SelectValue placeholder="Select interval" />
+              <SelectValue placeholder={t("transaction.selectInterval")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="DAILY">Daily</SelectItem>
-              <SelectItem value="WEEKLY">Weekly</SelectItem>
-              <SelectItem value="MONTHLY">Monthly</SelectItem>
-              <SelectItem value="YEARLY">Yearly</SelectItem>
+              <SelectItem value="DAILY">{t("transaction.daily")}</SelectItem>
+              <SelectItem value="WEEKLY">{t("transaction.weekly")}</SelectItem>
+              <SelectItem value="MONTHLY">{t("transaction.monthly")}</SelectItem>
+              <SelectItem value="YEARLY">{t("transaction.yearly")}</SelectItem>
             </SelectContent>
           </Select>
           {errors.recurringInterval &&
@@ -506,18 +508,18 @@ export function AddTransactionForm({
           className="w-full"
           onClick={() => router.back()}>
           
-          Cancel
+          {t("transaction.cancel")}
         </Button>
         <Button type="submit" className="w-full" disabled={transactionLoading}>
           {transactionLoading ?
           <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {editMode ? "Updating..." : "Creating..."}
+              {editMode ? t("transaction.updating") : t("transaction.creating")}
             </> :
           editMode ?
-          "Update Transaction" :
+          t("transaction.updateTransaction") :
 
-          "Create Transaction"
+          t("transaction.createTransaction")
           }
         </Button>
       </div>

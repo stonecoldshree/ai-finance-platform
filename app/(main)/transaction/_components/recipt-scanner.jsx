@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import useFetch from "@/hooks/use-fetch";
 import { scanReceipt } from "@/actions/transaction";
+import { useLanguage } from "@/components/language-provider";
 
 export function ReceiptScanner({ onScanComplete }) {
+  const { t } = useLanguage();
   const fileInputRef = useRef(null);
 
   const {
@@ -18,7 +20,7 @@ export function ReceiptScanner({ onScanComplete }) {
 
   const handleReceiptScan = async (file) => {
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size should be less than 5MB");
+      toast.error(t("transaction.fileSizeError"));
       return;
     }
 
@@ -31,7 +33,7 @@ export function ReceiptScanner({ onScanComplete }) {
 
 
     if (!allowedTypes.includes(file.type)) {
-      toast.error("Please upload an image or PDF file");
+      toast.error(t("transaction.fileTypeError"));
       return;
     }
 
@@ -74,12 +76,12 @@ export function ReceiptScanner({ onScanComplete }) {
         {scanReceiptLoading ?
         <>
             <Loader2 className="mr-2 animate-spin" />
-            <span>Scanning Receipt...</span>
+            <span>{t("transaction.scanning")}</span>
           </> :
 
         <>
             <Camera className="mr-2" />
-            <span>Scan Receipt with AI (Image or PDF)</span>
+            <span>{t("transaction.scanButton")}</span>
           </>
         }
       </Button>

@@ -1,13 +1,18 @@
 import DashboardPage from "./page";
 import { BarLoader } from "react-spinners";
 import { Suspense } from "react";
+import { getLocaleFromCookie } from "@/lib/i18n/server";
+import { getTranslator } from "@/lib/i18n/translations";
 
-export default function Layout() {
+export default async function Layout() {
+  const locale = await getLocaleFromCookie();
+  const t = getTranslator(locale);
+
   return (
     <div className="px-5">
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-6xl font-bold tracking-tight gradient-title">
-          Dashboard
+          {t("sidebar.dashboard")}
         </h1>
       </div>
       <Suspense

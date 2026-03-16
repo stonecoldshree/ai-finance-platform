@@ -5,9 +5,12 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { checkUser } from "@/lib/checkUser";
 import Image from "next/image";
 import { AppSidebar } from "./app-sidebar";
+import LanguageSwitcher from "./language-switcher";
+import { getTranslator } from "@/lib/i18n/translations";
 
-const Header = async () => {
+const Header = async ({ locale = "en" }) => {
   await checkUser();
+  const t = getTranslator(locale);
 
   return (
     <>
@@ -27,20 +30,20 @@ const Header = async () => {
 
             <div className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-muted-foreground hover:text-orange-600">
-                Features
+                {t("header.features")}
               </a>
               <a
                 href="#proof"
                 className="text-muted-foreground hover:text-orange-600">
-                
-                Proof
+                {t("header.proof")}
               </a>
             </div>
 
             <div className="flex items-center space-x-4">
+              <LanguageSwitcher className="w-28" />
               <SignInButton forceRedirectUrl="/dashboard">
                 <span className={buttonVariants({ variant: "outline" })}>
-                  Login
+                  {t("header.login")}
                 </span>
               </SignInButton>
             </div>
@@ -53,6 +56,7 @@ const Header = async () => {
         <header className="fixed top-0 right-0 left-0 md:left-64 h-16 bg-background/80 backdrop-blur-md z-30 border-b flex items-center justify-between px-4">
           <AppSidebar />
           <div className="flex items-center gap-3 ml-auto">
+            <LanguageSwitcher className="w-28" />
             <UserButton
               appearance={{
                 elements: {

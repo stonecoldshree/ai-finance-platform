@@ -19,8 +19,10 @@ import { DashboardSummary } from "./dashboard-summary";
 import { DashboardOverview } from "./transaction-overview";
 import { FinancialHero } from "./financial-hero";
 import { InsightsForecastPanel } from "./insights-forecast-panel";
+import { useLanguage } from "@/components/language-provider";
 
-export default function DashboardClient({ accounts, transactions }) {
+export default function DashboardClient({ accounts = [], transactions = [] }) {
+  const { t, locale } = useLanguage();
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthValue());
 
   const monthOptions = useMemo(
@@ -53,26 +55,27 @@ export default function DashboardClient({ accounts, transactions }) {
     buildDashboardIntelligence({
       transactions,
       selectedMonth,
-      totalBalance: monthlyStats.totalBalance
+      totalBalance: monthlyStats.totalBalance,
+      t
     }),
-    [transactions, selectedMonth, monthlyStats.totalBalance]
+    [transactions, selectedMonth, monthlyStats.totalBalance, t]
   );
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 rounded-2xl border bg-card/70 p-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">Financial command center</p>
-          <h2 className="text-xl font-semibold tracking-tight">Track momentum, spot risk, and act faster</h2>
+          <p className="text-sm text-muted-foreground">{t("dashboard.commandCenter")}</p>
+          <h2 className="text-xl font-semibold tracking-tight">{t("dashboard.commandCenterTitle")}</h2>
         </div>
         <Select value={selectedMonth} onValueChange={setSelectedMonth}>
           <SelectTrigger className="w-[190px]">
-            <SelectValue placeholder="Select month" />
+            <SelectValue placeholder={t("dashboard.selectMonth")} />
           </SelectTrigger>
           <SelectContent>
             {monthOptions.map((monthValue) =>
             <SelectItem key={monthValue} value={monthValue}>
-                {formatMonthValue(monthValue)}
+                {formatMonthValue(monthValue, locale)}
               </SelectItem>
             )}
           </SelectContent>
@@ -80,19 +83,19 @@ export default function DashboardClient({ accounts, transactions }) {
       </div>
 
       <FinancialHero
-        selectedMonthLabel={formatMonthValue(selectedMonth)}
+        selectedMonthLabel={formatMonthValue(selectedMonth, locale)}
         totalBalance={monthlyStats.totalBalance}
         income={monthlyStats.income}
         expenses={monthlyStats.expenses}
         transactionCount={monthlyStats.transactionCount} />
 
       <InsightsForecastPanel
-        selectedMonthLabel={formatMonthValue(selectedMonth)}
+        selectedMonthLabel={formatMonthValue(selectedMonth, locale)}
         intelligence={dashboardIntelligence} />
 
       <div className="space-y-2">
-        <h3 className="text-lg font-semibold tracking-tight">Performance Snapshot</h3>
-        <p className="text-sm text-muted-foreground">Month-over-month movement for the numbers that matter most.</p>
+        <h3 className="text-lg font-semibold tracking-tight">{t("dashboard.performanceSnapshot")}</h3>
+        <p className="text-sm text-muted-foreground">{t("dashboard.performanceHint")}</p>
       </div>
 
       <DashboardSummary
@@ -101,8 +104,8 @@ export default function DashboardClient({ accounts, transactions }) {
         selectedMonth={selectedMonth} />
 
       <div className="space-y-2">
-        <h3 className="text-lg font-semibold tracking-tight">Spending Story</h3>
-        <p className="text-sm text-muted-foreground">Recent activity and category concentration for the selected month.</p>
+        <h3 className="text-lg font-semibold tracking-tight">{t("dashboard.spendingStory")}</h3>
+        <p className="text-sm text-muted-foreground">{t("dashboard.spendingHint")}</p>
       </div>
 
       <DashboardOverview

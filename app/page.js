@@ -9,23 +9,44 @@ import {
 import HeroSection from "@/components/hero";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { getLocaleFromCookie } from "@/lib/i18n/server";
+import { getTranslator } from "@/lib/i18n/translations";
 
-const LandingPage = () => {
+const LandingPage = async () => {
   const topFeatures = featuresData.slice(0, 4);
+  const locale = await getLocaleFromCookie();
+  const t = getTranslator(locale);
+
+  const heroCopy = {
+    badge: t("hero.badge"),
+    titleFirst: t("hero.titleFirst"),
+    titleSecond: t("hero.titleSecond"),
+    subtitle: t("hero.subtitle"),
+    secureAuth: t("hero.secureAuth"),
+    realtimeInsights: t("hero.realtimeInsights"),
+    smartAutomation: t("hero.smartAutomation"),
+    enterDashboard: t("hero.enterDashboard"),
+    users: t("hero.users"),
+    tracked: t("hero.tracked"),
+    uptime: t("hero.uptime"),
+    usersValue: t("hero.usersValue"),
+    trackedValue: t("hero.trackedValue"),
+    uptimeValue: t("hero.uptimeValue")
+  };
 
   return (
     <div className="landing-shell min-h-screen pt-24 md:pt-20">
       <section className="landing-section px-2 md:px-4">
-        <HeroSection />
+        <HeroSection copy={heroCopy} />
       </section>
 
       <section id="features" className="landing-section px-4 py-14 md:flex md:items-center md:py-0">
         <div className="container mx-auto">
           <div className="landing-fade-up mx-auto max-w-3xl text-center">
-            <p className="text-xs uppercase tracking-[0.18em] text-orange-600">Product signal</p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-5xl">Everything essential. Nothing noisy.</h2>
+            <p className="text-xs uppercase tracking-[0.18em] text-orange-600">{t("landing.productSignal")}</p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-5xl">{t("landing.essentialTitle")}</h2>
             <p className="mt-4 text-muted-foreground">
-              Built for short attention spans: fast capture, clear analytics, and actionable feedback.
+              {t("landing.essentialSubtitle")}
             </p>
           </div>
 
@@ -48,8 +69,8 @@ const LandingPage = () => {
       <section id="proof" className="landing-section px-4 py-14 md:flex md:items-center md:py-0">
         <div className="container mx-auto space-y-10">
           <div className="landing-fade-up mx-auto max-w-3xl text-center">
-            <p className="text-xs uppercase tracking-[0.18em] text-orange-600">Trust and conversion</p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-5xl">See the value in under a minute.</h2>
+            <p className="text-xs uppercase tracking-[0.18em] text-orange-600">{t("landing.trust")}</p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-5xl">{t("landing.valueTitle")}</h2>
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
@@ -68,7 +89,7 @@ const LandingPage = () => {
             {testimonialsData.slice(0, 2).map((testimonial, index) =>
             <Card key={index} className={`landing-fade-up landing-hover-lift border bg-card/80 ${index === 0 ? "landing-delay-1" : "landing-delay-2"}`}>
                 <CardContent className="p-5">
-                  <p className="text-sm leading-relaxed text-muted-foreground">"{testimonial.quote}"</p>
+                  <p className="text-sm leading-relaxed text-muted-foreground">&ldquo;{testimonial.quote}&rdquo;</p>
                   <p className="mt-3 text-sm font-semibold">{testimonial.name}</p>
                   <p className="text-xs text-muted-foreground">{testimonial.role}</p>
                 </CardContent>
@@ -77,13 +98,13 @@ const LandingPage = () => {
           </div>
 
           <div className="landing-fade-up landing-delay-3 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-500 p-6 text-center text-white md:p-8">
-            <h3 className="text-2xl font-bold">Ready to run your money like a control room?</h3>
+            <h3 className="text-2xl font-bold">{t("landing.ctaTitle")}</h3>
             <p className="mx-auto mt-2 max-w-xl text-sm text-orange-50 md:text-base">
-              Jump in, log your first transactions, and watch real insights kick in.
+              {t("landing.ctaSubtitle")}
             </p>
             <Link href="/dashboard" className="mt-5 inline-flex">
               <Button size="lg" className="landing-pulse bg-white text-orange-700 hover:bg-orange-100">
-                Launch Gullak
+                {t("landing.launch")}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>

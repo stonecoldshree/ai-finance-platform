@@ -52,6 +52,7 @@ export async function getUserAccounts() {
     return serializedAccounts;
   } catch (error) {
     console.error(error.message);
+    return [];
   }
 }
 
@@ -195,24 +196,29 @@ export async function getDashboardData(options = {}) {
   new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-  const transactions = await db.transaction.findMany({
-    where: {
-      userId: user.id,
-      ...(includeAllMonths ?
-      {
-        date: {
-          lte: endOfMonth
-        }
-      } :
-      {
-        date: {
-          gte: startOfMonth,
-          lte: endOfMonth
-        }
-      })
-    },
-    orderBy: { date: "desc" }
-  });
+  try {
+    const transactions = await db.transaction.findMany({
+      where: {
+        userId: user.id,
+        ...(includeAllMonths ?
+        {
+          date: {
+            lte: endOfMonth
+          }
+        } :
+        {
+          date: {
+            gte: startOfMonth,
+            lte: endOfMonth
+          }
+        })
+      },
+      orderBy: { date: "desc" }
+    });
 
-  return transactions.map(serializeTransaction);
+    return transactions.map(serializeTransaction);
+  } catch (error) {
+    console.error(error.message);
+    return [];
+  }
 }

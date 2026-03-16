@@ -13,10 +13,12 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { exportTransactionsCsv } from "@/actions/transaction";
-import { buildMonthRangeFromTransactions, formatMonthValue, getCurrentMonthValue, toMonthValue } from "@/lib/month-range";
+import { buildMonthRangeFromTransactions, formatDateValue, formatMonthValue, getCurrentMonthValue, toMonthValue } from "@/lib/month-range";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/language-provider";
 
 export default function ReportsClient({ accounts = [], transactions = [] }) {
+  const { t, locale } = useLanguage();
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthValue());
   const [selectedAccount, setSelectedAccount] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
@@ -67,9 +69,9 @@ export default function ReportsClient({ accounts = [], transactions = [] }) {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      toast.success("Report downloaded successfully");
+      toast.success(t("reports.downloaded"));
     } catch (error) {
-      toast.error(error.message || "Failed to download report");
+      toast.error(error.message || t("reports.downloadFailed"));
     } finally {
       setDownloading(false);
     }
@@ -81,17 +83,17 @@ export default function ReportsClient({ accounts = [], transactions = [] }) {
     <div className="space-y-4">
       <Card className="border-orange-100/70 bg-card/80">
         <CardHeader>
-          <CardTitle className="text-base">Report Filters</CardTitle>
+          <CardTitle className="text-base">{t("reports.filters")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-4">
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
             <SelectTrigger>
-              <SelectValue placeholder="Month" />
+              <SelectValue placeholder={t("reports.month")} />
             </SelectTrigger>
             <SelectContent>
               {monthOptions.map((month) => (
                 <SelectItem key={month} value={month}>
-                  {formatMonthValue(month)}
+                  {formatMonthValue(month, locale)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -99,10 +101,10 @@ export default function ReportsClient({ accounts = [], transactions = [] }) {
 
           <Select value={selectedAccount} onValueChange={setSelectedAccount}>
             <SelectTrigger>
-              <SelectValue placeholder="Account" />
+              <SelectValue placeholder={t("reports.account")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Accounts</SelectItem>
+              <SelectItem value="all">{t("reports.allAccounts")}</SelectItem>
               {accounts.map((account) => (
                 <SelectItem key={account.id} value={account.id}>
                   {account.name}
@@ -113,18 +115,18 @@ export default function ReportsClient({ accounts = [], transactions = [] }) {
 
           <Select value={selectedType} onValueChange={setSelectedType}>
             <SelectTrigger>
-              <SelectValue placeholder="Type" />
+              <SelectValue placeholder={t("reports.type")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Income + Expenses</SelectItem>
-              <SelectItem value="INCOME">Income Only</SelectItem>
-              <SelectItem value="EXPENSE">Expense Only</SelectItem>
+              <SelectItem value="all">{t("reports.incomeAndExpenses")}</SelectItem>
+              <SelectItem value="INCOME">{t("reports.incomeOnly")}</SelectItem>
+              <SelectItem value="EXPENSE">{t("reports.expenseOnly")}</SelectItem>
             </SelectContent>
           </Select>
 
           <Button onClick={handleDownload} disabled={downloading} className="w-full">
             <Download className="mr-2 h-4 w-4" />
-            {downloading ? "Preparing..." : "Download CSV"}
+            {downloading ? t("reports.preparing") : t("reports.downloadCsv")}
           </Button>
         </CardContent>
       </Card>
@@ -132,19 +134,19 @@ export default function ReportsClient({ accounts = [], transactions = [] }) {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Income</p>
+            <p className="text-sm text-muted-foreground">{t("reports.income")}</p>
             <p className="text-2xl font-bold text-green-500">₹{totals.income.toFixed(2)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Expenses</p>
+            <p className="text-sm text-muted-foreground">{t("reports.expenses")}</p>
             <p className="text-2xl font-bold text-red-500">₹{totals.expenses.toFixed(2)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Net</p>
+            <p className="text-sm text-muted-foreground">{t("reports.net")}</p>
             <p className={`text-2xl font-bold ${totals.income - totals.expenses >= 0 ? "text-green-500" : "text-red-500"}`}>
               ₹{(totals.income - totals.expenses).toFixed(2)}
             </p>
@@ -154,14 +156,14 @@ export default function ReportsClient({ accounts = [], transactions = [] }) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Report Preview ({filteredTransactions.length} transactions)</CardTitle>
+          <CardTitle className="text-base">{t("reports.preview")} ({filteredTransactions.length} {t("reports.transactions")})</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           {!hasAnyTransactions && (
             <div className="space-y-3 rounded-lg border border-orange-200/70 bg-orange-50/50 p-4 text-center dark:border-orange-900/40 dark:bg-orange-950/20">
-              <p className="text-muted-foreground">No transactions found yet. Add entries to generate your first report.</p>
+              <p className="text-muted-foreground">{t("reports.noTransactionsYet")}</p>
               <Link href="/transaction/create" className="inline-flex">
-                <Button size="sm">Add Transaction</Button>
+                <Button size="sm">{t("reports.addTransaction")}</Button>
               </Link>
             </div>
           )}
@@ -169,8 +171,8 @@ export default function ReportsClient({ accounts = [], transactions = [] }) {
           {filteredTransactions.slice(0, 10).map((transaction) => (
             <div key={transaction.id} className="flex items-center justify-between rounded border p-2">
               <div>
-                <p className="font-medium">{transaction.description || "Untitled"}</p>
-                <p className="text-xs text-muted-foreground">{new Date(transaction.date).toLocaleDateString()} - {transaction.category}</p>
+                <p className="font-medium">{transaction.description || t("reports.untitled")}</p>
+                <p className="text-xs text-muted-foreground">{formatDateValue(transaction.date, locale)} - {transaction.category}</p>
               </div>
               <p className={transaction.type === "EXPENSE" ? "text-red-500" : "text-green-500"}>
                 ₹{transaction.amount.toFixed(2)}
@@ -178,7 +180,7 @@ export default function ReportsClient({ accounts = [], transactions = [] }) {
             </div>
           ))}
           {hasAnyTransactions && filteredTransactions.length === 0 && (
-            <p className="text-muted-foreground">No transactions match these filters. Try All Accounts or Income + Expenses.</p>
+            <p className="text-muted-foreground">{t("reports.noMatches")}</p>
           )}
         </CardContent>
       </Card>

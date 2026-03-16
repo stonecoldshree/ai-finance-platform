@@ -21,6 +21,7 @@ import { Trash2, Sun, Moon, Monitor, Phone, Mail, Plus, Bell, SlidersHorizontal 
 import useFetch from "@/hooks/use-fetch";
 import { CreateAccountDrawer } from "@/components/create-account-drawer";
 import { Switch } from "@/components/ui/switch";
+import { useLanguage } from "@/components/language-provider";
 
 const QUICK_ADD_PREFS_KEY = "gullak.quickAddPrefs";
 const DEFAULT_QUICK_PREFS = {
@@ -31,6 +32,7 @@ const DEFAULT_QUICK_PREFS = {
 };
 
 export default function SettingsPage() {
+  const { t } = useLanguage();
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -183,23 +185,23 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-      <h1 className="text-4xl font-bold gradient-title">Settings</h1>
+      <h1 className="text-4xl font-bold gradient-title">{t("settings.title")}</h1>
 
       {}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Appearance</CardTitle>
+          <CardTitle className="text-lg">{t("settings.appearance")}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            Choose your preferred theme
+            {t("settings.preferredTheme")}
           </p>
           {mounted &&
           <div className="flex gap-3">
               {[
-            { value: "light", icon: Sun, label: "Light" },
-            { value: "dark", icon: Moon, label: "Dark" },
-            { value: "system", icon: Monitor, label: "System" }].
+            { value: "light", icon: Sun, label: t("settings.light") },
+            { value: "dark", icon: Moon, label: t("settings.dark") },
+            { value: "system", icon: Monitor, label: t("settings.system") }].
             map((opt) =>
             <Button
               key={opt.value}
@@ -222,7 +224,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Phone className="h-5 w-5" />
-            SMS Notifications
+            {t("settings.smsNotifications")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -243,7 +245,7 @@ export default function SettingsPage() {
           </div>
           <div className="flex gap-3">
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? "Saving..." : "Save"}
+              {saving ? t("settings.saving") : t("settings.save")}
             </Button>
             {hasPhone &&
             <Button
@@ -251,7 +253,7 @@ export default function SettingsPage() {
               onClick={handleTestSMS}
               disabled={testing}>
               
-                {testing ? "Sending..." : "Send Test SMS"}
+                {testing ? t("settings.sending") : t("settings.sendTestSms")}
               </Button>
             }
             {phone &&
@@ -268,7 +270,7 @@ export default function SettingsPage() {
                 });
               }}>
               
-                Remove
+                {t("settings.remove")}
               </Button>
             }
           </div>
@@ -298,7 +300,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <SlidersHorizontal className="h-5 w-5" />
-            Quick Add Preferences
+            {t("settings.quickAddPreferences")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -375,18 +377,18 @@ export default function SettingsPage() {
       {}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-lg">Manage Accounts</CardTitle>
+          <CardTitle className="text-lg">{t("settings.manageAccounts")}</CardTitle>
           <CreateAccountDrawer>
             <Button size="sm" className="flex items-center gap-1">
               <Plus className="h-4 w-4" />
-              Add Account
+              {t("settings.addAccount")}
             </Button>
           </CreateAccountDrawer>
         </CardHeader>
         <CardContent>
           {accounts.length === 0 ?
           <p className="text-sm text-muted-foreground">
-              No accounts found.
+              {t("settings.noAccounts")}
             </p> :
 
           <div className="space-y-3">
@@ -448,7 +450,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Mail className="h-5 w-5" />
-            Contact Us
+            {t("settings.contactUs")}
           </CardTitle>
         </CardHeader>
         <CardContent>

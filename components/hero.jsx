@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Sparkles, ShieldCheck, Zap, ArrowRight } from "lucide-react";
 
-const HeroSection = () => {
+const HeroSection = ({ copy }) => {
   return (
     <section className="relative flex min-h-[calc(100vh-5rem)] items-center px-4 py-8 md:py-12">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -19,31 +19,31 @@ const HeroSection = () => {
         <div className="space-y-6 text-center lg:text-left">
           <div className="landing-fade-up inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50/70 px-3 py-1 text-xs font-medium text-orange-700 dark:border-orange-900/50 dark:bg-orange-950/30 dark:text-orange-300">
             <Sparkles className="h-3.5 w-3.5" />
-            AI-assisted finance for high-speed decisions
+            {copy.badge}
           </div>
 
           <h1 className="landing-fade-up landing-delay-1 text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
-            Stop Tracking.
+            {copy.titleFirst}
             <br />
             <span className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-700 bg-clip-text text-transparent">
-              Start Controlling Money.
+              {copy.titleSecond}
             </span>
           </h1>
 
           <p className="landing-fade-up landing-delay-2 mx-auto max-w-xl text-base text-muted-foreground sm:text-lg lg:mx-0">
-            Gullak turns every transaction into momentum. Capture expenses, forecast outcomes, and get signal-first insights without dashboard clutter.
+            {copy.subtitle}
           </p>
 
           <div className="landing-fade-up landing-delay-2 flex flex-wrap justify-center gap-2 lg:justify-start">
-            <span className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5 text-green-600" />Secure auth</span>
-            <span className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs text-muted-foreground"><Zap className="h-3.5 w-3.5 text-orange-500" />Realtime insights</span>
-            <span className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs text-muted-foreground"><Sparkles className="h-3.5 w-3.5 text-cyan-600" />Smart automation</span>
+            <span className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5 text-green-600" />{copy.secureAuth}</span>
+            <span className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs text-muted-foreground"><Zap className="h-3.5 w-3.5 text-orange-500" />{copy.realtimeInsights}</span>
+            <span className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs text-muted-foreground"><Sparkles className="h-3.5 w-3.5 text-cyan-600" />{copy.smartAutomation}</span>
           </div>
 
           <div className="landing-fade-up landing-delay-3 flex flex-wrap justify-center gap-3 lg:justify-start">
           <Link href="/dashboard">
             <Button size="lg" className="group px-8">
-              Enter Dashboard
+              {copy.enterDashboard}
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Button>
           </Link>
@@ -51,16 +51,16 @@ const HeroSection = () => {
 
           <div className="landing-fade-up landing-delay-3 grid grid-cols-3 gap-3 rounded-2xl border bg-card/70 p-3 text-left">
             <div>
-              <p className="text-xs text-muted-foreground">Users</p>
-              <p className="text-lg font-bold">50K+</p>
+              <p className="text-xs text-muted-foreground">{copy.users}</p>
+              <p className="text-lg font-bold">{copy.usersValue}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Tracked</p>
-              <p className="text-lg font-bold">Rs.200Cr+</p>
+              <p className="text-xs text-muted-foreground">{copy.tracked}</p>
+              <p className="text-lg font-bold">{copy.trackedValue}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Uptime</p>
-              <p className="text-lg font-bold">99.9%</p>
+              <p className="text-xs text-muted-foreground">{copy.uptime}</p>
+              <p className="text-lg font-bold">{copy.uptimeValue}</p>
             </div>
           </div>
         </div>
