@@ -20,20 +20,22 @@ import {
   SelectTrigger,
   SelectValue } from
 "@/components/ui/select";
+import { useLanguage } from "@/components/language-provider";
 
-const DATE_RANGES = {
-  "7D": { label: "Last 7 Days", days: 7 },
-  "1M": { label: "Last Month", days: 30 },
-  "3M": { label: "Last 3 Months", days: 90 },
-  "6M": { label: "Last 6 Months", days: 180 },
-  ALL: { label: "All Time", days: null }
+const DATE_RANGE_KEYS = {
+  "7D": { days: 7, labelKey: "accountChart.last7Days" },
+  "1M": { days: 30, labelKey: "accountChart.lastMonth" },
+  "3M": { days: 90, labelKey: "accountChart.last3Months" },
+  "6M": { days: 180, labelKey: "accountChart.last6Months" },
+  ALL: { days: null, labelKey: "accountChart.allTime" }
 };
 
 export function AccountChart({ transactions }) {
   const [dateRange, setDateRange] = useState("1M");
+  const { t } = useLanguage();
 
   const filteredData = useMemo(() => {
-    const range = DATE_RANGES[dateRange];
+    const range = DATE_RANGE_KEYS[dateRange];
     const now = new Date();
     const startDate = range.days ?
     startOfDay(subDays(now, range.days)) :
@@ -79,16 +81,16 @@ export function AccountChart({ transactions }) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-7">
         <CardTitle className="text-base font-normal">
-          Transaction Overview
+          {t("accountChart.transactionOverview")}
         </CardTitle>
         <Select defaultValue={dateRange} onValueChange={setDateRange}>
           <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Select range" />
+            <SelectValue placeholder={t("accountChart.selectRange")} />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(DATE_RANGES).map(([key, { label }]) =>
+            {Object.entries(DATE_RANGE_KEYS).map(([key, { labelKey }]) =>
             <SelectItem key={key} value={key}>
-                {label}
+                {t(labelKey)}
               </SelectItem>
             )}
           </SelectContent>
@@ -97,25 +99,25 @@ export function AccountChart({ transactions }) {
       <CardContent>
         <div className="flex justify-around mb-6 text-sm">
           <div className="text-center">
-            <p className="text-muted-foreground">Total Income</p>
+            <p className="text-muted-foreground">{t("accountChart.totalIncome")}</p>
             <p className="text-lg font-bold text-green-500">
               ₹{totals.income.toFixed(2)}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-muted-foreground">Total Expenses</p>
+            <p className="text-muted-foreground">{t("accountChart.totalExpenses")}</p>
             <p className="text-lg font-bold text-red-500">
               ₹{totals.expense.toFixed(2)}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-muted-foreground">Net</p>
+            <p className="text-muted-foreground">{t("accountChart.net")}</p>
             <p
               className={`text-lg font-bold ${totals.income - totals.expense >= 0 ?
               "text-green-500" :
               "text-red-500"}`
               }>
-              
+
               ₹{(totals.income - totals.expense).toFixed(2)}
             </p>
           </div>
@@ -125,20 +127,20 @@ export function AccountChart({ transactions }) {
             <BarChart
               data={filteredData}
               margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-              
+
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="date"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false} />
-              
+
               <YAxis
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) => `₹${value}`} />
-              
+
               <Tooltip
                 formatter={(value) => [`₹${value}`, undefined]}
                 contentStyle={{
@@ -146,20 +148,20 @@ export function AccountChart({ transactions }) {
                   border: "1px solid hsl(var(--border))",
                   borderRadius: "var(--radius)"
                 }} />
-              
+
               <Legend />
               <Bar
                 dataKey="income"
-                name="Income"
+                name={t("accountChart.income")}
                 fill="#22c55e"
                 radius={[4, 4, 0, 0]} />
-              
+
               <Bar
                 dataKey="expense"
-                name="Expense"
+                name={t("accountChart.expense")}
                 fill="#ef4444"
                 radius={[4, 4, 0, 0]} />
-              
+
             </BarChart>
           </ResponsiveContainer>
         </div>

@@ -50,7 +50,7 @@ export function ReceiptScanner({ onScanComplete }) {
   useEffect(() => {
     if (scannedData && !scanReceiptLoading) {
       onScanComplete(scannedData);
-      toast.success("Receipt scanned successfully");
+      toast.success(t("transaction.scanSuccess"));
     }
   }, [scanReceiptLoading, scannedData]);
 

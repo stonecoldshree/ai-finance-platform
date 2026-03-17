@@ -85,27 +85,27 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (deleteResult?.success) {
-      toast.success("Account deleted successfully");
+      toast.success(t("settings.accountDeleted"));
       loadAccounts();
     }
   }, [deleteResult]);
 
   useEffect(() => {
     if (updateDefaultResult?.success) {
-      toast.success("Default account updated successfully");
+      toast.success(t("settings.defaultUpdated"));
       loadAccounts();
     }
   }, [updateDefaultResult]);
 
   useEffect(() => {
     if (deleteError) {
-      toast.error(deleteError.message || "Failed to delete account");
+      toast.error(deleteError.message || t("settings.failedDelete"));
     }
   }, [deleteError]);
 
   useEffect(() => {
     if (defaultError) {
-      toast.error(defaultError.message || "Failed to update default account");
+      toast.error(defaultError.message || t("settings.failedDefault"));
     }
   }, [defaultError]);
 
@@ -114,13 +114,13 @@ export default function SettingsPage() {
     try {
       const result = await updatePhoneNumber(phone);
       if (result.success) {
-        toast.success(phone ? "Phone number saved!" : "Phone number removed.");
+        toast.success(phone ? t("settings.phoneSaved") : t("settings.phoneRemoved"));
         setHasPhone(!!phone);
       } else {
         toast.error(result.error);
       }
     } catch {
-      toast.error("Failed to save phone number");
+      toast.error(t("settings.failedSavePhone"));
     } finally {
       setSaving(false);
     }
@@ -131,12 +131,12 @@ export default function SettingsPage() {
     try {
       const result = await sendTestSMS();
       if (result.success) {
-        toast.success(`Test SMS sent to ${result.phoneNumber}`);
+        toast.success(t("settings.testSmsSent", { phone: result.phoneNumber }));
       } else {
         toast.error(result.error);
       }
     } catch {
-      toast.error("Failed to send test SMS");
+      toast.error(t("settings.failedTestSms"));
     } finally {
       setTesting(false);
     }
@@ -144,12 +144,10 @@ export default function SettingsPage() {
 
   const handleDeleteAccount = async (id, name, isDefault) => {
     if (isDefault) {
-      toast.error(
-        "Cannot delete the default account. Set another account as default first."
-      );
+      toast.error(t("settings.cannotDeleteDefault"));
       return;
     }
-    if (!window.confirm(`Delete "${name}"? All transactions will be lost.`))
+    if (!window.confirm(t("settings.confirmDelete", { name })))
     return;
     await deleteFn(id);
   };
@@ -165,9 +163,9 @@ export default function SettingsPage() {
   const handleSaveQuickPrefs = () => {
     try {
       localStorage.setItem(QUICK_ADD_PREFS_KEY, JSON.stringify(quickPrefs));
-      toast.success("Quick-add preferences saved");
+      toast.success(t("settings.quickPrefsSaved"));
     } catch (error) {
-      toast.error("Failed to save preferences");
+      toast.error(t("settings.failedSavePrefs"));
       console.error("Failed to save quick-add preferences:", error.message);
     }
   };
@@ -176,9 +174,9 @@ export default function SettingsPage() {
     setQuickPrefs(DEFAULT_QUICK_PREFS);
     try {
       localStorage.setItem(QUICK_ADD_PREFS_KEY, JSON.stringify(DEFAULT_QUICK_PREFS));
-      toast.success("Quick-add preferences reset to default");
+      toast.success(t("settings.quickPrefsReset"));
     } catch (error) {
-      toast.error("Failed to reset preferences");
+      toast.error(t("settings.failedResetPrefs"));
       console.error("Failed to reset quick-add preferences:", error.message);
     }
   };
@@ -229,8 +227,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Add your phone number to receive SMS alerts for budget warnings,
-            monthly reports, and transaction updates.
+            {t("settings.phoneNumberDesc")}
           </p>
           <div>
             <Input
@@ -238,9 +235,9 @@ export default function SettingsPage() {
               placeholder="+919876543210"
               value={phone}
               onChange={(e) => setPhone(e.target.value)} />
-            
+
             <p className="text-xs text-muted-foreground mt-1">
-              International format with country code (e.g. +91 for India)
+              {t("settings.phoneFormat")}
             </p>
           </div>
           <div className="flex gap-3">
@@ -264,7 +261,7 @@ export default function SettingsPage() {
                 setPhone("");
                 updatePhoneNumber("").then((result) => {
                   if (result.success) {
-                    toast.success("Phone number removed.");
+                    toast.success(t("settings.phoneRemoved"));
                     setHasPhone(false);
                   }
                 });
@@ -281,17 +278,17 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Bell className="h-5 w-5" />
-            Notification Delivery Mode
+            {t("settings.notificationModeTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <p className="text-muted-foreground">
-            Launch mode is optimized for reliability and free-tier limits.
+            {t("settings.notificationModeDesc")}
           </p>
           <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
-            <li>Weekly and monthly digests are delivered primarily by email.</li>
-            <li>SMS is reserved for critical alerts like budget/anomaly warnings.</li>
-            <li>If AI quotas are reached, rule-based insights continue automatically.</li>
+            <li>{t("settings.notificationModeLi1")}</li>
+            <li>{t("settings.notificationModeLi2")}</li>
+            <li>{t("settings.notificationModeLi3")}</li>
           </ul>
         </CardContent>
       </Card>
@@ -306,8 +303,8 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div>
-              <p className="text-sm font-medium">Remember last draft</p>
-              <p className="text-xs text-muted-foreground">Reuse your last selected account and type in quick-add.</p>
+              <p className="text-sm font-medium">{t("settings.rememberLastDraft")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.rememberLastDraftDesc")}</p>
             </div>
             <Switch
               checked={quickPrefs.rememberLast}
@@ -317,47 +314,47 @@ export default function SettingsPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <p className="text-sm font-medium">Default transaction type</p>
+              <p className="text-sm font-medium">{t("settings.defaultTransactionType")}</p>
               <Select
                 value={quickPrefs.defaultType}
                 onValueChange={(value) => setQuickPrefs((prev) => ({ ...prev, defaultType: value }))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select default type" />
+                  <SelectValue placeholder={t("settings.selectDefaultType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="EXPENSE">Expense</SelectItem>
-                  <SelectItem value="INCOME">Income</SelectItem>
+                  <SelectItem value="EXPENSE">{t("transaction.expense")}</SelectItem>
+                  <SelectItem value="INCOME">{t("transaction.income")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium">Quick amount profile</p>
+              <p className="text-sm font-medium">{t("settings.quickAmountProfile")}</p>
               <Select
                 value={quickPrefs.amountProfile}
                 onValueChange={(value) => setQuickPrefs((prev) => ({ ...prev, amountProfile: value }))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select amount profile" />
+                  <SelectValue placeholder={t("settings.selectAmountProfile")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="compact">Compact</SelectItem>
-                  <SelectItem value="standard">Standard</SelectItem>
-                  <SelectItem value="premium">Premium</SelectItem>
+                  <SelectItem value="compact">{t("settings.compact")}</SelectItem>
+                  <SelectItem value="standard">{t("settings.standard")}</SelectItem>
+                  <SelectItem value="premium">{t("settings.premium")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm font-medium">Default quick-add account</p>
+            <p className="text-sm font-medium">{t("settings.defaultQuickAddAccount")}</p>
             <Select
               value={quickPrefs.defaultAccountId}
               onValueChange={(value) => setQuickPrefs((prev) => ({ ...prev, defaultAccountId: value }))}>
               <SelectTrigger>
-                <SelectValue placeholder="Choose default account" />
+                <SelectValue placeholder={t("settings.chooseDefaultAccount")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="auto">Auto (current default account)</SelectItem>
+                <SelectItem value="auto">{t("settings.autoAccount")}</SelectItem>
                 {accounts.map((account) =>
                 <SelectItem key={account.id} value={account.id}>
                     {account.name}
@@ -368,8 +365,8 @@ export default function SettingsPage() {
           </div>
 
           <div className="flex gap-3">
-            <Button onClick={handleSaveQuickPrefs}>Save Preferences</Button>
-            <Button variant="outline" onClick={handleResetQuickPrefs}>Reset</Button>
+            <Button onClick={handleSaveQuickPrefs}>{t("settings.savePreferences")}</Button>
+            <Button variant="outline" onClick={handleResetQuickPrefs}>{t("settings.reset")}</Button>
           </div>
         </CardContent>
       </Card>
@@ -402,7 +399,7 @@ export default function SettingsPage() {
                       {account.name}
                       {account.isDefault &&
                   <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
-                          Default
+                          {t("settings.defaultBadge")}
                         </span>
                   }
                     </p>
@@ -413,7 +410,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">Default</span>
+                      <span className="text-xs text-muted-foreground">{t("settings.defaultToggle")}</span>
                       <Switch
                     checked={account.isDefault}
                     onCheckedChange={() => handleSetDefaultAccount(account)}
@@ -455,20 +452,20 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-2">
-            Have questions, feedback, or need help? Reach out to us.
+            {t("settings.contactHelper")}
           </p>
           <div className="space-y-1 text-sm">
             <p>
-              Email:{" "}
+              {t("settings.emailLabel")}{" "}
               <a
                 href="mailto:support@gullak.app"
                 className="text-orange-600 hover:underline">
-                
+
                 support@gullak.app
               </a>
             </p>
             <p className="text-muted-foreground">
-              We typically respond within 24 hours.
+              {t("settings.respondTime")}
             </p>
           </div>
         </CardContent>

@@ -27,9 +27,11 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { createAccount } from "@/actions/dashboard";
 import { accountSchema } from "@/app/lib/schema";
+import { useLanguage } from "@/components/language-provider";
 
 export function CreateAccountDrawer({ children }) {
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
   const {
     register,
     handleSubmit,
@@ -60,7 +62,7 @@ export function CreateAccountDrawer({ children }) {
 
   useEffect(() => {
     if (newAccount) {
-      toast.success("Account created successfully");
+      toast.success(t("createAccountDrawer.createdSuccess"));
       reset();
       setOpen(false);
     }
@@ -68,7 +70,7 @@ export function CreateAccountDrawer({ children }) {
 
   useEffect(() => {
     if (error) {
-      toast.error(error.message || "Failed to create account");
+      toast.error(error.message || t("createAccountDrawer.failedCreate"));
     }
   }, [error]);
 
@@ -77,7 +79,7 @@ export function CreateAccountDrawer({ children }) {
       <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>Create New Account</DrawerTitle>
+          <DrawerTitle>{t("createAccountDrawer.title")}</DrawerTitle>
         </DrawerHeader>
         <div className="px-4 pb-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -85,14 +87,14 @@ export function CreateAccountDrawer({ children }) {
               <label
                 htmlFor="name"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                
-                Account Name
+
+                {t("createAccountDrawer.accountName")}
               </label>
               <Input
                 id="name"
-                placeholder="e.g., Main Checking"
+                placeholder={t("createAccountDrawer.namePlaceholder")}
                 {...register("name")} />
-              
+
               {errors.name &&
               <p className="text-sm text-red-500">{errors.name.message}</p>
               }
@@ -102,19 +104,19 @@ export function CreateAccountDrawer({ children }) {
               <label
                 htmlFor="type"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                
-                Account Type
+
+                {t("createAccountDrawer.accountType")}
               </label>
               <Select
                 onValueChange={(value) => setValue("type", value)}
                 defaultValue={watch("type")}>
-                
+
                 <SelectTrigger id="type">
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t("createAccountDrawer.selectType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CURRENT">Current</SelectItem>
-                  <SelectItem value="SAVINGS">Savings</SelectItem>
+                  <SelectItem value="CURRENT">{t("createAccountDrawer.current")}</SelectItem>
+                  <SelectItem value="SAVINGS">{t("createAccountDrawer.savings")}</SelectItem>
                 </SelectContent>
               </Select>
               {errors.type &&
@@ -126,8 +128,8 @@ export function CreateAccountDrawer({ children }) {
               <label
                 htmlFor="balance"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                
-                Initial Balance
+
+                {t("createAccountDrawer.initialBalance")}
               </label>
               <Input
                 id="balance"
@@ -135,7 +137,7 @@ export function CreateAccountDrawer({ children }) {
                 step="0.01"
                 placeholder="0.00"
                 {...register("balance")} />
-              
+
               {errors.balance &&
               <p className="text-sm text-red-500">{errors.balance.message}</p>
               }
@@ -146,38 +148,38 @@ export function CreateAccountDrawer({ children }) {
                 <label
                   htmlFor="isDefault"
                   className="text-base font-medium cursor-pointer">
-                  
-                  Set as Default
+
+                  {t("createAccountDrawer.setDefault")}
                 </label>
                 <p className="text-sm text-muted-foreground">
-                  This account will be selected by default for transactions
+                  {t("createAccountDrawer.setDefaultDesc")}
                 </p>
               </div>
               <Switch
                 id="isDefault"
                 checked={watch("isDefault")}
                 onCheckedChange={(checked) => setValue("isDefault", checked)} />
-              
+
             </div>
 
             <div className="flex gap-4 pt-4">
               <DrawerClose asChild>
                 <Button type="button" variant="outline" className="flex-1">
-                  Cancel
+                  {t("createAccountDrawer.cancel")}
                 </Button>
               </DrawerClose>
               <Button
                 type="submit"
                 className="flex-1"
                 disabled={createAccountLoading}>
-                
+
                 {createAccountLoading ?
                 <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
+                    {t("createAccountDrawer.creating")}
                   </> :
 
-                "Create Account"
+                t("createAccountDrawer.createAccount")
                 }
               </Button>
             </div>

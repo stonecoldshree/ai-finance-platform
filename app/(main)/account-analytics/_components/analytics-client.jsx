@@ -52,7 +52,7 @@ const COLORS = [
 
 
 export default function AccountAnalyticsClient({ accounts, transactions, budgetsByAccount = {} }) {
-  const { locale } = useLanguage();
+  const { locale, t } = useLanguage();
   const [selectedAccountId, setSelectedAccountId] = useState(
     accounts.find((a) => a.isDefault)?.id || accounts[0]?.id
   );
@@ -215,7 +215,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
           onValueChange={setSelectedAccountId}>
           
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select account" />
+            <SelectValue placeholder={t("analytics.selectAccount")} />
           </SelectTrigger>
           <SelectContent>
             {accounts.map((account) =>
@@ -227,7 +227,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
         </Select>
         <Select value={selectedMonth} onValueChange={setSelectedMonth}>
           <SelectTrigger className="w-[170px]">
-            <SelectValue placeholder="Select month" />
+            <SelectValue placeholder={t("analytics.selectMonth")} />
           </SelectTrigger>
           <SelectContent>
             {monthOptions.map((monthValue) =>
@@ -259,7 +259,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">{periodLabel} Income</p>
+                <p className="text-sm text-muted-foreground">{periodLabel} {t("analytics.income")}</p>
                 <p className="text-2xl font-bold text-green-500">
                   ₹{monthStats.income.toFixed(2)}
                 </p>
@@ -273,7 +273,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">
-                  {periodLabel} Expenses
+                  {periodLabel} {t("analytics.expenses")}
                 </p>
                 <p className="text-2xl font-bold text-red-500">
                   ₹{monthStats.expense.toFixed(2)}
@@ -287,7 +287,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">{periodLabel} Net</p>
+                <p className="text-sm text-muted-foreground">{periodLabel} {t("analytics.net")}</p>
                 <p
                   className={cn(
                     "text-2xl font-bold",
@@ -305,7 +305,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">{periodLabel} Transactions</p>
+                <p className="text-sm text-muted-foreground">{periodLabel} {t("analytics.transactions")}</p>
                 <p className="text-2xl font-bold">{monthStats.count}</p>
               </div>
               <ArrowUpRight className="h-8 w-8 text-orange-500 opacity-50" />
@@ -317,17 +317,17 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Average Daily Expense</p>
+            <p className="text-sm text-muted-foreground">{t("analytics.averageDailyExpense")}</p>
             <p className="mt-1 text-2xl font-bold text-red-500">
               ₹{analyticsInsights.averageDailyExpense.toFixed(2)}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">Based on active spending days in {periodLabel}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t("analytics.basedOnActiveDays", { period: periodLabel })}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Peak Spending Day</p>
+            <p className="text-sm text-muted-foreground">{t("analytics.peakSpendingDay")}</p>
             <p className="mt-1 text-2xl font-bold text-orange-500">
               {analyticsInsights.peakExpenseDay ?
               analyticsInsights.peakExpenseDay.date :
@@ -336,8 +336,8 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               {analyticsInsights.peakExpenseDay ?
-              `₹${analyticsInsights.peakExpenseDay.expense.toFixed(2)} spent` :
-              "No expense data yet"
+              `₹${analyticsInsights.peakExpenseDay.expense.toFixed(2)} ${t("analytics.spent")}` :
+              t("analytics.noExpenseData")
               }
             </p>
           </CardContent>
@@ -345,7 +345,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
 
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Savings Rate</p>
+            <p className="text-sm text-muted-foreground">{t("analytics.savingsRate")}</p>
             <p
               className={cn(
                 "mt-1 text-2xl font-bold",
@@ -354,7 +354,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
 
               {analyticsInsights.savingsRate.toFixed(1)}%
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">Income retained after monthly spending</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t("analytics.incomeRetained")}</p>
           </CardContent>
         </Card>
       </div>
@@ -362,12 +362,12 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
       {analyticsInsights.topCategory &&
       <Card className="border-orange-200/60 bg-orange-50/40 dark:border-orange-900/40 dark:bg-orange-950/10">
           <CardContent className="pt-6">
-            <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Insight of the month</p>
+            <p className="text-sm font-medium text-orange-700 dark:text-orange-300">{t("analytics.insightOfMonth")}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              {analyticsInsights.topCategory.name} contributes {analyticsInsights.topCategoryShare.toFixed(1)}% of your monthly expense total.
+              {analyticsInsights.topCategory.name} {t("analytics.contributes", { pct: analyticsInsights.topCategoryShare.toFixed(1) })}
               {analyticsInsights.topCategoryShare >= 35 ?
-              " This category is highly concentrated, so optimizing it can quickly improve net cashflow." :
-              " Your category distribution is fairly balanced this month."
+              t("analytics.highConcentration") :
+              t("analytics.balanced")
               }
             </p>
           </CardContent>
@@ -380,13 +380,13 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
         <Card>
           <CardHeader>
             <CardTitle className="text-base font-normal">
-              Daily Income vs Expenses ({periodLabel})
+              {t("analytics.dailyIncomeVsExpenses", { period: periodLabel })}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {dailyData.length === 0 ?
             <p className="text-center text-muted-foreground py-8">
-                No transactions for this period
+                {t("analytics.noTransactionsPeriod")}
               </p> :
 
             <div className="h-[300px]">
@@ -410,13 +410,13 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
                     <Legend />
                     <Bar
                     dataKey="income"
-                    name="Income"
+                    name={t("analytics.incomeBar")}
                     fill="#22c55e"
                     radius={[4, 4, 0, 0]} />
-                  
+
                     <Bar
                     dataKey="expense"
-                    name="Expense"
+                    name={t("analytics.expenseBar")}
                     fill="#ef4444"
                     radius={[4, 4, 0, 0]} />
                   
@@ -431,13 +431,13 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
         <Card>
           <CardHeader>
             <CardTitle className="text-base font-normal">
-              Expenses by Category ({periodLabel})
+              {t("analytics.expensesByCategory", { period: periodLabel })}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 pb-5">
             {categoryData.length === 0 ?
             <p className="text-center text-muted-foreground py-8">
-                No expenses for this period
+                {t("analytics.noExpensesPeriod")}
               </p> :
 
             <div className="h-[300px]">
@@ -483,7 +483,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
       <Card>
           <CardHeader>
             <CardTitle className="text-base font-normal">
-              Top Spending Categories
+              {t("analytics.topSpendingCategories")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -514,19 +514,19 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
                         {trendState === "up" &&
                         <>
                             <ArrowUpRight className="h-3.5 w-3.5 text-red-500" />
-                            <span className="text-red-500">+{deltaPct.toFixed(1)}% vs previous month</span>
+                            <span className="text-red-500">+{deltaPct.toFixed(1)}% {t("analytics.vsPreviousMonth")}</span>
                           </>
                         }
                         {trendState === "down" &&
                         <>
                             <ArrowDownRight className="h-3.5 w-3.5 text-green-500" />
-                            <span className="text-green-500">{deltaPct.toFixed(1)}% vs previous month</span>
+                            <span className="text-green-500">{deltaPct.toFixed(1)}% {t("analytics.vsPreviousMonth")}</span>
                           </>
                         }
                         {trendState === "stable" &&
                         <>
                             <Minus className="h-3.5 w-3.5" />
-                            <span>Stable vs previous month</span>
+                            <span>{t("analytics.stablePreviousMonth")}</span>
                           </>
                         }
                       </div>

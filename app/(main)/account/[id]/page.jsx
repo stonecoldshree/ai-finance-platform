@@ -4,10 +4,16 @@ import { BarLoader } from "react-spinners";
 import { TransactionTable } from "../_components/transaction-table";
 import { notFound } from "next/navigation";
 import { AccountChart } from "../_components/account-chart";
+import { getLocaleFromCookie } from "@/lib/i18n/server";
+import { getTranslator } from "@/lib/i18n/translations";
 
 export default async function AccountPage({ params }) {
   const { id } = await params;
-  const accountData = await getAccountWithTransactions(id);
+  const [accountData, locale] = await Promise.all([
+    getAccountWithTransactions(id),
+    getLocaleFromCookie()
+  ]);
+  const t = getTranslator(locale);
 
   if (!accountData) {
     notFound();
@@ -24,7 +30,7 @@ export default async function AccountPage({ params }) {
           </h1>
           <p className="text-muted-foreground">
             {account.type.charAt(0) + account.type.slice(1).toLowerCase()}{" "}
-            Account
+            {t("account.accountLabel")}
           </p>
         </div>
 
@@ -33,7 +39,7 @@ export default async function AccountPage({ params }) {
             ₹{parseFloat(account.balance).toFixed(2)}
           </div>
           <p className="text-sm text-muted-foreground">
-            {account._count.transactions} Transactions
+            {t("account.transactionsCount", { count: account._count.transactions })}
           </p>
         </div>
       </div>

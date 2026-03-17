@@ -1,12 +1,16 @@
 import { getUserAccounts, getDashboardData } from "@/actions/dashboard";
 import { getCurrentBudget } from "@/actions/budget";
 import AccountAnalyticsClient from "./_components/analytics-client";
+import { getLocaleFromCookie } from "@/lib/i18n/server";
+import { getTranslator } from "@/lib/i18n/translations";
 
 export default async function AccountAnalyticsPage() {
-  const [accounts, transactions] = await Promise.all([
+  const [accounts, transactions, locale] = await Promise.all([
   getUserAccounts(),
-  getDashboardData({ includeAllMonths: true })]
+  getDashboardData({ includeAllMonths: true }),
+  getLocaleFromCookie()]
   );
+  const t = getTranslator(locale);
 
 
   const budgetsByAccount = {};
@@ -29,7 +33,7 @@ export default async function AccountAnalyticsPage() {
   return (
     <div className="px-5 space-y-8">
       <h1 className="text-4xl md:text-5xl font-bold tracking-tight gradient-title">
-        Account Analytics
+        {t("accountAnalytics.title")}
       </h1>
 
       {}

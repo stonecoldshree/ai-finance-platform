@@ -26,9 +26,11 @@ import {
 import Link from "next/link";
 import { updateDefaultAccount, deleteAccount } from "@/actions/account";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/language-provider";
 
 export function AccountCard({ account }) {
   const { name, type, balance, id, isDefault } = account;
+  const { t } = useLanguage();
 
   const {
     loading: updateDefaultLoading,
@@ -48,7 +50,7 @@ export function AccountCard({ account }) {
     event.preventDefault();
 
     if (isDefault) {
-      toast.warning("You need atleast 1 default account");
+      toast.warning(t("accountCard.needDefaultAccount"));
       return;
     }
 
@@ -57,7 +59,7 @@ export function AccountCard({ account }) {
 
   const handleDelete = async () => {
     if (isDefault) {
-      toast.error("Cannot delete the default account. Set another account as default first.");
+      toast.error(t("accountCard.cannotDeleteDefault"));
       return;
     }
     await deleteFn(id);
@@ -65,27 +67,27 @@ export function AccountCard({ account }) {
 
   useEffect(() => {
     if (updatedAccount?.success) {
-      toast.success("Default account updated successfully");
+      toast.success(t("accountCard.defaultUpdated"));
     }
   }, [updatedAccount]);
 
   useEffect(() => {
     if (error) {
-      toast.error(error.message || "Failed to update default account");
+      toast.error(error.message || t("accountCard.failedUpdateDefault"));
     }
   }, [error]);
 
   useEffect(() => {
     if (deleteResult?.success) {
-      toast.success("Account deleted successfully");
+      toast.success(t("accountCard.accountDeleted"));
     } else if (deleteResult && !deleteResult.success) {
-      toast.error(deleteResult.error || "Failed to delete account");
+      toast.error(deleteResult.error || t("accountCard.failedDelete"));
     }
   }, [deleteResult]);
 
   useEffect(() => {
     if (deleteError) {
-      toast.error(deleteError.message || "Failed to delete account");
+      toast.error(deleteError.message || t("accountCard.failedDelete"));
     }
   }, [deleteError]);
 
@@ -107,17 +109,17 @@ export function AccountCard({ account }) {
             ₹{parseFloat(balance).toFixed(2)}
           </div>
           <p className="text-xs text-muted-foreground">
-            {type.charAt(0) + type.slice(1).toLowerCase()} Account
+            {type.charAt(0) + type.slice(1).toLowerCase()} {t("accountCard.accountLabel")}
           </p>
         </CardContent>
         <CardFooter className="flex justify-between text-sm text-muted-foreground">
           <div className="flex items-center">
             <ArrowUpRight className="mr-1 h-4 w-4 text-green-500" />
-            Income
+            {t("accountCard.income")}
           </div>
           <div className="flex items-center">
             <ArrowDownRight className="mr-1 h-4 w-4 text-red-500" />
-            Expense
+            {t("accountCard.expense")}
           </div>
         </CardFooter>
       </Link>
@@ -135,20 +137,19 @@ export function AccountCard({ account }) {
             </AlertDialogTrigger>
             <AlertDialogContent onClick={(e) => e.stopPropagation()}>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete &quot;{name}&quot; Account?</AlertDialogTitle>
+                <AlertDialogTitle>{t("accountCard.deleteTitle", { name })}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete this account and all its
-                  transactions. This action cannot be undone.
+                  {t("accountCard.deleteDescription")}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>{t("accountCard.cancel")}</AlertDialogCancel>
                 <AlertDialogAction
                 onClick={handleDelete}
                 disabled={deleteLoading}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                
-                  {deleteLoading ? "Deleting..." : "Delete"}
+
+                  {deleteLoading ? t("accountCard.deleting") : t("accountCard.delete")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

@@ -20,21 +20,14 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { useLanguage } from "@/components/language-provider";
 
 const INTERVALS = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"];
-
-function formatIntervalLabel(interval) {
-  if (!interval) return "Monthly";
-  return interval.charAt(0) + interval.slice(1).toLowerCase();
-}
-
-function getStatusLabel(status) {
-  return status === "COMPLETED" ? "Active" : "Paused";
-}
 
 export default function RecurringTransactionsClient({ initialItems = [] }) {
   const [items, setItems] = useState(initialItems);
   const [loadingId, setLoadingId] = useState(null);
+  const { t } = useLanguage();
 
   const refresh = async () => {
     const result = await getRecurringTransactions();
@@ -49,10 +42,10 @@ export default function RecurringTransactionsClient({ initialItems = [] }) {
     setLoadingId(id);
     try {
       await pauseRecurringTransaction(id);
-      toast.success("Recurring transaction paused");
+      toast.success(t("recurring.paused"));
       await refresh();
     } catch (error) {
-      toast.error(error.message || "Failed to pause recurring transaction");
+      toast.error(error.message || t("recurring.failedPause"));
     } finally {
       setLoadingId(null);
     }
@@ -62,10 +55,10 @@ export default function RecurringTransactionsClient({ initialItems = [] }) {
     setLoadingId(id);
     try {
       await resumeRecurringTransaction(id);
-      toast.success("Recurring transaction resumed");
+      toast.success(t("recurring.resumed"));
       await refresh();
     } catch (error) {
-      toast.error(error.message || "Failed to resume recurring transaction");
+      toast.error(error.message || t("recurring.failedResume"));
     } finally {
       setLoadingId(null);
     }
@@ -75,10 +68,10 @@ export default function RecurringTransactionsClient({ initialItems = [] }) {
     setLoadingId(id);
     try {
       await disableRecurringTransaction(id);
-      toast.success("Recurring template removed");
+      toast.success(t("recurring.removed"));
       await refresh();
     } catch (error) {
-      toast.error(error.message || "Failed to disable recurring transaction");
+      toast.error(error.message || t("recurring.failedDisable"));
     } finally {
       setLoadingId(null);
     }
@@ -88,22 +81,32 @@ export default function RecurringTransactionsClient({ initialItems = [] }) {
     setLoadingId(id);
     try {
       await updateRecurringInterval(id, interval);
-      toast.success("Recurring interval updated");
+      toast.success(t("recurring.intervalUpdated"));
       await refresh();
     } catch (error) {
-      toast.error(error.message || "Failed to update interval");
+      toast.error(error.message || t("recurring.failedInterval"));
     } finally {
       setLoadingId(null);
     }
+  };
+
+  const getIntervalLabel = (interval) => {
+    if (!interval) return t("recurring.monthly");
+    const key = `recurring.interval${interval.charAt(0) + interval.slice(1).toLowerCase()}`;
+    return t(key, {}, interval.charAt(0) + interval.slice(1).toLowerCase());
+  };
+
+  const getStatusLabel = (status) => {
+    return status === "COMPLETED" ? t("recurring.statusActive") : t("recurring.statusPaused");
   };
 
   if (items.length === 0) {
     return (
       <Card className="border-orange-200/60 bg-orange-50/40 dark:border-orange-900/40 dark:bg-orange-950/10">
         <CardContent className="space-y-4 py-10 text-center text-sm text-muted-foreground">
-          <p>No recurring templates yet. Enable recurring when adding a transaction.</p>
+          <p>{t("recurring.noTemplates")}</p>
           <Link href="/transaction/create" className="inline-flex">
-            <Button size="sm">Create Recurring Template</Button>
+            <Button size="sm">{t("recurring.createTemplate")}</Button>
           </Link>
         </CardContent>
       </Card>
@@ -117,7 +120,7 @@ export default function RecurringTransactionsClient({ initialItems = [] }) {
           <CardHeader className="pb-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <CardTitle className="text-base font-semibold">
-                {item.description || "Recurring Template"}
+                {item.description || t("recurring.recurringTemplate")}
               </CardTitle>
               <div className="flex items-center gap-2 text-xs">
                 <span className="rounded-full border px-2 py-1 text-muted-foreground">{item.type}</span>
@@ -128,32 +131,32 @@ export default function RecurringTransactionsClient({ initialItems = [] }) {
           <CardContent className="space-y-4">
             <div className="grid gap-3 text-sm md:grid-cols-4">
               <p>
-                <span className="text-muted-foreground">Amount:</span> ₹{Number(item.amount).toFixed(2)}
+                <span className="text-muted-foreground">{t("recurring.amountLabel")}</span> ₹{Number(item.amount).toFixed(2)}
               </p>
               <p>
-                <span className="text-muted-foreground">Type:</span> {item.type}
+                <span className="text-muted-foreground">{t("recurring.typeLabel")}</span> {item.type}
               </p>
               <p>
-                <span className="text-muted-foreground">Account:</span> {item.account?.name || "N/A"}
+                <span className="text-muted-foreground">{t("recurring.accountLabel")}</span> {item.account?.name || "N/A"}
               </p>
               <p>
-                <span className="text-muted-foreground">Status:</span> {getStatusLabel(item.status)}
+                <span className="text-muted-foreground">{t("recurring.statusLabel")}</span> {getStatusLabel(item.status)}
               </p>
             </div>
 
             <div className="grid gap-3 md:grid-cols-3 md:items-center">
               <div>
-                <p className="mb-1 text-xs text-muted-foreground">Recurring Interval</p>
+                <p className="mb-1 text-xs text-muted-foreground">{t("recurring.recurringInterval")}</p>
                 <Select
                   value={item.recurringInterval || "MONTHLY"}
                   onValueChange={(value) => handleIntervalChange(item.id, value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Interval" />
+                    <SelectValue placeholder={t("recurring.recurringInterval")} />
                   </SelectTrigger>
                   <SelectContent>
                     {INTERVALS.map((interval) => (
                       <SelectItem key={interval} value={interval}>
-                        {formatIntervalLabel(interval)}
+                        {getIntervalLabel(interval)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -161,7 +164,7 @@ export default function RecurringTransactionsClient({ initialItems = [] }) {
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Next run: {item.nextRecurringDate ? new Date(item.nextRecurringDate).toLocaleDateString() : "Not scheduled"}
+                {t("recurring.nextRun")} {item.nextRecurringDate ? new Date(item.nextRecurringDate).toLocaleDateString() : t("recurring.notScheduled")}
               </p>
 
               <div className="flex flex-wrap gap-2 md:justify-end">
@@ -171,7 +174,7 @@ export default function RecurringTransactionsClient({ initialItems = [] }) {
                     size="sm"
                     onClick={() => handlePause(item.id)}
                     disabled={loadingId === item.id}>
-                    <PauseCircle className="mr-1 h-4 w-4" /> Pause
+                    <PauseCircle className="mr-1 h-4 w-4" /> {t("recurring.pause")}
                   </Button>
                 ) : (
                   <Button
@@ -179,7 +182,7 @@ export default function RecurringTransactionsClient({ initialItems = [] }) {
                     size="sm"
                     onClick={() => handleResume(item.id)}
                     disabled={loadingId === item.id}>
-                    <PlayCircle className="mr-1 h-4 w-4" /> Resume
+                    <PlayCircle className="mr-1 h-4 w-4" /> {t("recurring.resume")}
                   </Button>
                 )}
 
@@ -188,7 +191,7 @@ export default function RecurringTransactionsClient({ initialItems = [] }) {
                   size="sm"
                   onClick={() => handleDisable(item.id)}
                   disabled={loadingId === item.id}>
-                  <Trash2 className="mr-1 h-4 w-4" /> Remove
+                  <Trash2 className="mr-1 h-4 w-4" /> {t("recurring.remove")}
                 </Button>
               </div>
             </div>

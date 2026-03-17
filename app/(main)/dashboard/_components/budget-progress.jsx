@@ -16,6 +16,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateBudget } from "@/actions/budget";
+import { useLanguage } from "@/components/language-provider";
 
 export function BudgetProgress({
   initialBudget,
@@ -28,6 +29,7 @@ export function BudgetProgress({
   const [newBudget, setNewBudget] = useState(
     initialBudget?.amount?.toString() || ""
   );
+  const { t } = useLanguage();
 
   const {
     loading: isLoading,
@@ -44,7 +46,7 @@ export function BudgetProgress({
     const amount = parseFloat(newBudget);
 
     if (isNaN(amount) || amount <= 0) {
-      toast.error("Please enter a valid amount");
+      toast.error(t("budget.invalidAmount"));
       return;
     }
 
@@ -64,13 +66,13 @@ export function BudgetProgress({
   useEffect(() => {
     if (updatedBudget?.success) {
       setIsEditing(false);
-      toast.success("Budget updated successfully");
+      toast.success(t("budget.updatedSuccess"));
     }
   }, [updatedBudget]);
 
   useEffect(() => {
     if (error) {
-      toast.error(error.message || "Failed to update budget");
+      toast.error(error.message || t("budget.failedUpdate"));
     }
   }, [error]);
 
@@ -79,7 +81,7 @@ export function BudgetProgress({
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex-1">
           <CardTitle className="text-sm font-medium">
-            Monthly Budget{accountName ? ` - ${accountName}` : ""}
+            {t("budget.monthlyBudget")}{accountName ? ` - ${accountName}` : ""}
             {periodLabel ? ` (${periodLabel})` : ""}
           </CardTitle>
           <div className="flex items-center gap-2 mt-1">
@@ -90,7 +92,7 @@ export function BudgetProgress({
                 value={newBudget}
                 onChange={(e) => setNewBudget(e.target.value)}
                 className="w-32"
-                placeholder="Enter amount"
+                placeholder={t("budget.enterAmount")}
                 autoFocus
                 disabled={isLoading} />
               
@@ -115,10 +117,8 @@ export function BudgetProgress({
             <>
                 <CardDescription>
                   {initialBudget ?
-                `₹${currentExpenses.toFixed(
-                  2
-                )} of ₹${initialBudget.amount.toFixed(2)} spent` :
-                "No budget set"}
+                t("budget.spentOf", { spent: currentExpenses.toFixed(2), total: initialBudget.amount.toFixed(2) }) :
+                t("budget.noBudgetSet")}
                 </CardDescription>
                 <Button
                 variant="ghost"
@@ -148,7 +148,7 @@ export function BudgetProgress({
             } />
           
             <p className="text-xs text-muted-foreground text-right">
-              {percentUsed.toFixed(1)}% used
+              {t("budget.percentUsed", { pct: percentUsed.toFixed(1) })}
             </p>
           </div>
         }
