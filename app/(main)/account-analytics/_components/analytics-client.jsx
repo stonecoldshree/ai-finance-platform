@@ -239,7 +239,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
         </Select>
         {selectedAccount &&
         <span className="text-sm text-muted-foreground">
-            Balance: ₹{parseFloat(selectedAccount.balance).toFixed(2)}
+            {t("analytics.balance")} ₹{parseFloat(selectedAccount.balance).toFixed(2)}
           </span>
         }
       </div>
@@ -331,7 +331,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
             <p className="mt-1 text-2xl font-bold text-orange-500">
               {analyticsInsights.peakExpenseDay ?
               analyticsInsights.peakExpenseDay.date :
-              "N/A"
+              t("analytics.notAvailable")
               }
             </p>
             <p className="mt-1 text-xs text-muted-foreground">

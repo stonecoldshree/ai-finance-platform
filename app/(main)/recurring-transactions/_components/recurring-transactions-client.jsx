@@ -124,7 +124,7 @@ export default function RecurringTransactionsClient({ initialItems = [] }) {
               </CardTitle>
               <div className="flex items-center gap-2 text-xs">
                 <span className="rounded-full border px-2 py-1 text-muted-foreground">{item.type}</span>
-                <span className="rounded-full border px-2 py-1 text-muted-foreground">{item.account?.name || "N/A"}</span>
+                <span className="rounded-full border px-2 py-1 text-muted-foreground">{item.account?.name || t("recurring.notAvailable")}</span>
               </div>
             </div>
           </CardHeader>
@@ -137,7 +137,7 @@ export default function RecurringTransactionsClient({ initialItems = [] }) {
                 <span className="text-muted-foreground">{t("recurring.typeLabel")}</span> {item.type}
               </p>
               <p>
-                <span className="text-muted-foreground">{t("recurring.accountLabel")}</span> {item.account?.name || "N/A"}
+                <span className="text-muted-foreground">{t("recurring.accountLabel")}</span> {item.account?.name || t("recurring.notAvailable")}
               </p>
               <p>
                 <span className="text-muted-foreground">{t("recurring.statusLabel")}</span> {getStatusLabel(item.status)}

@@ -10,6 +10,17 @@ import { sendSMS } from "@/lib/twilio";
 import { formatSMS } from "@/lib/sms-templates";
 import EmailTemplate from "@/emails/template";
 
+const isDbConnectivityError = (error) => {
+  const message = String(error?.message || "").toLowerCase();
+  return (
+    message.includes("tenant or user not found") ||
+    message.includes("error querying the database") ||
+    message.includes("can't reach database server") ||
+    message.includes("authentication failed") ||
+    message.includes("connection")
+  );
+};
+
 const serializeTransaction = (obj) => {
   const serialized = { ...obj };
   if (obj.balance) {
@@ -25,15 +36,15 @@ export async function getUserAccounts() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId }
-  });
-
-  if (!user) {
-    throw new Error("User not found");
-  }
-
   try {
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId }
+    });
+
+    if (!user) {
+      return [];
+    }
+
     const accounts = await db.account.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
@@ -51,7 +62,9 @@ export async function getUserAccounts() {
 
     return serializedAccounts;
   } catch (error) {
-    console.error(error.message);
+    if (!isDbConnectivityError(error)) {
+      console.error("getUserAccounts failed:", error.message);
+    }
     return [];
   }
 }
@@ -177,14 +190,6 @@ export async function getDashboardData(options = {}) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId }
-  });
-
-  if (!user) {
-    throw new Error("User not found");
-  }
-
   const { includePreviousMonth = false, includeAllMonths = false } = options;
 
 
@@ -197,6 +202,14 @@ export async function getDashboardData(options = {}) {
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
   try {
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId }
+    });
+
+    if (!user) {
+      return [];
+    }
+
     const transactions = await db.transaction.findMany({
       where: {
         userId: user.id,
@@ -218,7 +231,9 @@ export async function getDashboardData(options = {}) {
 
     return transactions.map(serializeTransaction);
   } catch (error) {
-    console.error(error.message);
+    if (!isDbConnectivityError(error)) {
+      console.error("getDashboardData failed:", error.message);
+    }
     return [];
   }
 }
