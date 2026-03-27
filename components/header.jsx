@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, buttonVariants } from "./ui/button";
 import Link from "next/link";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton, UserButton, ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
 import { checkUser } from "@/lib/checkUser";
 import Image from "next/image";
 import { AppSidebar } from "./app-sidebar";
@@ -57,12 +57,17 @@ const Header = async ({ locale = "en" }) => {
           <AppSidebar />
           <div className="flex items-center gap-3 ml-auto">
             <LanguageSwitcher className="w-28" />
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: "w-10 h-10"
-                }
-              }} />
+            <ClerkLoading>
+              <div className="w-10 h-10 rounded-full bg-muted animate-pulse"></div>
+            </ClerkLoading>
+            <ClerkLoaded>
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: "w-10 h-10"
+                  }
+                }} />
+            </ClerkLoaded>
             
           </div>
         </header>

@@ -336,7 +336,7 @@ export function NoPaginationTransactionTable({ transactions }) {
                   }}
                   className="px-2 py-1 rounded text-white text-sm">
 
-                      {transaction.category}
+                      {t(`categories.${transaction.category}`, {}, transaction.category)}
                     </span>
                   </TableCell>
                   <TableCell

@@ -109,7 +109,7 @@ export function AccountCard({ account }) {
             ₹{parseFloat(balance).toFixed(2)}
           </div>
           <p className="text-xs text-muted-foreground">
-            {type.charAt(0) + type.slice(1).toLowerCase()} {t("accountCard.accountLabel")}
+            {t(`accountTypes.${type}`, {}, type.charAt(0) + type.slice(1).toLowerCase())} {t("accountCard.accountLabel")}
           </p>
         </CardContent>
         <CardFooter className="flex justify-between text-sm text-muted-foreground">

@@ -172,7 +172,7 @@ export default function ReportsClient({ accounts = [], transactions = [] }) {
             <div key={transaction.id} className="flex items-center justify-between rounded border p-2">
               <div>
                 <p className="font-medium">{transaction.description || t("reports.untitled")}</p>
-                <p className="text-xs text-muted-foreground">{formatDateValue(transaction.date, locale)} - {transaction.category}</p>
+                <p className="text-xs text-muted-foreground">{formatDateValue(transaction.date, locale)} - {t(`categories.${transaction.category}`, {}, transaction.category)}</p>
               </div>
               <p className={transaction.type === "EXPENSE" ? "text-red-500" : "text-green-500"}>
                 ₹{transaction.amount.toFixed(2)}

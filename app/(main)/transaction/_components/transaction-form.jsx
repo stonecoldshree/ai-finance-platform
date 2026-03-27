@@ -356,15 +356,15 @@ export function AddTransactionForm({
             const categoryMeta = categories.find((item) => item.id === recentCategoryId);
             return (
               <Button
-                key={recentCategoryId}
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 rounded-full px-3 text-xs"
-                onClick={() => setValue("category", recentCategoryId, { shouldValidate: true })}>
-
-                  {categoryMeta?.name || recentCategoryId}
-                </Button>);
+                  key={recentCategoryId}
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 rounded-full px-3 text-xs"
+                  onClick={() => setValue("category", recentCategoryId, { shouldValidate: true })}>
+                    {t(`categories.${recentCategoryId}`, {}, categoryMeta?.name || recentCategoryId)}
+              </Button>
+            );
 
           })}
           </div>
@@ -379,7 +379,7 @@ export function AddTransactionForm({
           <SelectContent>
             {filteredCategories.map((category) =>
             <SelectItem key={category.id} value={category.id}>
-                {category.name}
+                {t(`categories.${category.id}`, {}, category.name)}
               </SelectItem>
             )}
           </SelectContent>

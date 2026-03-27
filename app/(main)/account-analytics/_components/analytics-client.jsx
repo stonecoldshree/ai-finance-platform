@@ -131,7 +131,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
     }, {});
 
     return Object.entries(grouped).
-    map(([name, value]) => ({ name, value })).
+    map(([name, value]) => ({ id: name, name: t(`categories.${name}`, {}, name), value })).
     sort((a, b) => b.value - a.value);
   }, [accountTransactions, analysisMonth, analysisYear]);
 
@@ -491,12 +491,12 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
               {categoryData.slice(0, 5).map((cat, i) => {
               const total = categoryData.reduce((s, c) => s + c.value, 0);
               const pct = (cat.value / total * 100).toFixed(1);
-              const previousValue = previousCategoryTotals[cat.name] || 0;
+              const previousValue = previousCategoryTotals[cat.id] || 0;
               const delta = cat.value - previousValue;
               const deltaPct = previousValue > 0 ? delta / previousValue * 100 : delta > 0 ? 100 : 0;
               const trendState = Math.abs(delta) < 0.01 ? "stable" : delta > 0 ? "up" : "down";
               return (
-                <div key={cat.name} className="flex items-center gap-3">
+                <div key={cat.id} className="flex items-center gap-3">
                     <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: COLORS[i % COLORS.length] }} />

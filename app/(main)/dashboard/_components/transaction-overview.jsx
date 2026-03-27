@@ -71,7 +71,7 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
 
   const pieChartData = Object.entries(expensesByCategory).map(
     ([category, amount]) => ({
-      name: category,
+      name: t(`categories.${category}`, {}, category),
       value: amount
     })
   );
