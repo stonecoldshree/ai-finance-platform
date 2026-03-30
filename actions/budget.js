@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/prisma";
+import { getAuthUser } from "@/lib/cachedAuth";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { generateAIContent } from "@/lib/gemini";
@@ -9,16 +10,8 @@ import EmailTemplate from "@/emails/template";
 
 export async function getCurrentBudget(accountId) {
   try {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const user = await getAuthUser();
 
-    const user = await db.user.findUnique({
-      where: { clerkUserId: userId }
-    });
-
-    if (!user) {
-      throw new Error("User not found");
-    }
 
     const budget = await db.budget.findFirst({
       where: {

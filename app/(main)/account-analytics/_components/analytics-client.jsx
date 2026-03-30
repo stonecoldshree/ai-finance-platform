@@ -1,19 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  Legend,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid } from
-"recharts";
+import dynamic from "next/dynamic";
 import { format } from "date-fns";
 import {
   ArrowUpRight,
@@ -40,6 +28,79 @@ import {
   getCurrentMonthValue } from
 "@/lib/month-range";
 import { useLanguage } from "@/components/language-provider";
+
+const ChartPlaceholder = () => (
+  <div className="h-[300px] bg-muted/30 animate-pulse rounded-lg" />
+);
+
+const LazyBarChartSection = dynamic(
+  () => import("recharts").then((mod) => {
+    const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = mod;
+    const Component = ({ data, incomeLabel, expenseLabel }) => (
+      <div className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="date" fontSize={12} tickLine={false} />
+            <YAxis fontSize={12} tickLine={false} tickFormatter={(v) => `₹${v}`} />
+            <Tooltip
+              formatter={(value) => `₹${value.toFixed(2)}`}
+              contentStyle={{
+                backgroundColor: "hsl(var(--popover))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "var(--radius)"
+              }} />
+            <Legend />
+            <Bar dataKey="income" name={incomeLabel} fill="#22c55e" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="expense" name={expenseLabel} fill="#ef4444" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+    Component.displayName = "LazyBarChartSection";
+    return Component;
+  }),
+  { ssr: false, loading: ChartPlaceholder }
+);
+
+const LazyPieChartSection = dynamic(
+  () => import("recharts").then((mod) => {
+    const { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } = mod;
+    const Component = ({ data, colors }) => (
+      <div className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey="value"
+              label={({ name, value }) => `${name}: ₹${value.toFixed(2)}`}>
+              {data.map((_, index) => (
+                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+              ))}
+            </Pie>
+            <Tooltip
+              formatter={(value) => `₹${value.toFixed(2)}`}
+              contentStyle={{
+                backgroundColor: "hsl(var(--popover))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "var(--radius)"
+              }} />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    );
+    Component.displayName = "LazyPieChartSection";
+    return Component;
+  }),
+  { ssr: false, loading: ChartPlaceholder }
+);
+
+
 
 const COLORS = [
 "#FF6B6B",
@@ -389,40 +450,11 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
                 {t("analytics.noTransactionsPeriod")}
               </p> :
 
-            <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dailyData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="date" fontSize={12} tickLine={false} />
-                    <YAxis
-                    fontSize={12}
-                    tickLine={false}
-                    tickFormatter={(v) => `₹${v}`} />
-                  
-                    <Tooltip
-                    formatter={(value) => `₹${value.toFixed(2)}`}
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "var(--radius)"
-                    }} />
-                  
-                    <Legend />
-                    <Bar
-                    dataKey="income"
-                    name={t("analytics.incomeBar")}
-                    fill="#22c55e"
-                    radius={[4, 4, 0, 0]} />
-
-                    <Bar
-                    dataKey="expense"
-                    name={t("analytics.expenseBar")}
-                    fill="#ef4444"
-                    radius={[4, 4, 0, 0]} />
-                  
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+            <LazyBarChartSection
+                data={dailyData}
+                incomeLabel={t("analytics.incomeBar")}
+                expenseLabel={t("analytics.expenseBar")}
+              />
             }
           </CardContent>
         </Card>
@@ -440,39 +472,10 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
                 {t("analytics.noExpensesPeriod")}
               </p> :
 
-            <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, value }) =>
-                    `${name}: ₹${value.toFixed(2)}`
-                    }>
-                    
-                      {categoryData.map((_, index) =>
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]} />
-
-                    )}
-                    </Pie>
-                    <Tooltip
-                    formatter={(value) => `₹${value.toFixed(2)}`}
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "var(--radius)"
-                    }} />
-                  
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+            <LazyPieChartSection
+                data={categoryData}
+                colors={COLORS}
+              />
             }
           </CardContent>
         </Card>

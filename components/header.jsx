@@ -2,14 +2,14 @@ import React from "react";
 import { Button, buttonVariants } from "./ui/button";
 import Link from "next/link";
 import { SignedIn, SignedOut, SignInButton, UserButton, ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
-import { checkUser } from "@/lib/checkUser";
+import { getCachedUser } from "@/lib/cachedUser";
 import Image from "next/image";
 import { AppSidebar } from "./app-sidebar";
 import LanguageSwitcher from "./language-switcher";
 import { getTranslator } from "@/lib/i18n/translations";
 
 const Header = async ({ locale = "en" }) => {
-  await checkUser();
+  await getCachedUser();
   const t = getTranslator(locale);
 
   return (

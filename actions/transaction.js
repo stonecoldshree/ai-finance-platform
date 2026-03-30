@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
+import { getAuthUser } from "@/lib/cachedAuth";
 import { revalidatePath } from "next/cache";
 import { generateAIContent } from "@/lib/gemini";
 import aj from "@/lib/arcjet";
@@ -322,16 +323,8 @@ export async function updateTransaction(id, data) {
 
 export async function getUserTransactions(query = {}) {
   try {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const user = await getAuthUser();
 
-    const user = await db.user.findUnique({
-      where: { clerkUserId: userId }
-    });
-
-    if (!user) {
-      throw new Error("User not found");
-    }
 
     const transactions = await db.transaction.findMany({
       where: {
@@ -353,14 +346,8 @@ export async function getUserTransactions(query = {}) {
 }
 
 export async function getRecurringTransactions() {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const user = await getAuthUser();
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId }
-  });
-
-  if (!user) throw new Error("User not found");
 
   const recurringTransactions = await db.transaction.findMany({
     where: {

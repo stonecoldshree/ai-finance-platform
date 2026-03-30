@@ -2,6 +2,7 @@
 
 import aj from "@/lib/arcjet";
 import { db } from "@/lib/prisma";
+import { getAuthUser } from "@/lib/cachedAuth";
 import { request } from "@arcjet/next";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -33,17 +34,9 @@ const serializeTransaction = (obj) => {
 };
 
 export async function getUserAccounts() {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
-
   try {
-    const user = await db.user.findUnique({
-      where: { clerkUserId: userId }
-    });
+    const user = await getAuthUser();
 
-    if (!user) {
-      return [];
-    }
 
     const accounts = await db.account.findMany({
       where: { userId: user.id },
@@ -187,46 +180,30 @@ export async function createAccount(data) {
 }
 
 export async function getDashboardData(options = {}) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
-
   const { includePreviousMonth = false, includeAllMonths = false } = options;
-
 
   const now = new Date();
   const startOfMonth = includeAllMonths ?
-  undefined :
+  new Date(now.getFullYear() - 1, now.getMonth(), 1) :
   includePreviousMonth ?
   new Date(now.getFullYear(), now.getMonth() - 1, 1) :
   new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
   try {
-    const user = await db.user.findUnique({
-      where: { clerkUserId: userId }
-    });
+    const user = await getAuthUser();
 
-    if (!user) {
-      return [];
-    }
 
     const transactions = await db.transaction.findMany({
       where: {
         userId: user.id,
-        ...(includeAllMonths ?
-        {
-          date: {
-            lte: endOfMonth
-          }
-        } :
-        {
-          date: {
-            gte: startOfMonth,
-            lte: endOfMonth
-          }
-        })
+        date: {
+          gte: startOfMonth,
+          lte: endOfMonth
+        }
       },
-      orderBy: { date: "desc" }
+      orderBy: { date: "desc" },
+      take: 500
     });
 
     return transactions.map(serializeTransaction);

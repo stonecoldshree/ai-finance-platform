@@ -1,10 +1,10 @@
 import React from "react";
-import { checkUser } from "@/lib/checkUser";
+import { getCachedUser } from "@/lib/cachedUser";
 import PhonePromptBanner from "@/components/phone-prompt-banner";
 import { DesktopSidebar } from "@/components/app-sidebar";
 
 const MainLayout = async ({ children }) => {
-  const user = await checkUser();
+  const user = await getCachedUser();
   const hasPhone = !!user?.phoneNumber;
 
   return (

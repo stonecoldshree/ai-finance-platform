@@ -1,16 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer } from
-"recharts";
+import dynamic from "next/dynamic";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -21,6 +12,56 @@ import {
   SelectValue } from
 "@/components/ui/select";
 import { useLanguage } from "@/components/language-provider";
+
+const LazyBarChart = dynamic(
+  () => import("recharts").then((mod) => {
+    const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = mod;
+    // Return a wrapper component that renders the chart
+    const ChartWrapper = ({ data, incomeLabel, expenseLabel }) => (
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={data}
+          margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+          <XAxis
+            dataKey="date"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false} />
+          <YAxis
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(value) => `₹${value}`} />
+          <Tooltip
+            formatter={(value) => [`₹${value}`, undefined]}
+            contentStyle={{
+              backgroundColor: "hsl(var(--popover))",
+              border: "1px solid hsl(var(--border))",
+              borderRadius: "var(--radius)"
+            }} />
+          <Legend />
+          <Bar
+            dataKey="income"
+            name={incomeLabel}
+            fill="#22c55e"
+            radius={[4, 4, 0, 0]} />
+          <Bar
+            dataKey="expense"
+            name={expenseLabel}
+            fill="#ef4444"
+            radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    );
+    ChartWrapper.displayName = "ChartWrapper";
+    return ChartWrapper;
+  }),
+  {
+    ssr: false,
+    loading: () => <div className="h-[300px] bg-muted/30 animate-pulse rounded-lg" />
+  }
+);
 
 const DATE_RANGE_KEYS = {
   "7D": { days: 7, labelKey: "accountChart.last7Days" },
@@ -41,11 +82,9 @@ export function AccountChart({ transactions }) {
     startOfDay(subDays(now, range.days)) :
     startOfDay(new Date(0));
 
-
     const filtered = transactions.filter(
       (t) => new Date(t.date) >= startDate && new Date(t.date) <= endOfDay(now)
     );
-
 
     const grouped = filtered.reduce((acc, transaction) => {
       const date = format(new Date(transaction.date), "MMM dd");
@@ -60,12 +99,10 @@ export function AccountChart({ transactions }) {
       return acc;
     }, {});
 
-
     return Object.values(grouped).sort(
       (a, b) => new Date(a.date) - new Date(b.date)
     );
   }, [transactions, dateRange]);
-
 
   const totals = useMemo(() => {
     return filteredData.reduce(
@@ -117,55 +154,17 @@ export function AccountChart({ transactions }) {
               "text-green-500" :
               "text-red-500"}`
               }>
-
               ₹{(totals.income - totals.expense).toFixed(2)}
             </p>
           </div>
         </div>
         <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={filteredData}
-              margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis
-                dataKey="date"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false} />
-
-              <YAxis
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `₹${value}`} />
-
-              <Tooltip
-                formatter={(value) => [`₹${value}`, undefined]}
-                contentStyle={{
-                  backgroundColor: "hsl(var(--popover))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "var(--radius)"
-                }} />
-
-              <Legend />
-              <Bar
-                dataKey="income"
-                name={t("accountChart.income")}
-                fill="#22c55e"
-                radius={[4, 4, 0, 0]} />
-
-              <Bar
-                dataKey="expense"
-                name={t("accountChart.expense")}
-                fill="#ef4444"
-                radius={[4, 4, 0, 0]} />
-
-            </BarChart>
-          </ResponsiveContainer>
+          <LazyBarChart
+            data={filteredData}
+            incomeLabel={t("accountChart.income")}
+            expenseLabel={t("accountChart.expense")}
+          />
         </div>
       </CardContent>
     </Card>);
-
 }
