@@ -24,13 +24,13 @@ const isDbConnectivityError = (error) => {
 
 const serializeTransaction = (obj) => {
   const serialized = { ...obj };
-  if (obj.balance) {
+  if (obj.balance && typeof obj.balance.toNumber === 'function') {
     serialized.balance = obj.balance.toNumber();
   }
-  if (obj.amount) {
+  if (obj.amount && typeof obj.amount.toNumber === 'function') {
     serialized.amount = obj.amount.toNumber();
   }
-  return serialized;
+  return JSON.parse(JSON.stringify(serialized));
 };
 
 export async function getUserAccounts() {
@@ -55,6 +55,9 @@ export async function getUserAccounts() {
 
     return serializedAccounts;
   } catch (error) {
+    if (error?.digest === "DYNAMIC_SERVER_USAGE" || error?.message?.includes("Dynamic server usage")) {
+      throw error;
+    }
     if (!isDbConnectivityError(error)) {
       console.error("getUserAccounts failed:", error.message);
     }
@@ -208,6 +211,9 @@ export async function getDashboardData(options = {}) {
 
     return transactions.map(serializeTransaction);
   } catch (error) {
+    if (error?.digest === "DYNAMIC_SERVER_USAGE" || error?.message?.includes("Dynamic server usage")) {
+      throw error;
+    }
     if (!isDbConnectivityError(error)) {
       console.error("getDashboardData failed:", error.message);
     }

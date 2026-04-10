@@ -236,10 +236,10 @@ export function OnboardingWizard({ hasAccounts = false }) {
             <div className="space-y-4">
               <div className="text-center space-y-1">
                 <h3 className="text-lg font-semibold">
-                  {t("onboarding.addAccountTitle") || "Add Your Bank Account"}
+                  {t("onboarding.addAccountTitle", {}, "Add Your Bank Account")}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {t("onboarding.addAccountDesc") || "Enter the details of your primary bank account."}
+                  {t("onboarding.addAccountDesc", {}, "Enter the details of your primary bank account.")}
                 </p>
               </div>
 

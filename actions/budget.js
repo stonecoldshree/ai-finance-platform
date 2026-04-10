@@ -122,9 +122,10 @@ export async function getAccountsBudgetStatus() {
       currentBudget: budgetMap[account.id] || null
     }));
   } catch (error) {
-    if (error?.message && !error.message.includes("Dynamic server usage")) {
-      console.error("Error fetching budget status:", error.message);
+    if (error?.digest === "DYNAMIC_SERVER_USAGE" || error?.message?.includes("Dynamic server usage")) {
+      throw error;
     }
+    console.error("Error fetching budget status:", error.message || error);
     return [];
   }
 }

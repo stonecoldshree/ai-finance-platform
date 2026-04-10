@@ -9,12 +9,14 @@ const MainLayout = async ({ children }) => {
   const user = await getCachedUser();
   const hasPhone = !!user?.phoneNumber;
 
-  // Check if user has any accounts (for onboarding)
   let hasAccounts = false;
   try {
     const accounts = await getUserAccounts();
     hasAccounts = accounts && accounts.length > 0;
-  } catch {
+  } catch (error) {
+    if (error?.digest === "DYNAMIC_SERVER_USAGE" || error?.message?.includes("Dynamic server usage")) {
+      throw error;
+    }
     // If fetch fails, assume no accounts
     hasAccounts = false;
   }
