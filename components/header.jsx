@@ -40,7 +40,6 @@ const Header = async ({ locale = "en" }) => {
             </div>
 
             <div className="flex items-center space-x-4">
-              <LanguageSwitcher className="w-28" />
               <SignInButton forceRedirectUrl="/dashboard">
                 <span className={buttonVariants({ variant: "outline" })}>
                   {t("header.login")}

@@ -1,10 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Pencil, Check, X } from "lucide-react";
-import useFetch from "@/hooks/use-fetch";
-import { toast } from "sonner";
-
+import { Sparkles } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -13,9 +9,6 @@ import {
   CardTitle } from
 "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { updateBudget } from "@/actions/budget";
 import { useLanguage } from "@/components/language-provider";
 
 export function BudgetProgress({
@@ -25,56 +18,17 @@ export function BudgetProgress({
   accountName,
   periodLabel
 }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [newBudget, setNewBudget] = useState(
-    initialBudget?.amount?.toString() || ""
-  );
   const { t } = useLanguage();
 
-  const {
-    loading: isLoading,
-    fn: updateBudgetFn,
-    data: updatedBudget,
-    error
-  } = useFetch(updateBudget);
+  // 50% rule: effective spending budget is half the total budget
+  const totalBudget = initialBudget?.amount || 0;
+  const effectiveSpendingBudget = totalBudget / 2;
+  const savingsTarget = totalBudget / 2;
 
-  const percentUsed = initialBudget ?
-  currentExpenses / initialBudget.amount * 100 :
-  0;
-
-  const handleUpdateBudget = async () => {
-    const amount = parseFloat(newBudget);
-
-    if (isNaN(amount) || amount <= 0) {
-      toast.error(t("budget.invalidAmount"));
-      return;
-    }
-
-    await updateBudgetFn(amount, accountId);
-  };
-
-  const handleCancel = () => {
-    setNewBudget(initialBudget?.amount?.toString() || "");
-    setIsEditing(false);
-  };
-
-  useEffect(() => {
-    setNewBudget(initialBudget?.amount?.toString() || "");
-    setIsEditing(false);
-  }, [initialBudget, accountId]);
-
-  useEffect(() => {
-    if (updatedBudget?.success) {
-      setIsEditing(false);
-      toast.success(t("budget.updatedSuccess"));
-    }
-  }, [updatedBudget]);
-
-  useEffect(() => {
-    if (error) {
-      toast.error(error.message || t("budget.failedUpdate"));
-    }
-  }, [error]);
+  // Progress is calculated against the effective spending budget (50%)
+  const percentUsed = effectiveSpendingBudget > 0
+    ? (currentExpenses / effectiveSpendingBudget) * 100
+    : 0;
 
   return (
     <Card>
@@ -85,71 +39,55 @@ export function BudgetProgress({
             {periodLabel ? ` (${periodLabel})` : ""}
           </CardTitle>
           <div className="flex items-center gap-2 mt-1">
-            {isEditing ?
-            <div className="flex items-center gap-2">
-                <Input
-                type="number"
-                value={newBudget}
-                onChange={(e) => setNewBudget(e.target.value)}
-                className="w-32"
-                placeholder={t("budget.enterAmount")}
-                autoFocus
-                disabled={isLoading} />
-              
-                <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleUpdateBudget}
-                disabled={isLoading}>
-                
-                  <Check className="h-4 w-4 text-green-500" />
-                </Button>
-                <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleCancel}
-                disabled={isLoading}>
-                
-                  <X className="h-4 w-4 text-red-500" />
-                </Button>
-              </div> :
-
-            <>
-                <CardDescription>
-                  {initialBudget ?
-                t("budget.spentOf", { spent: currentExpenses.toFixed(2), total: initialBudget.amount.toFixed(2) }) :
+            <CardDescription>
+              {initialBudget ?
+                t("budget.spentOf", {
+                  spent: currentExpenses.toFixed(2),
+                  total: effectiveSpendingBudget.toFixed(2)
+                }) :
                 t("budget.noBudgetSet")}
-                </CardDescription>
-                <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsEditing(true)}
-                className="h-6 w-6">
-                
-                  <Pencil className="h-3 w-3" />
-                </Button>
-              </>
-            }
+            </CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent>
         {initialBudget &&
-        <div className="space-y-2">
-            <Progress
-            value={percentUsed}
-            extraStyles={`${
+          <div className="space-y-3">
+            {/* Spending progress bar */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{t("budget.spendingBudget") || "Spending (50%)"}</span>
+                <span>₹{effectiveSpendingBudget.toFixed(2)}</span>
+              </div>
+              <Progress
+                value={Math.min(percentUsed, 100)}
+                extraStyles={`${
+                  percentUsed >= 90
+                    ? "bg-red-500"
+                    : percentUsed >= 75
+                      ? "bg-yellow-500"
+                      : "bg-green-500"
+                }`} />
+              <p className="text-xs text-muted-foreground text-right">
+                {t("budget.percentUsed", { pct: percentUsed.toFixed(1) })}
+              </p>
+            </div>
 
-            percentUsed >= 90 ?
-            "bg-red-500" :
-            percentUsed >= 75 ?
-            "bg-yellow-500" :
-            "bg-green-500"}`
-            } />
-          
-            <p className="text-xs text-muted-foreground text-right">
-              {t("budget.percentUsed", { pct: percentUsed.toFixed(1) })}
-            </p>
+            {/* 50% Rule Info Strip */}
+            <div className="flex items-center gap-2 rounded-lg bg-orange-50/70 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/40 px-3 py-2">
+              <Sparkles className="h-3.5 w-3.5 text-orange-500 shrink-0" />
+              <p className="text-xs text-orange-700 dark:text-orange-300">
+                {t("budget.fiftyRuleStrip") || `₹${savingsTarget.toFixed(2)} reserved for savings/investment (50% rule)`}
+              </p>
+            </div>
+
+            {percentUsed > 100 && (
+              <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 px-3 py-2">
+                <p className="text-xs text-red-600 dark:text-red-400 font-medium">
+                  ⚠️ {t("budget.overBudget") || "You've exceeded your spending budget! Consider reducing expenses."}
+                </p>
+              </div>
+            )}
           </div>
         }
       </CardContent>

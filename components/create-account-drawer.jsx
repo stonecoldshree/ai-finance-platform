@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles, AlertTriangle, PiggyBank } from "lucide-react";
 import useFetch from "@/hooks/use-fetch";
 import { toast } from "sonner";
 
@@ -26,11 +26,17 @@ import {
 "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { createAccount } from "@/actions/dashboard";
+import { updateBudget } from "@/actions/budget";
 import { accountSchema } from "@/app/lib/schema";
 import { useLanguage } from "@/components/language-provider";
 
 export function CreateAccountDrawer({ children }) {
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState("account"); // "account" | "budget"
+  const [newAccountData, setNewAccountData] = useState(null);
+  const [budgetAmount, setBudgetAmount] = useState("");
+  const [budgetError, setBudgetError] = useState("");
+  const [showFiftyRule, setShowFiftyRule] = useState(false);
   const { t } = useLanguage();
   const {
     register,
@@ -56,17 +62,33 @@ export function CreateAccountDrawer({ children }) {
     data: newAccount
   } = useFetch(createAccount);
 
+  const {
+    loading: budgetLoading,
+    fn: saveBudgetFn,
+    data: budgetResult,
+    error: budgetSaveError
+  } = useFetch(updateBudget);
+
   const onSubmit = async (data) => {
     await createAccountFn(data);
   };
 
+  // When account is created successfully, move to budget step
   useEffect(() => {
-    if (newAccount) {
+    if (newAccount?.success && newAccount?.data) {
       toast.success(t("createAccountDrawer.createdSuccess"));
-      reset();
-      setOpen(false);
+      setNewAccountData(newAccount.data);
+      setStep("budget");
     }
-  }, [newAccount, reset]);
+  }, [newAccount]);
+
+  // When budget is saved, close drawer
+  useEffect(() => {
+    if (budgetResult?.success) {
+      toast.success(t("budget.updatedSuccess") || "Budget set successfully!");
+      handleClose();
+    }
+  }, [budgetResult]);
 
   useEffect(() => {
     if (error) {
@@ -74,116 +96,306 @@ export function CreateAccountDrawer({ children }) {
     }
   }, [error]);
 
+  useEffect(() => {
+    if (budgetSaveError) {
+      setBudgetError(budgetSaveError.message || t("budget.failedUpdate"));
+    }
+  }, [budgetSaveError]);
+
+  const handleClose = () => {
+    reset();
+    setStep("account");
+    setNewAccountData(null);
+    setBudgetAmount("");
+    setBudgetError("");
+    setShowFiftyRule(false);
+    setOpen(false);
+  };
+
+  const handleSetBudget = () => {
+    const amount = parseFloat(budgetAmount);
+    if (isNaN(amount) || amount <= 0) {
+      setBudgetError(t("budget.invalidAmount") || "Please enter a valid budget amount");
+      return;
+    }
+
+    const balance = parseFloat(newAccountData.balance);
+    if (amount > balance) {
+      setBudgetError(
+        `Budget cannot exceed your account balance of ₹${balance.toFixed(2)}`
+      );
+      return;
+    }
+
+    setBudgetError("");
+    setShowFiftyRule(true);
+  };
+
+  const handleConfirmBudget = async () => {
+    const amount = parseFloat(budgetAmount);
+    await saveBudgetFn(amount, newAccountData.id);
+  };
+
+  const handleSkipBudget = () => {
+    handleClose();
+  };
+
+  const effectiveBudget = parseFloat(budgetAmount || 0) / 2;
+
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) handleClose();
+      else setOpen(true);
+    }}>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{t("createAccountDrawer.title")}</DrawerTitle>
+          <DrawerTitle>
+            {step === "account"
+              ? t("createAccountDrawer.title")
+              : (
+                <span className="flex items-center gap-2">
+                  <PiggyBank className="h-5 w-5 text-orange-500" />
+                  {t("budget.setBudgetForAccount") || "Set Budget"}
+                </span>
+              )
+            }
+          </DrawerTitle>
         </DrawerHeader>
         <div className="px-4 pb-4">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <label
-                htmlFor="name"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-
-                {t("createAccountDrawer.accountName")}
-              </label>
-              <Input
-                id="name"
-                placeholder={t("createAccountDrawer.namePlaceholder")}
-                {...register("name")} />
-
-              {errors.name &&
-              <p className="text-sm text-red-500">{errors.name.message}</p>
-              }
-            </div>
-
-            <div className="space-y-2">
-              <label
-                htmlFor="type"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-
-                {t("createAccountDrawer.accountType")}
-              </label>
-              <Select
-                onValueChange={(value) => setValue("type", value)}
-                defaultValue={watch("type")}>
-
-                <SelectTrigger id="type">
-                  <SelectValue placeholder={t("createAccountDrawer.selectType")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CURRENT">{t("createAccountDrawer.current")}</SelectItem>
-                  <SelectItem value="SAVINGS">{t("createAccountDrawer.savings")}</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.type &&
-              <p className="text-sm text-red-500">{errors.type.message}</p>
-              }
-            </div>
-
-            <div className="space-y-2">
-              <label
-                htmlFor="balance"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-
-                {t("createAccountDrawer.initialBalance")}
-              </label>
-              <Input
-                id="balance"
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                {...register("balance")} />
-
-              {errors.balance &&
-              <p className="text-sm text-red-500">{errors.balance.message}</p>
-              }
-            </div>
-
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <div className="space-y-0.5">
+          {step === "account" ? (
+            /* Step 1: Create Account */
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
                 <label
-                  htmlFor="isDefault"
-                  className="text-base font-medium cursor-pointer">
+                  htmlFor="name"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
 
-                  {t("createAccountDrawer.setDefault")}
+                  {t("createAccountDrawer.accountName")}
                 </label>
+                <Input
+                  id="name"
+                  placeholder={t("createAccountDrawer.namePlaceholder")}
+                  {...register("name")} />
+
+                {errors.name &&
+                <p className="text-sm text-red-500">{errors.name.message}</p>
+                }
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="type"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+
+                  {t("createAccountDrawer.accountType")}
+                </label>
+                <Select
+                  onValueChange={(value) => setValue("type", value)}
+                  defaultValue={watch("type")}>
+
+                  <SelectTrigger id="type">
+                    <SelectValue placeholder={t("createAccountDrawer.selectType")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CURRENT">{t("createAccountDrawer.current")}</SelectItem>
+                    <SelectItem value="SAVINGS">{t("createAccountDrawer.savings")}</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.type &&
+                <p className="text-sm text-red-500">{errors.type.message}</p>
+                }
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="balance"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+
+                  {t("createAccountDrawer.initialBalance")}
+                </label>
+                <Input
+                  id="balance"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  {...register("balance")} />
+
+                {errors.balance &&
+                <p className="text-sm text-red-500">{errors.balance.message}</p>
+                }
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <label
+                    htmlFor="isDefault"
+                    className="text-base font-medium cursor-pointer">
+
+                    {t("createAccountDrawer.setDefault")}
+                  </label>
+                  <p className="text-sm text-muted-foreground">
+                    {t("createAccountDrawer.setDefaultDesc")}
+                  </p>
+                </div>
+                <Switch
+                  id="isDefault"
+                  checked={watch("isDefault")}
+                  onCheckedChange={(checked) => setValue("isDefault", checked)} />
+
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <DrawerClose asChild>
+                  <Button type="button" variant="outline" className="flex-1">
+                    {t("createAccountDrawer.cancel")}
+                  </Button>
+                </DrawerClose>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  disabled={createAccountLoading}>
+
+                  {createAccountLoading ?
+                  <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t("createAccountDrawer.creating")}
+                    </> :
+
+                  t("createAccountDrawer.createAccount")
+                  }
+                </Button>
+              </div>
+            </form>
+          ) : (
+            /* Step 2: Set Budget for New Account */
+            <div className="space-y-4">
+              {/* Account info card */}
+              <div className="rounded-xl border bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/10 p-4">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                  {t("budget.newAccountCreated") || "Account Created Successfully!"}
+                </p>
+                <p className="text-base font-semibold mt-1 capitalize">
+                  {newAccountData?.name}
+                </p>
                 <p className="text-sm text-muted-foreground">
-                  {t("createAccountDrawer.setDefaultDesc")}
+                  {t("budget.balance") || "Balance"}: ₹{parseFloat(newAccountData?.balance || 0).toFixed(2)}
                 </p>
               </div>
-              <Switch
-                id="isDefault"
-                checked={watch("isDefault")}
-                onCheckedChange={(checked) => setValue("isDefault", checked)} />
 
-            </div>
+              <p className="text-sm text-muted-foreground">
+                {t("budget.setMonthlyBudgetDesc") || "Set a monthly spending budget for this account to keep your finances on track."}
+              </p>
 
-            <div className="flex gap-4 pt-4">
-              <DrawerClose asChild>
-                <Button type="button" variant="outline" className="flex-1">
-                  {t("createAccountDrawer.cancel")}
-                </Button>
-              </DrawerClose>
-              <Button
-                type="submit"
-                className="flex-1"
-                disabled={createAccountLoading}>
-
-                {createAccountLoading ?
+              {!showFiftyRule ? (
                 <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("createAccountDrawer.creating")}
-                  </> :
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {t("budget.monthlyBudget") || "Monthly Budget"} (₹)
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder={t("budget.enterAmount") || "Enter budget amount"}
+                      value={budgetAmount}
+                      onChange={(e) => {
+                        setBudgetAmount(e.target.value);
+                        setBudgetError("");
+                      }}
+                      autoFocus
+                    />
+                  </div>
 
-                t("createAccountDrawer.createAccount")
-                }
-              </Button>
+                  {budgetError && (
+                    <div className="flex items-center gap-2 text-sm text-red-500 bg-red-50 dark:bg-red-950/30 rounded-lg p-3">
+                      <AlertTriangle className="h-4 w-4 shrink-0" />
+                      <p>{budgetError}</p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-4 pt-2">
+                    <Button variant="ghost" className="flex-1" onClick={handleSkipBudget}>
+                      {t("budget.skipForNow") || "Skip for Now"}
+                    </Button>
+                    <Button
+                      className="flex-1 bg-orange-600 hover:bg-orange-700"
+                      onClick={handleSetBudget}
+                    >
+                      {t("budget.setBudget") || "Set Budget"}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                /* 50% Rule Info */
+                <>
+                  <div className="rounded-xl border border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20 p-4 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <Sparkles className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-orange-800 dark:text-orange-200">
+                          {t("budget.fiftyRuleTitle") || "Smart 50/50 Budget Rule"}
+                        </p>
+                        <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
+                          {t("budget.fiftyRuleDesc") || "Gullak will consider only 50% of your budget for spending. The remaining 50% should be saved or invested for a healthier financial future."}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                      <div className="rounded-lg bg-white/70 dark:bg-background/50 p-3 text-center">
+                        <p className="text-xs text-muted-foreground">
+                          {t("budget.spendingBudget") || "Spending"}
+                        </p>
+                        <p className="text-lg font-bold text-orange-600">
+                          ₹{effectiveBudget.toFixed(2)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg bg-white/70 dark:bg-background/50 p-3 text-center">
+                        <p className="text-xs text-muted-foreground">
+                          {t("budget.savingsTarget") || "Save / Invest"}
+                        </p>
+                        <p className="text-lg font-bold text-green-600">
+                          ₹{effectiveBudget.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {budgetError && (
+                    <div className="flex items-center gap-2 text-sm text-red-500 bg-red-50 dark:bg-red-950/30 rounded-lg p-3">
+                      <AlertTriangle className="h-4 w-4 shrink-0" />
+                      <p>{budgetError}</p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-4 pt-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setShowFiftyRule(false)}
+                      disabled={budgetLoading}
+                    >
+                      {t("budget.back") || "Back"}
+                    </Button>
+                    <Button
+                      className="flex-1 bg-orange-600 hover:bg-orange-700"
+                      onClick={handleConfirmBudget}
+                      disabled={budgetLoading}
+                    >
+                      {budgetLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {t("budget.saving") || "Saving..."}
+                        </>
+                      ) : (
+                        t("budget.confirmBudget") || "Confirm Budget"
+                      )}
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
-          </form>
+          )}
         </div>
       </DrawerContent>
     </Drawer>);

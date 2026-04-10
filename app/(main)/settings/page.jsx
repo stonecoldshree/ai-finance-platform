@@ -17,11 +17,12 @@ import { updatePhoneNumber, getPhoneNumber } from "@/actions/settings";
 import { sendTestSMS } from "@/actions/test-send-sms";
 import { getUserAccounts } from "@/actions/dashboard";
 import { deleteAccount, updateDefaultAccount } from "@/actions/account";
-import { Trash2, Sun, Moon, Monitor, Phone, Mail, Plus, Bell, SlidersHorizontal } from "lucide-react";
+import { Trash2, Sun, Moon, Monitor, Phone, Mail, Plus, Bell, SlidersHorizontal, Globe } from "lucide-react";
 import useFetch from "@/hooks/use-fetch";
 import { CreateAccountDrawer } from "@/components/create-account-drawer";
 import { Switch } from "@/components/ui/switch";
 import { useLanguage } from "@/components/language-provider";
+import LanguageSwitcher from "@/components/language-switcher";
 
 const QUICK_ADD_PREFS_KEY = "gullak.quickAddPrefs";
 const DEFAULT_QUICK_PREFS = {
@@ -214,6 +215,22 @@ export default function SettingsPage() {
             )}
             </div>
           }
+        </CardContent>
+      </Card>
+
+      {/* Language Preferences */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            {t("settings.languageTitle") || "Language"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            {t("settings.languageDesc") || "Choose your preferred language for the application."}
+          </p>
+          <LanguageSwitcher className="w-full max-w-xs" />
         </CardContent>
       </Card>
 

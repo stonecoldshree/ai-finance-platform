@@ -8,18 +8,40 @@ import { generateAIContent } from "@/lib/gemini";
 import { sendEmail } from "./send-email";
 import EmailTemplate from "@/emails/template";
 
+/**
+ * Returns the current month string in "YYYY-MM" format.
+ */
+function getCurrentMonth() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+}
+
 export async function getCurrentBudget(accountId) {
   try {
     const user = await getAuthUser();
+    const currentMonth = getCurrentMonth();
 
-
-    const budget = await db.budget.findFirst({
+    // Try to find a budget for the current month first
+    let budget = await db.budget.findFirst({
       where: {
         userId: user.id,
-        accountId
+        accountId,
+        budgetMonth: currentMonth
       }
     });
 
+    // Fallback: if no monthly budget exists, check for legacy budget (null budgetMonth)
+    if (!budget) {
+      budget = await db.budget.findFirst({
+        where: {
+          userId: user.id,
+          accountId,
+          budgetMonth: null
+        }
+      });
+    }
 
     const currentDate = new Date();
     const startOfMonth = new Date(
@@ -60,6 +82,51 @@ export async function getCurrentBudget(accountId) {
   }
 }
 
+/**
+ * Returns budget status for all user accounts for the current month.
+ * Used by the dashboard to decide whether to show the monthly budget popup.
+ */
+export async function getAccountsBudgetStatus() {
+  try {
+    const user = await getAuthUser();
+    const currentMonth = getCurrentMonth();
+
+    const accounts = await db.account.findMany({
+      where: { userId: user.id },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        balance: true
+      }
+    });
+
+    const budgets = await db.budget.findMany({
+      where: {
+        userId: user.id,
+        budgetMonth: currentMonth
+      }
+    });
+
+    const budgetMap = {};
+    for (const b of budgets) {
+      budgetMap[b.accountId] = b.amount.toNumber();
+    }
+
+    return accounts.map((account) => ({
+      id: account.id,
+      name: account.name,
+      type: account.type,
+      balance: account.balance.toNumber(),
+      hasBudgetThisMonth: !!budgetMap[account.id],
+      currentBudget: budgetMap[account.id] || null
+    }));
+  } catch (error) {
+    console.error("Error fetching budget status:", error);
+    return [];
+  }
+}
+
 export async function updateBudget(amount, accountId) {
   try {
     const { userId } = await auth();
@@ -88,12 +155,14 @@ export async function updateBudget(amount, accountId) {
       );
     }
 
+    const currentMonth = getCurrentMonth();
 
     const budget = await db.budget.upsert({
       where: {
-        userId_accountId: {
+        userId_accountId_budgetMonth: {
           userId: user.id,
-          accountId
+          accountId,
+          budgetMonth: currentMonth
         }
       },
       update: {
@@ -102,19 +171,23 @@ export async function updateBudget(amount, accountId) {
       create: {
         userId: user.id,
         accountId,
-        amount
+        amount,
+        budgetMonth: currentMonth
       }
     });
 
     revalidatePath("/dashboard");
+    revalidatePath("/account-analytics");
 
 
     try {
       const balance = account.balance.toNumber();
+      const effectiveBudget = amount / 2;
 
       const prompt = `
         A user has set a monthly budget of ₹${amount}.
         Their current default account balance is ₹${balance}.
+        The effective spending budget is ₹${effectiveBudget} (50% rule applied — the other 50% is recommended for savings/investment).
         
         Provide 3 concise, friendly, and actionable financial tips on how to utilize their budget and balance effectively.
         Format as JSON array of strings: ["tip 1", "tip 2", "tip 3"]
