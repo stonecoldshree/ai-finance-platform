@@ -5,7 +5,7 @@ import { SignedIn, SignedOut, SignInButton, UserButton, ClerkLoaded, ClerkLoadin
 import { getCachedUser } from "@/lib/cachedUser";
 import Image from "next/image";
 import { AppSidebar } from "./app-sidebar";
-import LanguageSwitcher from "./language-switcher";
+
 import { getTranslator } from "@/lib/i18n/translations";
 
 const Header = async ({ locale = "en" }) => {
@@ -55,7 +55,6 @@ const Header = async ({ locale = "en" }) => {
         <header className="fixed top-0 right-0 left-0 md:left-64 h-16 bg-background/80 backdrop-blur-md z-30 border-b flex items-center justify-between px-4">
           <AppSidebar />
           <div className="flex items-center gap-3 ml-auto">
-            <LanguageSwitcher className="w-28" />
             <ClerkLoading>
               <div className="w-10 h-10 rounded-full bg-muted animate-pulse"></div>
             </ClerkLoading>

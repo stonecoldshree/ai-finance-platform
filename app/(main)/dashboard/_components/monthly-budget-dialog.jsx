@@ -43,7 +43,8 @@ export function MonthlyBudgetDialog({ accountsNeedingBudget = [] }) {
       // Check if user already dismissed this month
       const currentMonth = new Date().toISOString().slice(0, 7);
       const dismissedMonth = localStorage.getItem("gullak.budgetDismissed");
-      if (dismissedMonth !== currentMonth) {
+      const isOnboarded = localStorage.getItem("gullak.onboarded");
+      if (dismissedMonth !== currentMonth && isOnboarded) {
         setOpen(true);
       }
     }

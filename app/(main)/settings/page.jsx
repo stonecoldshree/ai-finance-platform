@@ -17,6 +17,7 @@ import { updatePhoneNumber, getPhoneNumber } from "@/actions/settings";
 import { sendTestSMS } from "@/actions/test-send-sms";
 import { getUserAccounts } from "@/actions/dashboard";
 import { deleteAccount, updateDefaultAccount } from "@/actions/account";
+import { getAccountsBudgetStatus, updateBudget } from "@/actions/budget";
 import { Trash2, Sun, Moon, Monitor, Phone, Mail, Plus, Bell, SlidersHorizontal, Globe } from "lucide-react";
 import useFetch from "@/hooks/use-fetch";
 import { CreateAccountDrawer } from "@/components/create-account-drawer";
@@ -39,6 +40,10 @@ export default function SettingsPage() {
   const [testing, setTesting] = useState(false);
   const [hasPhone, setHasPhone] = useState(false);
   const [accounts, setAccounts] = useState([]);
+  const [budgetMap, setBudgetMap] = useState({});
+  const [editingBudget, setEditingBudget] = useState(null);
+  const [editBudgetAmount, setEditBudgetAmount] = useState("");
+  const [savingBudget, setSavingBudget] = useState(false);
   const [quickPrefs, setQuickPrefs] = useState(DEFAULT_QUICK_PREFS);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -64,10 +69,21 @@ export default function SettingsPage() {
     loadAccounts();
   }, []);
 
-  const loadAccounts = () => {
-    getUserAccounts().then((accs) => {
+  const loadAccounts = async () => {
+    try {
+      const [accs, statuses] = await Promise.all([
+        getUserAccounts(),
+        getAccountsBudgetStatus()
+      ]);
       if (accs) setAccounts(accs);
-    });
+      if (statuses) {
+        const map = {};
+        statuses.forEach(s => map[s.id] = s.currentBudget);
+        setBudgetMap(map);
+      }
+    } catch (e) {
+      console.error("Failed to load accounts", e);
+    }
   };
 
   const {
@@ -179,6 +195,35 @@ export default function SettingsPage() {
     } catch (error) {
       toast.error(t("settings.failedResetPrefs"));
       console.error("Failed to reset quick-add preferences:", error.message);
+    }
+  };
+
+  const handleSaveBudget = async (accountId) => {
+    const amount = parseFloat(editBudgetAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error(t("budget.invalidAmount") || "Invalid amount");
+      return;
+    }
+    const account = accounts.find(a => a.id === accountId);
+    if (amount > account.balance) {
+      toast.error(`Budget cannot exceed balance of ₹${account.balance}`);
+      return;
+    }
+
+    setSavingBudget(true);
+    try {
+      const result = await updateBudget(amount, accountId);
+      if (result.success) {
+        toast.success(t("budget.updatedSuccess") || "Budget updated");
+        setBudgetMap(prev => ({ ...prev, [accountId]: amount }));
+        setEditingBudget(null);
+      } else {
+        toast.error(result.error);
+      }
+    } catch (e) {
+      toast.error(t("budget.failedUpdate") || "Failed to update budget");
+    } finally {
+      setSavingBudget(false);
     }
   };
 
@@ -453,6 +498,47 @@ export default function SettingsPage() {
                 }
                   </div>
                 </div>
+                
+                {/* Budget Section */}
+                <div className="px-3 pb-3 pt-0">
+                  {editingBudget === account.id ? (
+                    <div className="flex items-center gap-2 mt-2 bg-muted/30 p-2 rounded-md">
+                      <span className="text-xs font-medium text-muted-foreground w-16">Budget:</span>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        value={editBudgetAmount} 
+                        onChange={e => setEditBudgetAmount(e.target.value)} 
+                        className="h-8 w-24 text-sm" 
+                        placeholder="Amt"
+                      />
+                      <Button size="sm" onClick={() => handleSaveBudget(account.id)} disabled={savingBudget} className="h-8">
+                        {savingBudget ? t("settings.saving") : t("settings.save")}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingBudget(null)} disabled={savingBudget} className="h-8">
+                        {t("accountCard.cancel") || "Cancel"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between mt-2 bg-muted/30 px-3 py-1.5 rounded-md">
+                      <span className="text-xs text-muted-foreground">
+                        {t("budget.monthlyBudget") || "Monthly Budget"}: <span className="font-medium text-foreground ml-1">{budgetMap[account.id] ? `₹${parseFloat(budgetMap[account.id]).toFixed(2)}` : t("budget.noBudgetSet") || "Not set"}</span>
+                      </span>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-6 text-xs px-2" 
+                        onClick={() => { 
+                          setEditingBudget(account.id); 
+                          setEditBudgetAmount(budgetMap[account.id] || ""); 
+                        }}
+                      >
+                        {t("transactionTable.edit") || "Edit"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
             </div>
           }

@@ -104,7 +104,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
     if (newAccount?.success && newAccount?.data) {
       toast.success(t("createAccountDrawer.createdSuccess") || "Account created!");
       setCreatedAccount(newAccount.data);
-      setStep(2); // Go to language step
+      setStep(3); // Go to budget step
     }
   }, [newAccount]);
 
@@ -136,7 +136,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
     if (selectedLocale !== locale) {
       setLocale(selectedLocale);
     }
-    setStep(3); // Go to budget step
+    setStep(2); // Go to account step
   };
 
   const handleSetBudget = () => {
@@ -175,8 +175,8 @@ export function OnboardingWizard({ hasAccounts = false }) {
 
   const steps = [
     { icon: Sparkles, label: t("onboarding.welcome") || "Welcome" },
-    { icon: Wallet, label: t("onboarding.account") || "Account" },
     { icon: Languages, label: t("onboarding.language") || "Language" },
+    { icon: Wallet, label: t("onboarding.account") || "Account" },
     { icon: PiggyBank, label: t("onboarding.budget") || "Budget" },
   ];
 
@@ -231,8 +231,53 @@ export function OnboardingWizard({ hasAccounts = false }) {
             </div>
           )}
 
-          {/* Step 1: Add Account */}
+          {/* Step 1: Choose Language */}
           {step === 1 && (
+            <div className="space-y-5 py-2">
+              <div className="text-center space-y-1">
+                <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
+                  <Globe className="h-5 w-5 text-orange-500" />
+                  {t("onboarding.chooseLanguage") || "Choose Your Language"}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t("onboarding.languageDesc") || "Select your preferred language for the app."}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {SUPPORTED_LOCALES.map((code) => (
+                  <button
+                    key={code}
+                    onClick={() => setSelectedLocale(code)}
+                    className={`rounded-lg border p-3 text-sm font-medium transition-all text-center ${
+                      selectedLocale === code
+                        ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-300 ring-2 ring-orange-500/20"
+                        : "border-border hover:border-orange-200 hover:bg-orange-50/50 dark:hover:bg-orange-950/10"
+                    }`}
+                  >
+                    {LOCALE_LABELS[code]}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setStep(0)} className="flex-1">
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  {t("onboarding.back") || "Back"}
+                </Button>
+                <Button
+                  className="flex-1 bg-orange-600 hover:bg-orange-700 gap-2"
+                  onClick={handleLanguageConfirm}
+                >
+                  {t("onboarding.continue") || "Continue"}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Add Account */}
+          {step === 2 && (
             <div className="space-y-4">
               <div className="text-center space-y-1">
                 <h3 className="text-lg font-semibold">
@@ -310,50 +355,6 @@ export function OnboardingWizard({ hasAccounts = false }) {
             </div>
           )}
 
-          {/* Step 2: Choose Language */}
-          {step === 2 && (
-            <div className="space-y-5 py-2">
-              <div className="text-center space-y-1">
-                <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
-                  <Globe className="h-5 w-5 text-orange-500" />
-                  {t("onboarding.chooseLanguage") || "Choose Your Language"}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {t("onboarding.languageDesc") || "Select your preferred language for the app."}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                {SUPPORTED_LOCALES.map((code) => (
-                  <button
-                    key={code}
-                    onClick={() => setSelectedLocale(code)}
-                    className={`rounded-lg border p-3 text-sm font-medium transition-all text-center ${
-                      selectedLocale === code
-                        ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-300 ring-2 ring-orange-500/20"
-                        : "border-border hover:border-orange-200 hover:bg-orange-50/50 dark:hover:bg-orange-950/10"
-                    }`}
-                  >
-                    {LOCALE_LABELS[code]}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  {t("onboarding.back") || "Back"}
-                </Button>
-                <Button
-                  className="flex-1 bg-orange-600 hover:bg-orange-700 gap-2"
-                  onClick={handleLanguageConfirm}
-                >
-                  {t("onboarding.continue") || "Continue"}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
 
           {/* Step 3: Set Budget */}
           {step === 3 && (
