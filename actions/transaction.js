@@ -176,6 +176,18 @@ export async function createTransaction(data) {
         await sendEmailWithRetry({
           to: user.email,
           subject: "New Transaction Logged - Gullak",
+          templateParams: {
+            name: user.name,
+            userName: user.name,
+            alert_title: "New Transaction Logged - Gullak",
+            alert_message: "A new transaction has been recorded in your account.",
+            amount: transaction.amount.toNumber(),
+            category: transaction.category,
+            description: transaction.description,
+            advice1: advice?.[0] || "",
+            advice2: advice?.[1] || "",
+            advice3: advice?.[2] || ""
+          },
           react: EmailTemplate({
             userName: user.name,
             type: "transaction-success",

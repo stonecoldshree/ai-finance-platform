@@ -142,6 +142,15 @@ export async function createAccount(data) {
       await sendEmail({
         to: user.email,
         subject: "Account Created - Gullak",
+        templateParams: {
+          name: user.name,
+          userName: user.name,
+          alert_title: "Account Created - Gullak",
+          alert_message: `Your account ${account.name} was created successfully.`,
+          amount: account.balance.toNumber(),
+          category: account.type,
+          description: account.name
+        },
         react: EmailTemplate({
           userName: user.name,
           type: "account-created",

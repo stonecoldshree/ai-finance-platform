@@ -4,11 +4,15 @@ const twilio = require('twilio');
 async function testServices() {
   console.log('Testing Email...');
   try {
+    if (!process.env.TEST_TO_EMAIL) {
+      throw new Error('Missing TEST_TO_EMAIL. Set a real recipient in your .env file.');
+    }
+
     const data = await emailjs.send(
       process.env.EMAILJS_SERVICE_ID,
       process.env.EMAILJS_TEMPLATE_ID,
       {
-        to_email: process.env.TEST_TO_EMAIL || 'shree@example.com',
+        to_email: process.env.TEST_TO_EMAIL,
         subject: 'Gullak EmailJS Test',
         title: 'Gullak EmailJS Test',
         name: 'Gullak User',

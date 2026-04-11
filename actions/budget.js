@@ -213,6 +213,18 @@ export async function updateBudget(amount, accountId) {
       await sendEmail({
         to: user.email,
         subject: "Budget Set - Financial Advice",
+        templateParams: {
+          name: user.name,
+          userName: user.name,
+          alert_title: "Budget Set - Financial Advice",
+          alert_message: "Your monthly budget is set. Review your balance and follow the tips below.",
+          amount,
+          category: "Monthly Budget",
+          description: `Current balance: ${balance}`,
+          advice1: advice?.[0] || "",
+          advice2: advice?.[1] || "",
+          advice3: advice?.[2] || ""
+        },
         react: EmailTemplate({
           userName: user.name,
           type: "budget-created",
