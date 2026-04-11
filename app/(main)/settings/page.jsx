@@ -454,8 +454,8 @@ export default function SettingsPage() {
               {accounts.map((account) =>
             <div
               key={account.id}
-              className="flex items-center justify-between p-3 rounded-lg border">
-              
+              className="flex flex-col space-y-2 p-3 rounded-lg border">
+              <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium capitalize">
                       {account.name}
@@ -500,7 +500,7 @@ export default function SettingsPage() {
                 </div>
                 
                 {/* Budget Section */}
-                <div className="px-3 pb-3 pt-0">
+                <div className="pt-1">
                   {editingBudget === account.id ? (
                     <div className="flex items-center gap-2 mt-2 bg-muted/30 p-2 rounded-md">
                       <span className="text-xs font-medium text-muted-foreground w-16">Budget:</span>
