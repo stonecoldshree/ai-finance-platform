@@ -18,7 +18,13 @@ export default async function RootLayout({ children }) {
   const locale = await getLocaleFromCookie();
 
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      localization={{
+        formFieldLabel__firstName: "First name",
+        formFieldLabel__lastName: "Last name",
+        formFieldHintText__optional: "",
+      }}
+    >
       <html lang={locale} suppressHydrationWarning>
         <head>
           <link rel="icon" href="/logo_white.png" sizes="any" />
