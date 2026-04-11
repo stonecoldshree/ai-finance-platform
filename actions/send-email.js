@@ -20,6 +20,17 @@ function htmlToText(html = "") {
     .trim();
 }
 
+function normalizeEmailError(error) {
+  if (!error) return "Unknown EmailJS error";
+  if (typeof error === "string") return error;
+
+  const fromText = error.text || error.responseText;
+  const fromMessage = error.message || error.statusText;
+  const fromBody = error.response?.data?.message || error.data?.message;
+
+  return fromText || fromBody || fromMessage || "EmailJS request failed";
+}
+
 export async function sendEmail({ to, subject, react, templateParams = {} }) {
   const serviceId = process.env.EMAILJS_SERVICE_ID;
   const templateId = process.env.EMAILJS_TEMPLATE_ID;
@@ -38,26 +49,46 @@ export async function sendEmail({ to, subject, react, templateParams = {} }) {
     const renderedHtml = react ? await render(react) : "";
     const messageHtml = templateParams.message_html || renderedHtml;
     const messageText = templateParams.message_text || htmlToText(messageHtml);
+    const fallbackName = templateParams.name || deriveNameFromEmail(primaryRecipient);
+    const fallbackTitle = templateParams.title || subject || "Gullak Notification";
+    const fallbackAlertMessage = templateParams.alert_message || messageText || subject || "You have a new notification from Gullak.";
 
-    const data = await emailjs.send(serviceId, templateId, {
+    const mergedTemplateParams = {
+      email: primaryRecipient,
       to_email: primaryRecipient,
-      name: templateParams.name || deriveNameFromEmail(primaryRecipient),
-      title: templateParams.title || subject,
+      to: primaryRecipient,
+      recipient_email: primaryRecipient,
+      name: fallbackName,
+      to_name: templateParams.to_name || fallbackName,
+      userName: templateParams.userName || fallbackName,
+      user_name: templateParams.user_name || fallbackName,
+      title: fallbackTitle,
+      alert_title: templateParams.alert_title || fallbackTitle,
       subject,
+      alert_message: fallbackAlertMessage,
+      amount: templateParams.amount ?? "",
+      category: templateParams.category ?? "",
+      description: templateParams.description ?? "",
+      advice1: templateParams.advice1 ?? "",
+      advice2: templateParams.advice2 ?? "",
+      advice3: templateParams.advice3 ?? "",
       company_name: process.env.COMPANY_NAME || "Gullak",
       website_link: templateParams.website_link || normalizedAppUrl,
       dashboard_link: templateParams.dashboard_link || `${normalizedAppUrl}/dashboard`,
       message_html: messageHtml,
       message_text: messageText,
       ...templateParams
-    }, {
+    };
+
+    const data = await emailjs.send(serviceId, templateId, mergedTemplateParams, {
       publicKey,
       privateKey
     });
 
     return { success: true, data };
   } catch (error) {
-    console.error("Failed to send email:", error);
-    return { success: false, error };
+    const normalizedError = normalizeEmailError(error);
+    console.error("Failed to send email:", normalizedError, error);
+    return { success: false, error: normalizedError };
   }
 }

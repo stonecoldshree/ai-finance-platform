@@ -27,7 +27,7 @@ export async function sendTestEmail() {
     });
 
     if (!result.success) {
-      throw new Error(JSON.stringify(result.error));
+      throw new Error(result.error || "Email send failed");
     }
 
     return { success: true, email };
