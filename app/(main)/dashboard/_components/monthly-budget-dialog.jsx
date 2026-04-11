@@ -108,7 +108,7 @@ export function MonthlyBudgetDialog({ accountsNeedingBudget = [] }) {
   const effectiveBudget = parseFloat(budgetAmounts[currentAccount.id] || 0) / 2;
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog open={open}>
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-lg">
