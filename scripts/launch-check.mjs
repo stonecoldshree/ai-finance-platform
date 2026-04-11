@@ -9,12 +9,14 @@ const requiredKeys = [
 
 const recommendedKeys = [
   "GEMINI_API_KEY",
-  "RESEND_API_KEY",
+  "EMAILJS_SERVICE_ID",
+  "EMAILJS_TEMPLATE_ID",
+  "EMAILJS_PUBLIC_KEY",
+  "EMAILJS_PRIVATE_KEY",
   "ARCJET_KEY",
   "TWILIO_ACCOUNT_SID",
   "TWILIO_AUTH_TOKEN",
-  "TWILIO_PHONE_NUMBER",
-  "EMAIL_FROM_ADDRESS"
+  "TWILIO_PHONE_NUMBER"
 ];
 
 function loadEnvFile(filePath) {

@@ -21,7 +21,7 @@ export async function sendTestEmail() {
                     <h1>Test Email from Gullak</h1>
                     <p>Hello {user.firstName || "User"},</p>
                     <p>This is a test email to verify that your email configuration is working correctly.</p>
-                    <p>If you received this, the Resend integration is active.</p>
+                    <p>If you received this, the EmailJS integration is active.</p>
                 </div>
 
     });

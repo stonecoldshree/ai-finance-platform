@@ -1,16 +1,25 @@
-const { Resend } = require('resend');
+const emailjs = require('@emailjs/nodejs');
 const twilio = require('twilio');
 
 async function testServices() {
   console.log('Testing Email...');
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const data = await resend.emails.send({
-      from: 'onboarding@resend.dev',
-      to: 'shree@example.com',
-      subject: 'Test Email',
-      html: '<p>Test.</p>'
-    });
+    const data = await emailjs.send(
+      process.env.EMAILJS_SERVICE_ID,
+      process.env.EMAILJS_TEMPLATE_ID,
+      {
+        to_email: process.env.TEST_TO_EMAIL || 'shree@example.com',
+        subject: 'Gullak EmailJS Test',
+        title: 'Gullak EmailJS Test',
+        name: 'Gullak User',
+        message_html: '<p>EmailJS test from Gullak.</p>',
+        message_text: 'EmailJS test from Gullak.'
+      },
+      {
+        publicKey: process.env.EMAILJS_PUBLIC_KEY,
+        privateKey: process.env.EMAILJS_PRIVATE_KEY
+      }
+    );
     console.log('Email result:', data);
   } catch (error) {
     console.error('Email error:', error);
