@@ -18,6 +18,48 @@ function getCurrentMonth() {
   return `${year}-${month}`;
 }
 
+function buildBudgetSpecificAdvice({ amount, balance }) {
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const daysLeft = Math.max(1, daysInMonth - now.getDate() + 1);
+  const weeksLeft = Math.max(1, Math.ceil(daysLeft / 7));
+
+  const weeklyCap = Math.max(200, Math.round(amount / weeksLeft));
+  const dailyCap = Math.max(100, Math.round(amount / daysLeft));
+  const bufferTarget = Math.max(300, Math.round(balance * 0.2));
+  const nonEssentialThreshold = Math.max(250, Math.round(amount * 0.1));
+
+  return [
+    `For the next ${weeksLeft} week(s), keep total spending below ₹${weeklyCap} per week (about ₹${dailyCap}/day).`,
+    `Maintain a safety buffer of at least ₹${bufferTarget}; pause non-essential purchases whenever balance nears this level.`,
+    `Apply a 24-hour pause to any non-essential spend above ₹${nonEssentialThreshold} to reduce impulse purchases.`
+  ];
+}
+
+function isSpecificTip(tip) {
+  if (typeof tip !== "string") return false;
+  const trimmed = tip.trim();
+  if (trimmed.length < 20) return false;
+  return /₹|\d|%/.test(trimmed);
+}
+
+function normalizeAdvice(aiAdvice, fallbackAdvice) {
+  if (!Array.isArray(aiAdvice)) {
+    return fallbackAdvice;
+  }
+
+  const cleaned = aiAdvice
+    .map((tip) => String(tip || "").replace(/^[-•\s]+/, "").trim())
+    .filter(Boolean);
+
+  const merged = [0, 1, 2].map((index) => {
+    const candidate = cleaned[index];
+    return isSpecificTip(candidate) ? candidate : fallbackAdvice[index];
+  });
+
+  return merged;
+}
+
 export async function getCurrentBudget(accountId) {
   try {
     const user = await getAuthUser();
@@ -186,27 +228,28 @@ export async function updateBudget(amount, accountId) {
     try {
       const balance = account.balance.toNumber();
       const effectiveBudget = amount / 2;
+      const fallbackAdvice = buildBudgetSpecificAdvice({ amount, balance });
 
       const prompt = `
         A user has set a monthly budget of ₹${amount}.
         Their current default account balance is ₹${balance}.
         The effective spending budget is ₹${effectiveBudget} (50% rule applied — the other 50% is recommended for savings/investment).
         
-        Provide 3 concise, friendly, and actionable financial tips on how to utilize their budget and balance effectively.
-        Format as JSON array of strings: ["tip 1", "tip 2", "tip 3"]
+        Provide exactly 3 concise, friendly, and actionable financial tips.
+        Each tip must include at least one concrete number (₹ amount, %, or days) and one clear action.
+        Avoid vague wording such as "save more" without a numeric target.
+        Format strictly as JSON array of strings: ["tip 1", "tip 2", "tip 3"]
       `;
 
       let advice = [];
       try {
         const text = await generateAIContent(prompt);
         const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
-        advice = JSON.parse(cleanedText);
+        const parsed = JSON.parse(cleanedText);
+        advice = normalizeAdvice(parsed, fallbackAdvice);
       } catch (aiError) {
         console.error("AI Advice Error:", aiError);
-        advice = [
-        "Track your expenses daily.",
-        "Prioritize needs over wants.",
-        "Review your budget weekly."];
+        advice = fallbackAdvice;
 
       }
 

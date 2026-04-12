@@ -15,31 +15,52 @@ import EmailTemplate from "@/emails/template";
 function buildRuleBasedAdvice({ transaction, newBalance, recentTransactions }) {
   const tips = [];
   const amount = transaction.amount.toNumber();
+  const category = transaction.category || "this category";
 
   if (transaction.type === "EXPENSE") {
-    if (amount >= 2000) {
-      tips.push("Large expense logged. Review if this category needs a weekly cap.");
-    } else {
-      tips.push("Good habit: keep logging expenses daily to improve forecast accuracy.");
-    }
+    const sevenDayCap = Math.max(300, Math.round(amount * 1.2));
+    tips.push(`You spent ₹${amount} on ${category}. Keep ${category} spend under ₹${sevenDayCap} over the next 7 days.`);
   } else {
-    tips.push("Great income update. Consider allocating a fixed percentage to savings immediately.");
+    const saveNow = Math.max(300, Math.round(amount * 0.2));
+    tips.push(`Income of ₹${amount} recorded. Move at least ₹${saveNow} to savings within 24 hours.`);
   }
 
   if (newBalance < 1000) {
-    tips.push("Your account balance is getting low. Prioritize essentials for the next few days.");
+    const dailyLimit = Math.max(100, Math.round(newBalance / 7));
+    tips.push(`Current balance is ₹${newBalance}. Keep daily non-essential spend under ₹${dailyLimit} for the next 7 days.`);
   } else {
-    tips.push("Your current balance is stable. Keep discretionary spending planned, not reactive.");
+    const reserve = Math.max(500, Math.round(newBalance * 0.2));
+    tips.push(`Balance is ₹${newBalance}. Protect at least ₹${reserve} as a reserve before discretionary spending.`);
   }
 
   const recentExpenseCount = recentTransactions.filter((t) => t.type === "EXPENSE").length;
   if (recentExpenseCount >= 4) {
-    tips.push("Recent spending frequency is high. Recheck subscriptions and repeat purchases.");
+    tips.push(`You logged ${recentExpenseCount} recent expense entries. Audit subscriptions today and cut 1 recurring charge this week.`);
   } else {
-    tips.push("Spending frequency is controlled. Continue this consistency through the month.");
+    tips.push(`Recent expense frequency is ${recentExpenseCount} entries. Keep this pace and do a 10-minute spend review every Sunday.`);
   }
 
   return tips.slice(0, 3);
+}
+
+function isSpecificTip(tip) {
+  if (typeof tip !== "string") return false;
+  const trimmed = tip.trim();
+  if (trimmed.length < 20) return false;
+  return /₹|\d|%/.test(trimmed);
+}
+
+function mergeSpecificAdvice(candidateAdvice, fallbackAdvice) {
+  if (!Array.isArray(candidateAdvice)) return fallbackAdvice;
+
+  const cleaned = candidateAdvice
+    .map((tip) => String(tip || "").replace(/^[-•\s]+/, "").trim())
+    .filter(Boolean);
+
+  return [0, 1, 2].map((index) => {
+    const candidate = cleaned[index];
+    return isSpecificTip(candidate) ? candidate : fallbackAdvice[index];
+  });
 }
 
 function shouldUseRealtimeAIAdvice(transaction) {
@@ -143,11 +164,15 @@ export async function createTransaction(data) {
     });
 
     advice = buildRuleBasedAdvice({ transaction, newBalance, recentTransactions });
+    const fallbackAdvice = advice;
 
     if (shouldUseRealtimeAIAdvice(transaction)) {
       try {
         const prompt = `
-          Rewrite these financial tips in a concise and friendly way. Keep 3 bullet points.
+          Rewrite these financial tips in a concise and friendly way.
+          Keep exactly 3 bullet points.
+          Each bullet must include at least one number (₹ amount, %, or days) and one concrete action.
+          Avoid generic phrases like "save more" without a target.
           User Context:
           - Amount: ₹${transaction.amount.toNumber()}
           - Type: ${transaction.type}
@@ -163,9 +188,7 @@ export async function createTransaction(data) {
         const text = await generateAIContent(prompt);
         const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
         const rewrittenAdvice = JSON.parse(cleanedText);
-        if (Array.isArray(rewrittenAdvice) && rewrittenAdvice.length > 0) {
-          advice = rewrittenAdvice.slice(0, 3);
-        }
+        advice = mergeSpecificAdvice(rewrittenAdvice, fallbackAdvice);
       } catch (aiError) {
         console.error("AI Advice Error:", aiError.message);
       }
