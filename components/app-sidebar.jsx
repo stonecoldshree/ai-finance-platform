@@ -97,7 +97,7 @@ function SidebarContent({ pathname, onNavigate, t }) {
       icon: PenBox
     },
     {
-      label: t("sidebar.preferences"),
+      label: t("settings.title"),
       href: "/settings",
       icon: Settings
     }]

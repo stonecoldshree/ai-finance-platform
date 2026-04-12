@@ -17,7 +17,7 @@ import { updatePhoneNumber, getPhoneNumber } from "@/actions/settings";
 import { getUserAccounts } from "@/actions/dashboard";
 import { deleteAccount, updateDefaultAccount } from "@/actions/account";
 import { getAccountsBudgetStatus, updateBudget } from "@/actions/budget";
-import { Trash2, Sun, Moon, Monitor, Phone, Mail, Plus, Bell, SlidersHorizontal, Globe } from "lucide-react";
+import { Trash2, Sun, Moon, Monitor, Phone, Mail, Plus, SlidersHorizontal, Globe } from "lucide-react";
 import useFetch from "@/hooks/use-fetch";
 import { CreateAccountDrawer } from "@/components/create-account-drawer";
 import { Switch } from "@/components/ui/switch";
@@ -302,25 +302,6 @@ export default function SettingsPage() {
               </Button>
             }
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            {t("settings.notificationModeTitle")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <p className="text-muted-foreground">
-            {t("settings.notificationModeDesc")}
-          </p>
-          <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
-            <li>{t("settings.notificationModeLi1")}</li>
-            <li>{t("settings.notificationModeLi2")}</li>
-            <li>{t("settings.notificationModeLi3")}</li>
-          </ul>
         </CardContent>
       </Card>
 
