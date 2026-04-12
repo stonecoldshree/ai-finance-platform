@@ -22,12 +22,11 @@ export function BudgetProgress({
 
   // 50% rule: effective spending budget is half the total budget
   const totalBudget = initialBudget?.amount || 0;
-  const effectiveSpendingBudget = totalBudget / 2;
   const savingsTarget = totalBudget / 2;
 
-  // Progress is calculated against the effective spending budget (50%)
-  const percentUsed = effectiveSpendingBudget > 0
-    ? (currentExpenses / effectiveSpendingBudget) * 100
+  // Keep UI budget totals consistent across dashboard/settings using full monthly budget.
+  const percentUsed = totalBudget > 0
+    ? (currentExpenses / totalBudget) * 100
     : 0;
 
   return (
@@ -43,7 +42,7 @@ export function BudgetProgress({
               {initialBudget ?
                 t("budget.spentOf", {
                   spent: currentExpenses.toFixed(2),
-                  total: effectiveSpendingBudget.toFixed(2)
+                  total: totalBudget.toFixed(2)
                 }) :
                 t("budget.noBudgetSet")}
             </CardDescription>
@@ -56,8 +55,8 @@ export function BudgetProgress({
             {/* Spending progress bar */}
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{t("budget.spendingBudget") || "Spending (50%)"}</span>
-                <span>₹{effectiveSpendingBudget.toFixed(2)}</span>
+                <span>{t("budget.monthlyBudget") || "Monthly Budget"}</span>
+                <span>₹{totalBudget.toFixed(2)}</span>
               </div>
               <Progress
                 value={Math.min(percentUsed, 100)}
@@ -77,7 +76,7 @@ export function BudgetProgress({
             <div className="flex items-center gap-2 rounded-lg bg-orange-50/70 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/40 px-3 py-2">
               <Sparkles className="h-3.5 w-3.5 text-orange-500 shrink-0" />
               <p className="text-xs text-orange-700 dark:text-orange-300">
-                {t("budget.fiftyRuleStrip") || `₹${savingsTarget.toFixed(2)} reserved for savings/investment (50% rule)`}
+                {t("budget.fiftyRuleStrip", { amount: savingsTarget.toFixed(2) }, `₹${savingsTarget.toFixed(2)} reserved for savings/investment (50% rule)`)}
               </p>
             </div>
 

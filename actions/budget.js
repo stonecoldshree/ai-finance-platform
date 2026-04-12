@@ -150,9 +150,21 @@ export async function getAccountsBudgetStatus() {
       }
     });
 
+    const legacyBudgets = await db.budget.findMany({
+      where: {
+        userId: user.id,
+        budgetMonth: null
+      }
+    });
+
     const budgetMap = {};
     for (const b of budgets) {
       budgetMap[b.accountId] = b.amount.toNumber();
+    }
+
+    const legacyBudgetMap = {};
+    for (const b of legacyBudgets) {
+      legacyBudgetMap[b.accountId] = b.amount.toNumber();
     }
 
     return accounts.map((account) => ({
@@ -161,7 +173,7 @@ export async function getAccountsBudgetStatus() {
       type: account.type,
       balance: account.balance.toNumber(),
       hasBudgetThisMonth: !!budgetMap[account.id],
-      currentBudget: budgetMap[account.id] || null
+      currentBudget: budgetMap[account.id] ?? legacyBudgetMap[account.id] ?? null
     }));
   } catch (error) {
     if (error?.digest === "DYNAMIC_SERVER_USAGE" || error?.message?.includes("Dynamic server usage")) {
