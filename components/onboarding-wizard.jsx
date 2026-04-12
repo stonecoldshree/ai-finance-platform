@@ -8,6 +8,7 @@ import {
   Loader2,
   PiggyBank,
   Globe,
+  Phone,
   Sparkles,
   ArrowRight,
   ArrowLeft,
@@ -32,9 +33,9 @@ import {
   SelectTrigger,
   SelectValue } from
 "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { createAccount } from "@/actions/dashboard";
 import { updateBudget } from "@/actions/budget";
+import { updatePhoneNumber } from "@/actions/settings";
 import { accountSchema } from "@/app/lib/schema";
 import { useLanguage } from "@/components/language-provider";
 import { LOCALE_LABELS, SUPPORTED_LOCALES } from "@/lib/i18n/config";
@@ -42,18 +43,22 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES } from "@/lib/i18n/config";
 const ONBOARDED_KEY = "gullak.onboarded";
 
 /**
- * 4-step onboarding wizard for new users:
+ * 5-step onboarding wizard for new users:
  * 1. Welcome
- * 2. Add first bank account
- * 3. Choose language
- * 4. Set budget (with 50% rule)
+ * 2. Choose language
+ * 3. Add phone number
+ * 4. Add first bank account
+ * 5. Set budget (with 50% rule)
  */
 export function OnboardingWizard({ hasAccounts = false }) {
   const { t, locale, setLocale } = useLanguage();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState(0); // 0=welcome, 1=account, 2=language, 3=budget
+  const [step, setStep] = useState(0); // 0=welcome, 1=language, 2=phone, 3=account, 4=budget
   const [createdAccount, setCreatedAccount] = useState(null);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [savingPhone, setSavingPhone] = useState(false);
   const [budgetAmount, setBudgetAmount] = useState("");
   const [budgetError, setBudgetError] = useState("");
   const [showFiftyRule, setShowFiftyRule] = useState(false);
@@ -104,7 +109,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
     if (newAccount?.success && newAccount?.data) {
       toast.success(t("createAccountDrawer.createdSuccess") || "Account created!");
       setCreatedAccount(newAccount.data);
-      setStep(3); // Go to budget step
+      setStep(4); // Go to budget step
     }
   }, [newAccount]);
 
@@ -136,7 +141,33 @@ export function OnboardingWizard({ hasAccounts = false }) {
     if (selectedLocale !== locale) {
       setLocale(selectedLocale);
     }
-    setStep(2); // Go to account step
+    setStep(2); // Go to phone step
+  };
+
+  const handlePhoneContinue = async () => {
+    const sanitized = phoneNumber.trim();
+    if (!sanitized) {
+      setPhoneError(t("onboarding.phoneRequired", {}, "Phone number is required to continue."));
+      return;
+    }
+
+    setSavingPhone(true);
+    setPhoneError("");
+
+    try {
+      const result = await updatePhoneNumber(sanitized);
+      if (result?.success) {
+        toast.success(t("settings.phoneSaved", {}, "Phone number saved!"));
+        setStep(3);
+        return;
+      }
+
+      setPhoneError(result?.error || t("settings.failedSavePhone", {}, "Failed to save phone number"));
+    } catch (error) {
+      setPhoneError(error?.message || t("settings.failedSavePhone", {}, "Failed to save phone number"));
+    } finally {
+      setSavingPhone(false);
+    }
   };
 
   const handleSetBudget = () => {
@@ -176,6 +207,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
   const steps = [
     { icon: Sparkles, label: t("onboarding.welcome") || "Welcome" },
     { icon: Languages, label: t("onboarding.language") || "Language" },
+    { icon: Phone, label: t("onboarding.phone", {}, "Phone") },
     { icon: Wallet, label: t("onboarding.account") || "Account" },
     { icon: PiggyBank, label: t("onboarding.budget") || "Budget" },
   ];
@@ -276,8 +308,67 @@ export function OnboardingWizard({ hasAccounts = false }) {
             </div>
           )}
 
-          {/* Step 2: Add Account */}
+          {/* Step 2: Add Phone Number */}
           {step === 2 && (
+            <div className="space-y-5 py-2">
+              <div className="text-center space-y-1">
+                <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
+                  <Phone className="h-5 w-5 text-orange-500" />
+                  {t("onboarding.phoneTitle", {}, "Add Phone Number")}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t("settings.phoneNumberDesc")}
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="ob-phone" className="text-sm font-medium">
+                  {t("onboarding.phoneLabel", {}, "Phone Number")}
+                </label>
+                <Input
+                  id="ob-phone"
+                  type="tel"
+                  placeholder="+919876543210"
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    setPhoneNumber(e.target.value);
+                    setPhoneError("");
+                  }}
+                  autoFocus
+                />
+                <p className="text-xs text-muted-foreground">{t("settings.phoneFormat")}</p>
+                {phoneError && <p className="text-xs text-red-500">{phoneError}</p>}
+              </div>
+
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setStep(1)} className="flex-1" disabled={savingPhone}>
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  {t("onboarding.back") || "Back"}
+                </Button>
+                <Button
+                  className="flex-1 bg-orange-600 hover:bg-orange-700 gap-2"
+                  onClick={handlePhoneContinue}
+                  disabled={savingPhone}
+                >
+                  {savingPhone ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t("settings.saving") || "Saving..."}
+                    </>
+                  ) : (
+                    <>
+                      {t("onboarding.continue") || "Continue"}
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
+
+          {/* Step 3: Add Account */}
+          {step === 3 && (
             <div className="space-y-4">
               <div className="text-center space-y-1">
                 <h3 className="text-lg font-semibold">
@@ -356,8 +447,8 @@ export function OnboardingWizard({ hasAccounts = false }) {
           )}
 
 
-          {/* Step 3: Set Budget */}
-          {step === 3 && (
+          {/* Step 4: Set Budget */}
+          {step === 4 && (
             <div className="space-y-4 py-2">
               <div className="text-center space-y-1">
                 <h3 className="text-lg font-semibold">

@@ -14,7 +14,6 @@ import {
 "@/components/ui/select";
 import { toast } from "sonner";
 import { updatePhoneNumber, getPhoneNumber } from "@/actions/settings";
-import { sendTestSMS } from "@/actions/test-send-sms";
 import { getUserAccounts } from "@/actions/dashboard";
 import { deleteAccount, updateDefaultAccount } from "@/actions/account";
 import { getAccountsBudgetStatus, updateBudget } from "@/actions/budget";
@@ -37,8 +36,6 @@ export default function SettingsPage() {
   const { t } = useLanguage();
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
-  const [testing, setTesting] = useState(false);
-  const [hasPhone, setHasPhone] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [budgetMap, setBudgetMap] = useState({});
   const [editingBudget, setEditingBudget] = useState(null);
@@ -53,7 +50,6 @@ export default function SettingsPage() {
     getPhoneNumber().then((num) => {
       if (num) {
         setPhone(num);
-        setHasPhone(true);
       }
     });
 
@@ -132,7 +128,6 @@ export default function SettingsPage() {
       const result = await updatePhoneNumber(phone);
       if (result.success) {
         toast.success(phone ? t("settings.phoneSaved") : t("settings.phoneRemoved"));
-        setHasPhone(!!phone);
       } else {
         toast.error(result.error);
       }
@@ -140,22 +135,6 @@ export default function SettingsPage() {
       toast.error(t("settings.failedSavePhone"));
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleTestSMS = async () => {
-    setTesting(true);
-    try {
-      const result = await sendTestSMS();
-      if (result.success) {
-        toast.success(t("settings.testSmsSent", { phone: result.phoneNumber }));
-      } else {
-        toast.error(result.error);
-      }
-    } catch {
-      toast.error(t("settings.failedTestSms"));
-    } finally {
-      setTesting(false);
     }
   };
 
@@ -306,15 +285,6 @@ export default function SettingsPage() {
             <Button onClick={handleSave} disabled={saving}>
               {saving ? t("settings.saving") : t("settings.save")}
             </Button>
-            {hasPhone &&
-            <Button
-              variant="outline"
-              onClick={handleTestSMS}
-              disabled={testing}>
-              
-                {testing ? t("settings.sending") : t("settings.sendTestSms")}
-              </Button>
-            }
             {phone &&
             <Button
               variant="ghost"
@@ -324,7 +294,6 @@ export default function SettingsPage() {
                 updatePhoneNumber("").then((result) => {
                   if (result.success) {
                     toast.success(t("settings.phoneRemoved"));
-                    setHasPhone(false);
                   }
                 });
               }}>

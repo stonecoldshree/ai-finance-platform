@@ -1,14 +1,12 @@
 "use client";
 
 import { sendTestEmail } from "@/actions/test-send-email";
-import { sendTestSMS } from "@/actions/test-send-sms";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
 
 export default function TestEmailPage() {
   const [loadingEmail, setLoadingEmail] = useState(false);
-  const [loadingSMS, setLoadingSMS] = useState(false);
 
   const handleSendTest = async () => {
     setLoadingEmail(true);
@@ -23,22 +21,6 @@ export default function TestEmailPage() {
       toast.error("An unexpected error occurred");
     } finally {
       setLoadingEmail(false);
-    }
-  };
-
-  const handleSendTestSMS = async () => {
-    setLoadingSMS(true);
-    try {
-      const result = await sendTestSMS();
-      if (result.success) {
-        toast.success(`Test SMS sent to ${result.phoneNumber}`);
-      } else {
-        toast.error(`Failed to send SMS: ${result.error}`);
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setLoadingSMS(false);
     }
   };
 
@@ -58,21 +40,6 @@ export default function TestEmailPage() {
             className="w-full">
             
                         {loadingEmail ? "Sending..." : "Send Test Email"}
-                    </Button>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h2 className="text-xl font-semibold mb-2">SMS Test</h2>
-                    <p className="mb-6 text-gray-600">
-                        Send a test SMS to your phone number from Clerk profile.
-                    </p>
-                    <Button
-            onClick={handleSendTestSMS}
-            disabled={loadingSMS}
-            className="w-full"
-            variant="outline">
-            
-                        {loadingSMS ? "Sending..." : "Send Test SMS"}
                     </Button>
                 </div>
             </div>

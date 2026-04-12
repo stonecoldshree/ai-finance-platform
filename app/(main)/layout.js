@@ -26,7 +26,7 @@ const MainLayout = async ({ children }) => {
       <DesktopSidebar />
       <div className="flex-1 md:ml-64">
         <div className="pt-20 px-4 pb-8">
-          <PhonePromptBanner hasPhone={hasPhone} />
+          <PhonePromptBanner hasPhone={hasPhone} isExistingUser={hasAccounts} />
           <OnboardingWizard hasAccounts={hasAccounts} />
           {children}
         </div>
