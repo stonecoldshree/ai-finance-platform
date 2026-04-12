@@ -235,6 +235,12 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
 
   const selectedAccount = accounts.find((a) => a.id === selectedAccountId);
 
+  const selectedMonthBudget = useMemo(() => {
+    const accountBudgetMap = budgetsByAccount[selectedAccountId] || {};
+    const amount = accountBudgetMap[selectedMonth] ?? accountBudgetMap.__legacy__ ?? 0;
+    return amount > 0 ? { amount } : null;
+  }, [budgetsByAccount, selectedAccountId, selectedMonth]);
+
   const analyticsInsights = useMemo(() => {
     const expenseDays = dailyData.filter((day) => day.expense > 0);
     const averageDailyExpense =
@@ -307,7 +313,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
 
       {}
       <BudgetProgress
-        initialBudget={budgetsByAccount[selectedAccountId]?.budget}
+        initialBudget={selectedMonthBudget}
         currentExpenses={selectedMonthExpenses}
         accountId={selectedAccountId}
         accountName={selectedAccount?.name}

@@ -1,8 +1,9 @@
 import { getUserAccounts, getDashboardData } from "@/actions/dashboard";
-import { getCurrentBudget } from "@/actions/budget";
 import AccountAnalyticsClient from "./_components/analytics-client";
 import { getLocaleFromCookie } from "@/lib/i18n/server";
 import { getTranslator } from "@/lib/i18n/translations";
+import { getAuthUser } from "@/lib/cachedAuth";
+import { db } from "@/lib/prisma";
 
 export default async function AccountAnalyticsPage() {
   const [accounts, transactions, locale] = await Promise.all([
@@ -15,18 +16,28 @@ export default async function AccountAnalyticsPage() {
 
   const budgetsByAccount = {};
   if (accounts?.length > 0) {
-    const budgetPromises = accounts.map((account) =>
-    getCurrentBudget(account.id).then((data) => ({
-      accountId: account.id,
-      ...data
-    }))
-    );
-    const budgetResults = await Promise.all(budgetPromises);
-    for (const result of budgetResults) {
-      budgetsByAccount[result.accountId] = {
-        budget: result.budget,
-        currentExpenses: result.currentExpenses
-      };
+    const user = await getAuthUser();
+    const accountIds = accounts.map((account) => account.id);
+
+    const budgetRows = await db.budget.findMany({
+      where: {
+        userId: user.id,
+        accountId: { in: accountIds }
+      },
+      select: {
+        accountId: true,
+        budgetMonth: true,
+        amount: true
+      }
+    });
+
+    for (const row of budgetRows) {
+      if (!budgetsByAccount[row.accountId]) {
+        budgetsByAccount[row.accountId] = {};
+      }
+
+      const monthKey = row.budgetMonth || "__legacy__";
+      budgetsByAccount[row.accountId][monthKey] = row.amount.toNumber();
     }
   }
 

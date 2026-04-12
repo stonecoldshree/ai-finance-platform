@@ -195,9 +195,7 @@ export async function getDashboardData(options = {}) {
   const { includePreviousMonth = false, includeAllMonths = false } = options;
 
   const now = new Date();
-  const startOfMonth = includeAllMonths ?
-  new Date(now.getFullYear() - 1, now.getMonth(), 1) :
-  includePreviousMonth ?
+  const startOfMonth = includePreviousMonth ?
   new Date(now.getFullYear(), now.getMonth() - 1, 1) :
   new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
@@ -206,17 +204,28 @@ export async function getDashboardData(options = {}) {
     const user = await getAuthUser();
 
 
-    const transactions = await db.transaction.findMany({
-      where: {
-        userId: user.id,
-        date: {
-          gte: startOfMonth,
-          lte: endOfMonth
-        }
-      },
-      orderBy: { date: "desc" },
-      take: 500
-    });
+    const where = {
+      userId: user.id
+    };
+
+    // includeAllMonths powers reports/analytics and should use full user history.
+    if (!includeAllMonths) {
+      where.date = {
+        gte: startOfMonth,
+        lte: endOfMonth
+      };
+    }
+
+    const query = {
+      where,
+      orderBy: { date: "desc" }
+    };
+
+    if (!includeAllMonths) {
+      query.take = 500;
+    }
+
+    const transactions = await db.transaction.findMany(query);
 
     return transactions.map(serializeTransaction);
   } catch (error) {
