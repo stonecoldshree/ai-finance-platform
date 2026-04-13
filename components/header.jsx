@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, buttonVariants } from "./ui/button";
+import { buttonVariants } from "./ui/button";
 import Link from "next/link";
 import { SignedIn, SignedOut, SignInButton, UserButton, ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
 import { getCachedUser } from "@/lib/cachedUser";

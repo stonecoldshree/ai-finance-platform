@@ -24,7 +24,7 @@ import { useLanguage } from "@/components/language-provider";
 import { CreateAccountDrawer } from "@/components/create-account-drawer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { PiggyBank, Plus, ArrowRight } from "lucide-react";
+import { PiggyBank, Plus } from "lucide-react";
 
 export default function DashboardClient({ accounts = [], transactions = [], budgetStatus = [] }) {
   const { t, locale } = useLanguage();

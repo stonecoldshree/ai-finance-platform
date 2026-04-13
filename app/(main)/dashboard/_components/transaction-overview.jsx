@@ -109,7 +109,7 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
             {recentTransactions.length === 0 ?
             <div className="text-center py-6">
               <p className="text-muted-foreground">{t("dashboard.noActivity")}</p>
-              <p className="text-sm mt-2 font-medium text-primary">Your financial story starts here. Let's log your first transaction to unlock insights!</p>
+              <p className="text-sm mt-2 font-medium text-primary">Your financial story starts here. Let&apos;s log your first transaction to unlock insights!</p>
             </div> :
 
             recentTransactions.map((transaction) =>
@@ -160,7 +160,7 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
           {pieChartData.length === 0 ?
           <div className="text-center py-6">
             <p className="text-muted-foreground">{t("dashboard.noExpenseData")}</p>
-            <p className="text-sm mt-2 font-medium text-primary">Your financial story starts here. Let's log your first transaction to unlock insights!</p>
+            <p className="text-sm mt-2 font-medium text-primary">Your financial story starts here. Let&apos;s log your first transaction to unlock insights!</p>
           </div> :
 
           <div className="h-[300px]" role="img" aria-label="Pie chart illustrating the breakdown of expenses by category">

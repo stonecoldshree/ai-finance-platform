@@ -101,6 +101,7 @@ export default function SettingsPage() {
       toast.success(t("settings.accountDeleted"));
       loadAccounts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deleteResult]);
 
   useEffect(() => {
@@ -108,18 +109,21 @@ export default function SettingsPage() {
       toast.success(t("settings.defaultUpdated"));
       loadAccounts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateDefaultResult]);
 
   useEffect(() => {
     if (deleteError) {
       toast.error(deleteError.message || t("settings.failedDelete"));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deleteError]);
 
   useEffect(() => {
     if (defaultError) {
       toast.error(defaultError.message || t("settings.failedDefault"));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultError]);
 
   const handleSave = async () => {

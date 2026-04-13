@@ -71,7 +71,7 @@ export default async function GoalsPage() {
               {t("goals.noAccounts")}
             </p>
             <p className="text-sm mt-2 text-primary font-medium mb-4">
-              You haven't set any financial goals yet. What's your next big target? A laptop? A vacation? Let's start tracking!
+              You haven&apos;t set any financial goals yet. What&apos;s your next big target? A laptop? A vacation? Let&apos;s start tracking!
             </p>
             <Link href="/transaction/create">
                 <Button>{t("goals.addFirstTransaction")}</Button>

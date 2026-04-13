@@ -111,6 +111,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
       setCreatedAccount(newAccount.data);
       setStep(4); // Go to budget step
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newAccount]);
 
   useEffect(() => {
@@ -125,6 +126,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
       toast.success(t("budget.updatedSuccess") || "Budget set!");
       completeOnboarding();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [budgetResult]);
 
   useEffect(() => {

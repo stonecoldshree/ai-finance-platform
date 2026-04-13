@@ -2,8 +2,8 @@
 import { NextResponse } from "next/server";
 import { scanReceipt } from "@/actions/transaction";
 import { db } from "@/lib/prisma";
-import { detectAnomaly, batchDetectAnomalies, checkBudgetAnomaly } from "@/lib/anomaly";
-import { classifyByKeywords, evaluateBaselineAccuracy } from "@/lib/baseline-classifier";
+import { batchDetectAnomalies, checkBudgetAnomaly } from "@/lib/anomaly";
+import { evaluateBaselineAccuracy } from "@/lib/baseline-classifier";
 import fs from "fs";
 import path from "path";
 

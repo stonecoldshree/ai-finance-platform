@@ -14,8 +14,8 @@ export default function NotFound() {
         <div className="space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">404</h1>
           <p className="text-muted-foreground">
-            Oops! The page you're looking for seems to have wandered off.
-            Let's get you back to your finances.
+            Oops! The page you&apos;re looking for seems to have wandered off.
+            Let&apos;s get you back to your finances.
           </p>
         </div>
         <Link href="/">

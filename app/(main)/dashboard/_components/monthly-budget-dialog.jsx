@@ -63,12 +63,14 @@ export function MonthlyBudgetDialog({ accountsNeedingBudget = [] }) {
         setOpen(false);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saveResult]);
 
   useEffect(() => {
     if (saveError) {
       setError(saveError.message || t("budget.failedUpdate") || "Failed to set budget");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saveError]);
 
   if (accountsNeedingBudget.length === 0) return null;

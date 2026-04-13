@@ -80,6 +80,7 @@ export function CreateAccountDrawer({ children }) {
       setNewAccountData(newAccount.data);
       setStep("budget");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newAccount]);
 
   // When budget is saved, close drawer
@@ -88,18 +89,21 @@ export function CreateAccountDrawer({ children }) {
       toast.success(t("budget.updatedSuccess") || "Budget set successfully!");
       handleClose();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [budgetResult]);
 
   useEffect(() => {
     if (error) {
       toast.error(error.message || t("createAccountDrawer.failedCreate"));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [error]);
 
   useEffect(() => {
     if (budgetSaveError) {
       setBudgetError(budgetSaveError.message || t("budget.failedUpdate"));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [budgetSaveError]);
 
   const handleClose = () => {
