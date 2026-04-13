@@ -1,5 +1,6 @@
 const emailjs = require('@emailjs/nodejs');
 const twilio = require('twilio');
+require('dotenv').config();
 
 async function testServices() {
   console.log('Testing Email...');
@@ -31,15 +32,24 @@ async function testServices() {
 
   console.log('\nTesting SMS...');
   try {
+    if (!process.env.TEST_TO_PHONE) {
+      throw new Error('Missing TEST_TO_PHONE. Set a real recipient number in your .env file.');
+    }
+
     const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
     const msg = await client.messages.create({
       body: 'Test from CLI',
       from: process.env.TWILIO_PHONE_NUMBER,
-      to: '+1234567890'
+      to: process.env.TEST_TO_PHONE
     });
     console.log('SMS result:', msg.sid);
   } catch (error) {
-    console.error('SMS error:', error.message);
+    console.error('SMS error:', {
+      code: error.code,
+      status: error.status,
+      message: error.message,
+      moreInfo: error.moreInfo
+    });
   }
 }
 

@@ -216,7 +216,7 @@ export async function createAccount(data) {
       );
     }
 
-    void Promise.allSettled(notificationTasks);
+    await Promise.allSettled(notificationTasks);
 
 
     const serializedAccount = serializeTransaction(account);

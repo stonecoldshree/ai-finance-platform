@@ -291,7 +291,7 @@ export async function createTransaction(data) {
     }
 
     if (notificationTasks.length > 0) {
-      void Promise.allSettled(notificationTasks);
+      await Promise.allSettled(notificationTasks);
     }
 
     revalidatePath("/dashboard");
