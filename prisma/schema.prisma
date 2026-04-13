@@ -15,9 +15,11 @@ model User {
   phoneNumber   String?
   name          String?
   imageUrl      String?
+  locale        String    @default("en")
   transactions  Transaction[]
   accounts      Account[]
   budgets       Budget[]
+  goals         Goal[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -111,4 +113,28 @@ enum RecurringInterval {
   WEEKLY
   MONTHLY
   YEARLY
+}
+
+model Goal {
+  id            String    @id @default(uuid())
+  name          String
+  targetAmount  Decimal
+  currentAmount Decimal   @default(0)
+  targetDate    DateTime?
+  color         String?   @default("#ea580c")
+  icon          String?   @default("target")
+  status        GoalStatus @default(IN_PROGRESS)
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("goals")
+}
+
+enum GoalStatus {
+  IN_PROGRESS
+  ACHIEVED
+  CANCELLED
 }

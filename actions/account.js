@@ -4,6 +4,8 @@ import { db } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/cachedAuth";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { getLocaleFromCookie } from "@/lib/i18n/server";
+import { getTranslator } from "@/lib/i18n/translations";
 
 const serializeDecimal = (obj) => {
   const serialized = { ...obj };
@@ -46,13 +48,16 @@ export async function getAccountWithTransactions(accountId) {
 export async function bulkDeleteTransactions(transactionIds) {
   try {
     const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const locale = await getLocaleFromCookie();
+    const t = getTranslator(locale);
+    
+    if (!userId) throw new Error(t("errors.unauthorized", {}, "Unauthorized"));
 
     const user = await db.user.findUnique({
       where: { clerkUserId: userId }
     });
 
-    if (!user) throw new Error("User not found");
+    if (!user) throw new Error(t("errors.userNotFound", {}, "User not found"));
 
 
     const transactions = await db.transaction.findMany({
@@ -109,14 +114,17 @@ export async function bulkDeleteTransactions(transactionIds) {
 export async function updateDefaultAccount(accountId) {
   try {
     const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const locale = await getLocaleFromCookie();
+    const t = getTranslator(locale);
+
+    if (!userId) throw new Error(t("errors.unauthorized", {}, "Unauthorized"));
 
     const user = await db.user.findUnique({
       where: { clerkUserId: userId }
     });
 
     if (!user) {
-      throw new Error("User not found");
+      throw new Error(t("errors.userNotFound", {}, "User not found"));
     }
 
 
@@ -147,13 +155,16 @@ export async function updateDefaultAccount(accountId) {
 export async function deleteAccount(accountId) {
   try {
     const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const locale = await getLocaleFromCookie();
+    const t = getTranslator(locale);
+
+    if (!userId) throw new Error(t("errors.unauthorized", {}, "Unauthorized"));
 
     const user = await db.user.findUnique({
       where: { clerkUserId: userId }
     });
 
-    if (!user) throw new Error("User not found");
+    if (!user) throw new Error(t("errors.userNotFound", {}, "User not found"));
 
 
     const account = await db.account.findUnique({
@@ -163,12 +174,10 @@ export async function deleteAccount(accountId) {
       }
     });
 
-    if (!account) throw new Error("Account not found");
+    if (!account) throw new Error(t("errors.accountNotFound", {}, "Account not found"));
 
     if (account.isDefault) {
-      throw new Error(
-        "Cannot delete the default account. Please set another account as default first."
-      );
+      throw new Error(t("errors.cannotDeleteDefault", {}, "Cannot delete the default account. Please set another account as default first."));
     }
 
 

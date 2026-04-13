@@ -1,4 +1,3 @@
-import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/header";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -6,8 +5,6 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getLocaleFromCookie } from "@/lib/i18n/server";
 import { LanguageProvider } from "@/components/language-provider";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Gullak",
@@ -29,7 +26,7 @@ export default async function RootLayout({ children }) {
         <head>
           <link rel="icon" href="/logo_white.png" sizes="any" />
         </head>
-        <body className={`${inter.className}`}>
+        <body className="font-sans antialiased">
           <LanguageProvider initialLocale={locale}>
             <ThemeProvider
               attribute="class"

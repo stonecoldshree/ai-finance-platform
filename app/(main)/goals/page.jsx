@@ -1,149 +1,146 @@
-import { getCurrentBudget } from "@/actions/budget";
-import { getUserAccounts, getDashboardData } from "@/actions/dashboard";
-import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
+import { getUserGoals } from "@/actions/goals";
+import { getDashboardData } from "@/actions/dashboard";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getLocaleFromCookie } from "@/lib/i18n/server";
 import { getTranslator } from "@/lib/i18n/translations";
-
-function getCurrentMonthRange() {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-  return { start, end };
-}
+import { CreateGoalDrawer } from "./_components/create-goal-drawer";
+import { GoalCard } from "./_components/goal-card";
+import { PiggyBank, Target, Flag } from "lucide-react";
 
 export default async function GoalsPage() {
-  const [accounts, allTransactions, locale] = await Promise.all([
-    getUserAccounts(),
+  const [goals, allTransactions, locale] = await Promise.all([
+    getUserGoals(),
     getDashboardData({ includeAllMonths: true }),
     getLocaleFromCookie()
   ]);
   const t = getTranslator(locale);
 
-  const { start, end } = getCurrentMonthRange();
-  const monthTransactions = (allTransactions || []).filter((transaction) => {
-    const date = new Date(transaction.date);
-    return date >= start && date <= end;
+  // Compute metrics
+  const safeGoals = goals || [];
+  const totalLocked = safeGoals.reduce((sum, g) => sum + g.currentAmount, 0);
+  const activeGoals = safeGoals.filter(g => g.status === "IN_PROGRESS");
+  const achievedGoals = safeGoals.filter(g => g.status === "ACHIEVED");
+
+  // Determine the next goal to hit (the one with the highest progress percentage)
+  let nextGoal = null;
+  let maxProgress = -1;
+  activeGoals.forEach(g => {
+    const progress = (g.currentAmount / g.targetAmount) * 100;
+    if (progress > maxProgress) {
+      maxProgress = progress;
+      nextGoal = g;
+    }
   });
 
-  const accountGoalCards = await Promise.all(
-    (accounts || []).map(async (account) => {
-      const budgetData = await getCurrentBudget(account.id);
-      const income = monthTransactions
-        .filter((transaction) => transaction.accountId === account.id && transaction.type === "INCOME")
-        .reduce((sum, transaction) => sum + transaction.amount, 0);
-      const expense = monthTransactions
-        .filter((transaction) => transaction.accountId === account.id && transaction.type === "EXPENSE")
-        .reduce((sum, transaction) => sum + transaction.amount, 0);
+  // Calculate current month's global savings rate to pass down to predictive UI
+  const now = new Date();
+  const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  
+  const monthTransactions = (allTransactions || []).filter((t) => {
+    const d = new Date(t.date);
+    return d >= startMonth && d <= endMonth;
+  });
 
-      const budgetAmount = budgetData?.budget?.amount || 0;
-      const usagePct = budgetAmount > 0 ? Math.min(100, (expense / budgetAmount) * 100) : 0;
-      const savings = Math.max(0, income - expense);
-      const suggestedGoal = savings > 0 ? savings * 1.2 : Math.max(1000, Number(account.balance) * 0.1);
-      const progressToGoal = suggestedGoal > 0 ? Math.min(100, (savings / suggestedGoal) * 100) : 0;
-
-      return {
-        account,
-        budgetAmount,
-        expense,
-        income,
-        savings,
-        usagePct,
-        suggestedGoal,
-        progressToGoal
-      };
-    })
-  );
-
-  const totalSavings = accountGoalCards.reduce((sum, item) => sum + item.savings, 0);
-  const totalIncome = accountGoalCards.reduce((sum, item) => sum + item.income, 0);
-  const totalExpenses = accountGoalCards.reduce((sum, item) => sum + item.expense, 0);
-
-  if (!accounts || accounts.length === 0) {
-    return (
-      <div className="space-y-6 px-5">
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight gradient-title">{t("goals.title")}</h1>
-        <Card className="border-orange-200/60 bg-orange-50/40 dark:border-orange-900/40 dark:bg-orange-950/10">
-          <CardContent className="space-y-4 py-8 text-center">
-            <p className="text-muted-foreground">
-              {t("goals.noAccounts")}
-            </p>
-            <p className="text-sm mt-2 text-primary font-medium mb-4">
-              You haven&apos;t set any financial goals yet. What&apos;s your next big target? A laptop? A vacation? Let&apos;s start tracking!
-            </p>
-            <Link href="/transaction/create">
-                <Button>{t("goals.addFirstTransaction")}</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const monthIncome = monthTransactions
+    .filter(t => t.type === "INCOME")
+    .reduce((sum, t) => sum + t.amount, 0);
+  const monthExpense = monthTransactions
+    .filter(t => t.type === "EXPENSE")
+    .reduce((sum, t) => sum + t.amount, 0);
+  
+  const globalMonthlySavingsRate = Math.max(0, monthIncome - monthExpense);
 
   return (
-    <div className="space-y-6 px-5">
-      <h1 className="text-4xl md:text-5xl font-bold tracking-tight gradient-title">{t("goals.title")}</h1>
-      <p className="text-sm text-muted-foreground">
-        {t("goals.subtitle")}
-      </p>
+    <div className="space-y-6 px-5 mb-10">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight gradient-title">
+            {t("goals.title") || "Goals"}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t("goals.subtitle") || "Plan your targets, build your savings pots, and achieve your financial dreams."}
+          </p>
+        </div>
+        <CreateGoalDrawer>
+          <Button size="lg" className="bg-orange-600 hover:bg-orange-700">
+            <Target className="mr-2 h-4 w-4" />
+            {t("goals.createGoal") || "Create Goal"}
+          </Button>
+        </CreateGoalDrawer>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">{t("goals.totalMonthlySavings")}</p>
-            <p className="text-2xl font-bold text-green-500">₹{totalSavings.toFixed(2)}</p>
+          <CardContent className="pt-6 flex flex-row items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center">
+              <PiggyBank className="w-6 h-6 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">{t("goals.totalLocked") || "Total Money Saved"}</p>
+              <p className="text-2xl font-bold text-foreground">₹{totalLocked.toFixed(2)}</p>
+            </div>
           </CardContent>
         </Card>
+        
         <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">{t("goals.totalIncome")}</p>
-            <p className="text-2xl font-bold text-green-500">₹{totalIncome.toFixed(2)}</p>
+          <CardContent className="pt-6 flex flex-row items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+              <Target className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">{t("goals.activeGoals") || "Active Goals"}</p>
+              <p className="text-2xl font-bold text-foreground">{activeGoals.length}</p>
+            </div>
           </CardContent>
         </Card>
+
         <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">{t("goals.totalExpenses")}</p>
-            <p className="text-2xl font-bold text-red-500">₹{totalExpenses.toFixed(2)}</p>
+          <CardContent className="pt-6 flex flex-row items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
+              <Flag className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">{t("goals.nextGoalToHit") || "Next Goal to Hit"}</p>
+              <p className="text-lg font-bold text-foreground truncate max-w-[150px]">
+                {nextGoal ? nextGoal.name : "None"}
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {accountGoalCards.map(({ account, budgetAmount, expense, income, savings, usagePct, suggestedGoal, progressToGoal }) => (
-          <Card key={account.id} className="border-orange-100/70 bg-card/80">
-            <CardHeader>
-              <CardTitle className="text-lg">{account.name}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">{t("goals.budgetGoalProgress")}</p>
-                <p className="font-medium">
-                  ₹{expense.toFixed(2)} {t("goals.spent")} {budgetAmount > 0 ? t("goals.ofBudget", { amount: budgetAmount.toFixed(2) }) : t("goals.noBudgetSet")}
-                </p>
-                <Progress value={usagePct} className="mt-2" />
-              </div>
-
-              <div>
-                <p className="text-muted-foreground">{t("goals.savingsGoalProgress")}</p>
-                <p className="font-medium">
-                  {t("goals.savedOfSuggested", { savings: savings.toFixed(2), goal: suggestedGoal.toFixed(2) })}
-                </p>
-                <Progress value={progressToGoal} className="mt-2" />
-              </div>
-
-              <div className="rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
-                <p>{t("goals.incomeLabel")} ₹{income.toFixed(2)}</p>
-                <p>{t("goals.expensesLabel")} ₹{expense.toFixed(2)}</p>
-                <p>
-                  {t("goals.focusTip")} {savings > 0 ? t("goals.focusTipMomentum") : t("goals.focusTipReduce")}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {safeGoals.length === 0 ? (
+        <Card className="border-orange-200/60 bg-orange-50/40 dark:border-orange-900/40 dark:bg-orange-950/10 mt-8">
+          <CardContent className="space-y-4 py-12 text-center">
+            <div className="mx-auto w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mb-4">
+              <Target className="w-8 h-8 text-orange-600" />
+            </div>
+            <p className="text-xl font-semibold text-foreground">
+              {t("goals.noGoals") || "No active goals."}
+            </p>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              {t("goals.noGoalsSub") || "You haven't set any financial goals yet. What's your next big target? A laptop? A vacation? Let's start tracking!"}
+            </p>
+            <div className="pt-4">
+              <CreateGoalDrawer>
+                <Button>{t("goals.createGoal") || "Create Goal"}</Button>
+              </CreateGoalDrawer>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-8">
+          {safeGoals.map(goal => (
+            <GoalCard 
+              key={goal.id} 
+              goal={goal} 
+              globalMonthlySavingsRate={globalMonthlySavingsRate} 
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

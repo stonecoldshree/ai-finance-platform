@@ -15,11 +15,19 @@ export const LanguageProvider = ({ initialLocale = DEFAULT_LOCALE, children }) =
   const [locale, setLocaleState] = useState(resolveLocale(initialLocale));
   const router = useRouter();
 
-  const setLocale = useCallback((nextLocale) => {
+  const setLocale = useCallback(async (nextLocale) => {
     const safeLocale = resolveLocale(nextLocale);
     setLocaleState(safeLocale);
     document.cookie = `locale=${safeLocale}; path=/; max-age=31536000; SameSite=Lax`;
     router.refresh();
+
+    // Fire-and-forget sync to backend
+    try {
+      const { updateUserLocale } = await import("@/actions/user");
+      await updateUserLocale(safeLocale);
+    } catch (e) {
+      console.error("Failed to sync locale to DB", e);
+    }
   }, [router]);
 
   const value = useMemo(
