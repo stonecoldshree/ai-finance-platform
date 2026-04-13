@@ -255,14 +255,18 @@ export async function updateBudget(amount, accountId) {
 
       let advice = [];
       try {
-        const text = await generateAIContent(prompt);
+        const aiPromise = generateAIContent(prompt);
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("AI generation timed out")), 8000)
+        );
+        const text = await Promise.race([aiPromise, timeoutPromise]);
+        
         const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
         const parsed = JSON.parse(cleanedText);
         advice = normalizeAdvice(parsed, fallbackAdvice);
       } catch (aiError) {
         console.error("AI Advice Error:", aiError);
         advice = fallbackAdvice;
-
       }
 
       await sendEmail({

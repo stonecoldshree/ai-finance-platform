@@ -103,9 +103,12 @@ export default function RecurringTransactionsClient({ initialItems = [] }) {
   if (items.length === 0) {
     return (
       <Card className="border-orange-200/60 bg-orange-50/40 dark:border-orange-900/40 dark:bg-orange-950/10">
-        <CardContent className="space-y-4 py-10 text-center text-sm text-muted-foreground">
-          <p>{t("recurring.noTemplates")}</p>
-          <Link href="/transaction/create" className="inline-flex">
+        <CardContent className="space-y-4 py-10 text-center text-sm">
+          <p className="text-muted-foreground">{t("recurring.noTemplates")}</p>
+          <p className="mt-2 text-primary font-medium">
+            No subscriptions tracked yet. Add your Netflix or gym memberships so you never face a surprise charge!
+          </p>
+          <Link href="/transaction/create" className="inline-flex mt-4">
             <Button size="sm">{t("recurring.createTemplate")}</Button>
           </Link>
         </CardContent>

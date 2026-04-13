@@ -223,6 +223,8 @@ export async function getDashboardData(options = {}) {
 
     if (!includeAllMonths) {
       query.take = 500;
+    } else {
+      query.take = 10000;
     }
 
     const transactions = await db.transaction.findMany(query);

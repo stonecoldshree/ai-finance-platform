@@ -67,8 +67,11 @@ export default async function GoalsPage() {
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight gradient-title">{t("goals.title")}</h1>
         <Card className="border-orange-200/60 bg-orange-50/40 dark:border-orange-900/40 dark:bg-orange-950/10">
           <CardContent className="space-y-4 py-8 text-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground">
               {t("goals.noAccounts")}
+            </p>
+            <p className="text-sm mt-2 text-primary font-medium mb-4">
+              You haven't set any financial goals yet. What's your next big target? A laptop? A vacation? Let's start tracking!
             </p>
             <Link href="/transaction/create">
                 <Button>{t("goals.addFirstTransaction")}</Button>

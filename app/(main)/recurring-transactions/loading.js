@@ -1,14 +1,13 @@
-import { BarLoader } from "react-spinners";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {
   return (
-    <div className="px-5 space-y-6">
-      <div className="h-10 w-72 bg-muted animate-pulse rounded-lg" />
-      <div className="h-4 w-48 bg-muted animate-pulse rounded" />
-      <BarLoader className="mt-4" width={"100%"} color="#f97316" />
-      <div className="space-y-3">
+    <div className="px-5 space-y-6 pt-4">
+      <Skeleton className="h-10 w-72 rounded-lg" />
+      <Skeleton className="h-4 w-48 rounded" />
+      <div className="space-y-4 mt-8">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-20 bg-muted/50 animate-pulse rounded-xl" />
+          <Skeleton key={i} className="h-24 w-full rounded-xl" />
         ))}
       </div>
     </div>

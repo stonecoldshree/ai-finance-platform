@@ -32,7 +32,8 @@ model Account {
   isDefault    Boolean       @default(false)
   userId       String
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions Transaction[]
+  transactions Transaction[] @relation("FromAccount")
+  transfersReceived Transaction[] @relation("ToAccount")
   budgets      Budget[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -57,12 +58,16 @@ model Transaction {
   userId           String
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   accountId        String
-  account          Account           @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  account          Account           @relation("FromAccount", fields: [accountId], references: [id], onDelete: Cascade)
+  toAccountId      String?
+  toAccount        Account?          @relation("ToAccount", fields: [toAccountId], references: [id], onDelete: Cascade)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
   @@index([userId])
   @@index([accountId])
+  @@index([date])
+  @@index([accountId, date])
   @@map("transactions")
 }
 
@@ -87,6 +92,7 @@ model Budget {
 enum TransactionType {
   INCOME
   EXPENSE
+  TRANSFER
 }
 
 enum AccountType {

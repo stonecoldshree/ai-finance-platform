@@ -18,41 +18,43 @@ const LazyBarChart = dynamic(
     const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = mod;
     // Return a wrapper component that renders the chart
     const ChartWrapper = ({ data, incomeLabel, expenseLabel }) => (
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={data}
-          margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis
-            dataKey="date"
-            fontSize={12}
-            tickLine={false}
-            axisLine={false} />
-          <YAxis
-            fontSize={12}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(value) => `₹${value}`} />
-          <Tooltip
-            formatter={(value) => [`₹${value}`, undefined]}
-            contentStyle={{
-              backgroundColor: "hsl(var(--popover))",
-              border: "1px solid hsl(var(--border))",
-              borderRadius: "var(--radius)"
-            }} />
-          <Legend />
-          <Bar
-            dataKey="income"
-            name={incomeLabel}
-            fill="#22c55e"
-            radius={[4, 4, 0, 0]} />
-          <Bar
-            dataKey="expense"
-            name={expenseLabel}
-            fill="#ef4444"
-            radius={[4, 4, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+      <div role="img" aria-label="Line chart demonstrating income and expenses over the selected date range" style={{ width: "100%", height: "100%" }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={data}
+            margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis
+              dataKey="date"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false} />
+            <YAxis
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(value) => `₹${value}`} />
+            <Tooltip
+              formatter={(value) => [`₹${value}`, undefined]}
+              contentStyle={{
+                backgroundColor: "hsl(var(--popover))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "var(--radius)"
+              }} />
+            <Legend />
+            <Bar
+              dataKey="income"
+              name={incomeLabel}
+              fill="#22c55e"
+              radius={[4, 4, 0, 0]} />
+            <Bar
+              dataKey="expense"
+              name={expenseLabel}
+              fill="#ef4444"
+              radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     );
     ChartWrapper.displayName = "ChartWrapper";
     return ChartWrapper;

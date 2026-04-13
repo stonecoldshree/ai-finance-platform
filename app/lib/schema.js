@@ -9,11 +9,12 @@ export const accountSchema = z.object({
 
 export const transactionSchema = z.
 object({
-  type: z.enum(["INCOME", "EXPENSE"]),
+  type: z.enum(["INCOME", "EXPENSE", "TRANSFER"]),
   amount: z.string().min(1, "Amount is required"),
   description: z.string().optional(),
   date: z.date({ required_error: "Date is required" }),
   accountId: z.string().min(1, "Account is required"),
+  toAccountId: z.string().optional(),
   category: z.string().min(1, "Category is required"),
   isRecurring: z.boolean().default(false),
   recurringInterval: z.
@@ -26,6 +27,13 @@ superRefine((data, ctx) => {
       code: z.ZodIssueCode.custom,
       message: "Recurring interval is required for recurring transactions",
       path: ["recurringInterval"]
+    });
+  }
+  if (data.type === "TRANSFER" && !data.toAccountId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Destination account is required for transfers",
+      path: ["toAccountId"]
     });
   }
 });

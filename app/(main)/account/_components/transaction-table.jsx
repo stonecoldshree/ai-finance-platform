@@ -228,7 +228,7 @@ export function TransactionTable({ transactions }) {
   return (
     <div className="space-y-4">
       {deleteLoading &&
-      <BarLoader className="mt-4" width={"100%"} color="#9333ea" />
+      <BarLoader className="mt-4" width={"100%"} color="#ea580c" />
       }
       {}
       <div className="flex flex-col sm:flex-row gap-4">

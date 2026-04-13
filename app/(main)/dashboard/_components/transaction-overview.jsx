@@ -107,9 +107,10 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
         <CardContent>
           <div className="space-y-4">
             {recentTransactions.length === 0 ?
-            <p className="text-center text-muted-foreground py-4">
-                {t("dashboard.noActivity")}
-              </p> :
+            <div className="text-center py-6">
+              <p className="text-muted-foreground">{t("dashboard.noActivity")}</p>
+              <p className="text-sm mt-2 font-medium text-primary">Your financial story starts here. Let's log your first transaction to unlock insights!</p>
+            </div> :
 
             recentTransactions.map((transaction) =>
             <div
@@ -157,11 +158,12 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
         </CardHeader>
         <CardContent className="p-0 pb-5">
           {pieChartData.length === 0 ?
-          <p className="text-center text-muted-foreground py-4">
-              {t("dashboard.noExpenseData")}
-            </p> :
+          <div className="text-center py-6">
+            <p className="text-muted-foreground">{t("dashboard.noExpenseData")}</p>
+            <p className="text-sm mt-2 font-medium text-primary">Your financial story starts here. Let's log your first transaction to unlock insights!</p>
+          </div> :
 
-          <div className="h-[300px]">
+          <div className="h-[300px]" role="img" aria-label="Pie chart illustrating the breakdown of expenses by category">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie

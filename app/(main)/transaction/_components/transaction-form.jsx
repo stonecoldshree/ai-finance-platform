@@ -278,6 +278,7 @@ export function AddTransactionForm({
           <SelectContent>
             <SelectItem value="EXPENSE">{t("transaction.expense")}</SelectItem>
             <SelectItem value="INCOME">{t("transaction.income")}</SelectItem>
+            <SelectItem value="TRANSFER">Transfer</SelectItem>
           </SelectContent>
         </Select>
         {errors.type &&
@@ -316,7 +317,7 @@ export function AddTransactionForm({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">{t("transaction.account")}</label>
+          <label className="text-sm font-medium">{type === "TRANSFER" ? "From Account" : t("transaction.account")}</label>
           <Select
             onValueChange={(value) => setValue("accountId", value)}
             defaultValue={getValues("accountId")}>
@@ -344,6 +345,30 @@ export function AddTransactionForm({
           <p className="text-sm text-red-500">{errors.accountId.message}</p>
           }
         </div>
+
+        {type === "TRANSFER" && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">To Account</label>
+            <Select
+              onValueChange={(value) => setValue("toAccountId", value)}
+              defaultValue={getValues("toAccountId")}>
+              
+              <SelectTrigger>
+                <SelectValue placeholder="Select destination account" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.filter(a => a.id !== accountId).map((account) =>
+                <SelectItem key={account.id} value={account.id}>
+                    {account.name} (₹{parseFloat(account.balance).toFixed(2)})
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            {errors.toAccountId &&
+            <p className="text-sm text-red-500">{errors.toAccountId.message}</p>
+            }
+          </div>
+        )}
       </div>
 
       {}

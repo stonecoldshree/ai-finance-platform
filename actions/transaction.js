@@ -11,6 +11,7 @@ import { sendEmailWithRetry, sendSMSWithRetry } from "@/lib/notification-deliver
 import { shouldSendEmail, shouldSendSMS } from "@/lib/notification-policy";
 import { formatSMS } from "@/lib/sms-templates";
 import EmailTemplate from "@/emails/template";
+import { add } from "date-fns";
 
 function buildRuleBasedAdvice({ transaction, newBalance, recentTransactions }) {
   const tips = [];
@@ -128,9 +129,21 @@ export async function createTransaction(data) {
       throw new Error("Account not found");
     }
 
+    if (data.type === "TRANSFER") {
+      if (!data.toAccountId) throw new Error("Transfer requires a destination account");
+      if (data.accountId === data.toAccountId) throw new Error("Cannot transfer to the same account");
+      const destAccount = await db.account.findUnique({
+        where: { id: data.toAccountId, userId: user.id }
+      });
+      if (!destAccount) throw new Error("Destination account not found");
+    }
 
-    const balanceChange = data.type === "EXPENSE" ? -data.amount : data.amount;
+    const balanceChange = data.type === "EXPENSE" || data.type === "TRANSFER" ? -data.amount : data.amount;
     const newBalance = account.balance.toNumber() + balanceChange;
+
+    if (newBalance < 0) {
+      throw new Error("Insufficient funds. This transaction would result in a negative balance.");
+    }
 
 
     const transaction = await db.$transaction(async (tx) => {
@@ -149,6 +162,13 @@ export async function createTransaction(data) {
         where: { id: data.accountId },
         data: { balance: newBalance }
       });
+
+      if (data.type === "TRANSFER" && data.toAccountId) {
+        await tx.account.update({
+          where: { id: data.toAccountId },
+          data: { balance: { increment: data.amount } }
+        });
+      }
 
       return newTransaction;
     });
@@ -544,6 +564,7 @@ export async function exportTransactionsCsv({ monthValue = null, accountId = nul
       ...(type ? { type } : {}),
       ...(monthValue ? { date: dateFilter } : {})
     },
+    take: 5000,
     include: {
       account: true
     },
@@ -611,13 +632,18 @@ export async function scanReceipt(fileData) {
       If its not a recipt, return an empty object
     `;
 
-    const text = await generateAIContent(prompt, {
+    const aiPromise = generateAIContent(prompt, {
       inlineData: {
         data: fileData.base64,
         mimeType: fileData.mimeType
       }
     });
 
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("AI scan timed out")), 12000)
+    );
+
+    const text = await Promise.race([aiPromise, timeoutPromise]);
     console.log("Gemini response:", text);
     const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
 
@@ -641,18 +667,14 @@ function calculateNextRecurringDate(startDate, interval) {
 
   switch (interval) {
     case "DAILY":
-      date.setDate(date.getDate() + 1);
-      break;
+      return add(date, { days: 1 });
     case "WEEKLY":
-      date.setDate(date.getDate() + 7);
-      break;
+      return add(date, { weeks: 1 });
     case "MONTHLY":
-      date.setMonth(date.getMonth() + 1);
-      break;
+      return add(date, { months: 1 });
     case "YEARLY":
-      date.setFullYear(date.getFullYear() + 1);
-      break;
+      return add(date, { years: 1 });
+    default:
+      return date;
   }
-
-  return date;
 }

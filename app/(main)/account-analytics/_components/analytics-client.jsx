@@ -37,7 +37,7 @@ const LazyBarChartSection = dynamic(
   () => import("recharts").then((mod) => {
     const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = mod;
     const Component = ({ data, incomeLabel, expenseLabel }) => (
-      <div className="h-[300px]">
+      <div className="h-[300px]" role="img" aria-label="Bar chart comparing daily income and expenses">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -67,7 +67,7 @@ const LazyPieChartSection = dynamic(
   () => import("recharts").then((mod) => {
     const { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } = mod;
     const Component = ({ data, colors }) => (
-      <div className="h-[300px]">
+      <div className="h-[300px]" role="img" aria-label="Pie chart showcasing expense distribution by category">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -452,9 +452,10 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
           </CardHeader>
           <CardContent>
             {dailyData.length === 0 ?
-            <p className="text-center text-muted-foreground py-8">
-                {t("analytics.noTransactionsPeriod")}
-              </p> :
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">{t("analytics.noTransactionsPeriod")}</p>
+              <p className="text-sm mt-2 text-primary font-medium">Your financial story starts here. Log your first expense or income to unlock AI-driven insights!</p>
+            </div> :
 
             <LazyBarChartSection
                 data={dailyData}
@@ -474,9 +475,10 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
           </CardHeader>
           <CardContent className="p-0 pb-5">
             {categoryData.length === 0 ?
-            <p className="text-center text-muted-foreground py-8">
-                {t("analytics.noExpensesPeriod")}
-              </p> :
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">{t("analytics.noExpensesPeriod")}</p>
+              <p className="text-sm mt-2 text-primary font-medium">Your financial story starts here. Log your first expense or income to unlock AI-driven insights!</p>
+            </div> :
 
             <LazyPieChartSection
                 data={categoryData}
