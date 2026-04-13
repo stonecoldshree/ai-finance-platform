@@ -28,6 +28,7 @@ import {
   getCurrentMonthValue } from
 "@/lib/month-range";
 import { useLanguage } from "@/components/language-provider";
+import { normalizeCategoryKey } from "@/lib/category-utils";
 
 const ChartPlaceholder = () => (
   <div className="h-[300px] bg-muted/30 animate-pulse rounded-lg" />
@@ -186,8 +187,9 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
       (t) => t.type === "EXPENSE" && isInAnalysisMonth(t.date)
     );
 
-    const grouped = monthExpenses.reduce((acc, t) => {
-      acc[t.category] = (acc[t.category] || 0) + t.amount;
+    const grouped = monthExpenses.reduce((acc, transaction) => {
+      const categoryKey = normalizeCategoryKey(transaction.category);
+      acc[categoryKey] = (acc[categoryKey] || 0) + transaction.amount;
       return acc;
     }, {});
 
@@ -202,7 +204,8 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
     );
 
     return previousExpenses.reduce((totals, transaction) => {
-      totals[transaction.category] = (totals[transaction.category] || 0) + transaction.amount;
+      const categoryKey = normalizeCategoryKey(transaction.category);
+      totals[categoryKey] = (totals[categoryKey] || 0) + transaction.amount;
       return totals;
     }, {});
   }, [accountTransactions, previousMonth, previousYear]);
@@ -455,7 +458,9 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
             {dailyData.length === 0 ?
             <div className="text-center py-8">
               <p className="text-muted-foreground">{t("analytics.noTransactionsPeriod")}</p>
-              <p className="text-sm mt-2 text-primary font-medium">Your financial story starts here. Log your first expense or income to unlock AI-driven insights!</p>
+              <p className="text-sm mt-2 text-primary font-medium">
+                {t("analytics.storyStart", {}, "Your financial story starts here. Log your first expense or income to unlock AI-driven insights!")}
+              </p>
             </div> :
 
             <LazyBarChartSection
@@ -478,7 +483,9 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
             {categoryData.length === 0 ?
             <div className="text-center py-8">
               <p className="text-muted-foreground">{t("analytics.noExpensesPeriod")}</p>
-              <p className="text-sm mt-2 text-primary font-medium">Your financial story starts here. Log your first expense or income to unlock AI-driven insights!</p>
+              <p className="text-sm mt-2 text-primary font-medium">
+                {t("analytics.storyStart", {}, "Your financial story starts here. Log your first expense or income to unlock AI-driven insights!")}
+              </p>
             </div> :
 
             <LazyPieChartSection

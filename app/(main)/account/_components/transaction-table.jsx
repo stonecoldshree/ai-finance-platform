@@ -51,6 +51,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { categoryColors } from "@/data/categories";
+import { normalizeCategoryKey } from "@/lib/category-utils";
 import { bulkDeleteTransactions } from "@/actions/account";
 import useFetch from "@/hooks/use-fetch";
 import { BarLoader } from "react-spinners";
@@ -419,11 +420,13 @@ export function TransactionTable({ transactions }) {
                   <TableCell className="capitalize">
                     <span
                   style={{
-                    background: categoryColors[transaction.category]
+                    background:
+                    categoryColors[normalizeCategoryKey(transaction.category)] ||
+                    categoryColors["other-expense"]
                   }}
                   className="px-2 py-1 rounded text-white text-sm">
 
-                      {t(`categories.${transaction.category}`, {}, transaction.category)}
+                      {t(`categories.${normalizeCategoryKey(transaction.category)}`, {}, transaction.category)}
                     </span>
                   </TableCell>
                   <TableCell

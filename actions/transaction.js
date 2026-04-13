@@ -12,6 +12,8 @@ import { shouldSendEmail, shouldSendSMS } from "@/lib/notification-policy";
 import { formatSMS } from "@/lib/sms-templates";
 import EmailTemplate from "@/emails/template";
 import { add } from "date-fns";
+import { getTranslator } from "@/lib/i18n/translations";
+import { normalizeCategoryKey } from "@/lib/category-utils";
 
 function buildRuleBasedAdvice({ transaction, newBalance, recentTransactions }) {
   const tips = [];
@@ -118,6 +120,8 @@ export async function createTransaction(data) {
       throw new Error("User not found");
     }
 
+    const t = getTranslator(user.locale || "en");
+
     const account = await db.account.findUnique({
       where: {
         id: data.accountId,
@@ -216,16 +220,20 @@ export async function createTransaction(data) {
 
     try {
       if (shouldSendEmail("transaction-success")) {
+        const normalizedCategory = normalizeCategoryKey(transaction.category);
+        const localizedCategory = t(`categories.${normalizedCategory}`, {}, transaction.category);
+        const subject = t("notifications.txSub", {}, "New Transaction Logged - Gullak");
+
         await sendEmailWithRetry({
           to: user.email,
-          subject: "New Transaction Logged - Gullak",
+          subject,
           templateParams: {
             name: user.name,
             userName: user.name,
-            alert_title: "New Transaction Logged - Gullak",
-            alert_message: "A new transaction has been recorded in your account.",
+            alert_title: subject,
+            alert_message: t("notifications.txAlertMessage", {}, "A new transaction has been recorded in your account."),
             amount: transaction.amount.toNumber(),
-            category: transaction.category,
+            category: localizedCategory,
             description: transaction.description,
             advice1: advice?.[0] || "",
             advice2: advice?.[1] || "",
@@ -234,10 +242,11 @@ export async function createTransaction(data) {
           react: EmailTemplate({
             userName: user.name,
             type: "transaction-success",
+            locale: user.locale,
             data: {
               amount: transaction.amount.toNumber(),
               description: transaction.description,
-              category: transaction.category,
+              category: localizedCategory,
               advice
             }
           })
@@ -257,9 +266,9 @@ export async function createTransaction(data) {
           body: formatSMS("transaction-success", {
             amount: transaction.amount.toNumber(),
             description: transaction.description,
-            category: transaction.category,
+            category: t(`categories.${normalizeCategoryKey(transaction.category)}`, {}, transaction.category),
             advice
-          })
+          }, user.locale)
         });
         if (smsResult.success) {
           console.log("Transaction SMS sent:", smsResult.data?.sid);

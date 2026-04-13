@@ -8,6 +8,8 @@ import {
   Section,
   Text } from
 "@react-email/components";
+import { getTranslator } from "@/lib/i18n/translations";
+import { normalizeCategoryKey } from "@/lib/category-utils";
 
 
 const PREVIEW_DATA = {
@@ -48,34 +50,41 @@ const PREVIEW_DATA = {
 export default function EmailTemplate({
   userName = "",
   type = "monthly-report",
-  data = {}
+  data = {},
+  locale = "en"
 }) {
+  const t = getTranslator(locale || "en");
+  const categoryLabel = (raw) => {
+    const key = normalizeCategoryKey(String(raw || ""));
+    return t(`categories.${key}`, {}, String(raw || key));
+  };
+
   if (type === "monthly-report") {
     return (
       <Html>
         <Head />
-        <Preview>Your Monthly Financial Report</Preview>
+        <Preview>{t("emails.monthlyReportPreview", {}, "Your Monthly Financial Report")}</Preview>
         <Body style={styles.body}>
           <Container style={styles.container}>
-            <Heading style={styles.title}>Monthly Financial Report</Heading>
+            <Heading style={styles.title}>{t("emails.monthlyReportTitle", {}, "Monthly Financial Report")}</Heading>
 
-            <Text style={styles.text}>Hello {userName},</Text>
+            <Text style={styles.text}>{t("emails.helloUser", { userName }, `Hello ${userName},`)}</Text>
             <Text style={styles.text}>
-              Here&rsquo;s your financial summary for {data?.month}:
+              {t("emails.monthlyReportIntro", { month: data?.month }, `Here is your financial summary for ${data?.month}:`)}
             </Text>
 
             {}
             <Section style={styles.statsContainer}>
               <div style={styles.stat}>
-                <Text style={styles.text}>Total Income</Text>
+                <Text style={styles.text}>{t("emails.totalIncome", {}, "Total Income")}</Text>
                 <Text style={styles.heading}>₹{data?.stats.totalIncome}</Text>
               </div>
               <div style={styles.stat}>
-                <Text style={styles.text}>Total Expenses</Text>
+                <Text style={styles.text}>{t("emails.totalExpenses", {}, "Total Expenses")}</Text>
                 <Text style={styles.heading}>₹{data?.stats.totalExpenses}</Text>
               </div>
               <div style={styles.stat}>
-                <Text style={styles.text}>Net</Text>
+                <Text style={styles.text}>{t("emails.net", {}, "Net")}</Text>
                 <Text style={styles.heading}>
                   ₹{data?.stats.totalIncome - data?.stats.totalExpenses}
                 </Text>
@@ -85,11 +94,11 @@ export default function EmailTemplate({
             {}
             {data?.stats?.byCategory &&
             <Section style={styles.section}>
-                <Heading style={styles.heading}>Expenses by Category</Heading>
+                <Heading style={styles.heading}>{t("emails.expensesByCategory", {}, "Expenses by Category")}</Heading>
                 {Object.entries(data?.stats.byCategory).map(
                 ([category, amount]) =>
                 <div key={category} style={styles.row}>
-                      <Text style={styles.text}>{category}</Text>
+                  <Text style={styles.text}>{categoryLabel(category)}</Text>
                       <Text style={styles.text}>₹{amount}</Text>
                     </div>
 
@@ -100,7 +109,7 @@ export default function EmailTemplate({
             {}
             {data?.insights &&
             <Section style={styles.section}>
-                <Heading style={styles.heading}>Gullak Insights</Heading>
+                <Heading style={styles.heading}>{t("emails.gullakInsights", {}, "Gullak Insights")}</Heading>
                 {data.insights.map((insight, index) =>
               <Text key={index} style={styles.text}>
                     • {insight}
@@ -110,8 +119,7 @@ export default function EmailTemplate({
             }
 
             <Text style={styles.footer}>
-              Thank you for using Gullak. Keep tracking your finances for better
-              financial health!
+              {t("emails.monthlyFooter", {}, "Thank you for using Gullak. Keep tracking your finances for better financial health!")}
             </Text>
           </Container>
         </Body>
@@ -123,26 +131,25 @@ export default function EmailTemplate({
     return (
       <Html>
         <Head />
-        <Preview>Budget Alert</Preview>
+        <Preview>{t("emails.budgetAlertPreview", {}, "Budget Alert")}</Preview>
         <Body style={styles.body}>
           <Container style={styles.container}>
-            <Heading style={styles.title}>Budget Alert</Heading>
-            <Text style={styles.text}>Hello {userName},</Text>
+            <Heading style={styles.title}>{t("emails.budgetAlertTitle", {}, "Budget Alert")}</Heading>
+            <Text style={styles.text}>{t("emails.helloUser", { userName }, `Hello ${userName},`)}</Text>
             <Text style={styles.text}>
-              You&rsquo;ve used {data?.percentageUsed.toFixed(1)}% of your
-              monthly budget.
+              {t("emails.budgetAlertIntro", { percentageUsed: data?.percentageUsed?.toFixed?.(1) || "0" }, `You have used ${data?.percentageUsed?.toFixed?.(1) || "0"}% of your monthly budget.`)}
             </Text>
             <Section style={styles.statsContainer}>
               <div style={styles.stat}>
-                <Text style={styles.text}>Budget Amount</Text>
+                <Text style={styles.text}>{t("emails.budgetAmount", {}, "Budget Amount")}</Text>
                 <Text style={styles.heading}>₹{data?.budgetAmount}</Text>
               </div>
               <div style={styles.stat}>
-                <Text style={styles.text}>Spent So Far</Text>
+                <Text style={styles.text}>{t("emails.spentSoFar", {}, "Spent So Far")}</Text>
                 <Text style={styles.heading}>₹{data?.totalExpenses}</Text>
               </div>
               <div style={styles.stat}>
-                <Text style={styles.text}>Remaining</Text>
+                <Text style={styles.text}>{t("emails.remaining", {}, "Remaining")}</Text>
                 <Text style={styles.heading}>
                   ₹{data?.budgetAmount - data?.totalExpenses}
                 </Text>
@@ -158,30 +165,28 @@ export default function EmailTemplate({
     return (
       <Html>
         <Head />
-        <Preview>Welcome to Gullak</Preview>
+        <Preview>{t("notifications.welcomeSub", {}, "Welcome to Gullak")}</Preview>
         <Body style={styles.body}>
           <Container style={styles.container}>
-            <Heading style={styles.title}>Welcome to Gullak</Heading>
-            <Text style={styles.text}>Hello {userName},</Text>
+            <Heading style={styles.title}>{t("notifications.welcomeSub", {}, "Welcome to Gullak")}</Heading>
+            <Text style={styles.text}>{t("emails.helloUser", { userName }, `Hello ${userName},`)}</Text>
             <Text style={styles.text}>
-              We&rsquo;re excited to have you on board! Gullak helps you track
-              your expenses, set budgets, and achieve your financial goals with
-              the help of AI.
+              {t("emails.welcomeIntro", {}, "We are excited to have you on board! Gullak helps you track your expenses, set budgets, and achieve your financial goals with the help of AI.")}
             </Text>
             <Section style={styles.section}>
-              <Heading style={styles.heading}>Getting Started</Heading>
+              <Heading style={styles.heading}>{t("emails.gettingStarted", {}, "Getting Started")}</Heading>
               <Text style={styles.text}>
-                1. Set up your accounts to track balances.
+                {t("emails.welcomeStep1", {}, "1. Set up your accounts to track balances.")}
               </Text>
               <Text style={styles.text}>
-                2. Add your transactions regularly.
+                {t("emails.welcomeStep2", {}, "2. Add your transactions regularly.")}
               </Text>
               <Text style={styles.text}>
-                3. Create a monthly budget to stay on track.
+                {t("emails.welcomeStep3", {}, "3. Create a monthly budget to stay on track.")}
               </Text>
             </Section>
             <Text style={styles.footer}>
-              If you have any questions, feel free to reply to this email.
+              {t("emails.welcomeFooter", {}, "If you have any questions, feel free to reply to this email.")}
             </Text>
           </Container>
         </Body>
@@ -193,21 +198,21 @@ export default function EmailTemplate({
     return (
       <Html>
         <Head />
-        <Preview>New Account Created</Preview>
+        <Preview>{t("emails.accountCreatedPreview", {}, "New Account Created")}</Preview>
         <Body style={styles.body}>
           <Container style={styles.container}>
-            <Heading style={styles.title}>New Account Added</Heading>
-            <Text style={styles.text}>Hello {userName},</Text>
+            <Heading style={styles.title}>{t("emails.accountCreatedTitle", {}, "New Account Added")}</Heading>
+            <Text style={styles.text}>{t("emails.helloUser", { userName }, `Hello ${userName},`)}</Text>
             <Text style={styles.text}>
-              You have successfully created a new account: <strong>{data?.accountName}</strong>.
+              {t("emails.accountCreatedIntro", { accountName: data?.accountName }, "You have successfully created a new account:")} <strong>{data?.accountName}</strong>.
             </Text>
             <Section style={styles.statsContainer}>
               <div style={styles.stat}>
-                <Text style={styles.text}>Initial Balance</Text>
+                <Text style={styles.text}>{t("emails.initialBalance", {}, "Initial Balance")}</Text>
                 <Text style={styles.heading}>₹{data?.balance}</Text>
               </div>
               <div style={styles.stat}>
-                <Text style={styles.text}>Type</Text>
+                <Text style={styles.text}>{t("emails.type", {}, "Type")}</Text>
                 <Text style={styles.heading}>{data?.type}</Text>
               </div>
             </Section>
@@ -221,33 +226,33 @@ export default function EmailTemplate({
     return (
       <Html>
         <Head />
-        <Preview>Transaction Logged</Preview>
+        <Preview>{t("emails.transactionLoggedPreview", {}, "Transaction Logged")}</Preview>
         <Body style={styles.body}>
           <Container style={styles.container}>
-            <Heading style={styles.title}>Transaction Logged</Heading>
-            <Text style={styles.text}>Hello {userName},</Text>
+            <Heading style={styles.title}>{t("emails.transactionLoggedTitle", {}, "Transaction Logged")}</Heading>
+            <Text style={styles.text}>{t("emails.helloUser", { userName }, `Hello ${userName},`)}</Text>
             <Text style={styles.text}>
-              A new transaction has been successfully logged.
+              {t("emails.transactionLoggedIntro", {}, "A new transaction has been successfully logged.")}
             </Text>
             <Section style={styles.statsContainer}>
               <div style={styles.stat}>
-                <Text style={styles.text}>Amount</Text>
+                <Text style={styles.text}>{t("emails.amount", {}, "Amount")}</Text>
                 <Text style={styles.heading}>₹{data?.amount}</Text>
               </div>
               <div style={styles.stat}>
-                <Text style={styles.text}>Detailed Description</Text>
+                <Text style={styles.text}>{t("emails.detailedDescription", {}, "Detailed Description")}</Text>
                 <Text style={styles.heading}>{data?.description}</Text>
               </div>
               <div style={styles.stat}>
-                <Text style={styles.text}>Category</Text>
-                <Text style={styles.heading}>{data?.category}</Text>
+                <Text style={styles.text}>{t("emails.category", {}, "Category")}</Text>
+                <Text style={styles.heading}>{categoryLabel(data?.category)}</Text>
               </div>
             </Section>
 
             {}
             {data?.advice &&
             <Section style={styles.section}>
-                <Heading style={styles.heading}>Smart Spending Tips</Heading>
+                <Heading style={styles.heading}>{t("emails.smartSpendingTips", {}, "Smart Spending Tips")}</Heading>
                 {data.advice.map((tip, index) =>
               <Text key={index} style={styles.text}>
                     • {tip}
@@ -265,24 +270,24 @@ export default function EmailTemplate({
     return (
       <Html>
         <Head />
-        <Preview>Your Weekly Budget Coach</Preview>
+        <Preview>{t("emails.budgetCoachPreview", {}, "Your Weekly Budget Coach")}</Preview>
         <Body style={styles.body}>
           <Container style={styles.container}>
-            <Heading style={styles.title}>Weekly Budget Coach</Heading>
-            <Text style={styles.text}>Hello {userName},</Text>
+            <Heading style={styles.title}>{t("emails.budgetCoachTitle", {}, "Weekly Budget Coach")}</Heading>
+            <Text style={styles.text}>{t("emails.helloUser", { userName }, `Hello ${userName},`)}</Text>
             <Text style={styles.text}>
-              Here is your weekly financial advice to keep you on track!
+              {t("emails.budgetCoachIntro", {}, "Here is your weekly financial advice to keep you on track!")}
             </Text>
 
             {}
             <Section style={styles.statsContainer}>
-              <Heading style={styles.heading}>Last Week's Snapshot</Heading>
+              <Heading style={styles.heading}>{t("emails.lastWeekSnapshot", {}, "Last Week's Snapshot")}</Heading>
               <div style={styles.stat}>
-                <Text style={styles.text}>Total Spent</Text>
+                <Text style={styles.text}>{t("emails.totalSpent", {}, "Total Spent")}</Text>
                 <Text style={styles.heading}>₹{data?.stats?.totalExpenses}</Text>
               </div>
               <div style={styles.stat}>
-                <Text style={styles.text}>Remaining Monthly Budget</Text>
+                <Text style={styles.text}>{t("emails.remainingMonthlyBudget", {}, "Remaining Monthly Budget")}</Text>
                 <Text style={styles.heading}>₹{data?.stats?.remainingBudget}</Text>
               </div>
             </Section>
@@ -290,7 +295,7 @@ export default function EmailTemplate({
             {}
             {data?.advice &&
             <Section style={styles.section}>
-                <Heading style={styles.heading}>Smart Advice</Heading>
+                <Heading style={styles.heading}>{t("emails.smartAdvice", {}, "Smart Advice")}</Heading>
                 {data.advice.map((tip, index) =>
               <Text key={index} style={styles.text}>
                     • {tip}
@@ -307,21 +312,21 @@ export default function EmailTemplate({
     return (
       <Html>
         <Head />
-        <Preview>Budget Set & AI Advice</Preview>
+        <Preview>{t("emails.budgetCreatedPreview", {}, "Budget Set and AI Advice")}</Preview>
         <Body style={styles.body}>
           <Container style={styles.container}>
-            <Heading style={styles.title}>Budget Set Successfully</Heading>
-            <Text style={styles.text}>Hello {userName},</Text>
+            <Heading style={styles.title}>{t("emails.budgetCreatedTitle", {}, "Budget Set Successfully")}</Heading>
+            <Text style={styles.text}>{t("emails.helloUser", { userName }, `Hello ${userName},`)}</Text>
             <Text style={styles.text}>
-              You have successfully set your monthly budget.
+              {t("emails.budgetCreatedIntro", {}, "You have successfully set your monthly budget.")}
             </Text>
             <Section style={styles.statsContainer}>
               <div style={styles.stat}>
-                <Text style={styles.text}>Monthly Budget</Text>
+                <Text style={styles.text}>{t("emails.monthlyBudget", {}, "Monthly Budget")}</Text>
                 <Text style={styles.heading}>₹{data?.budgetAmount}</Text>
               </div>
               <div style={styles.stat}>
-                <Text style={styles.text}>Current Account Balance</Text>
+                <Text style={styles.text}>{t("emails.currentAccountBalance", {}, "Current Account Balance")}</Text>
                 <Text style={styles.heading}>₹{data?.balance}</Text>
               </div>
             </Section>
@@ -329,7 +334,7 @@ export default function EmailTemplate({
             {}
             {data?.advice &&
             <Section style={styles.section}>
-                <Heading style={styles.heading}>AI Financial Advice</Heading>
+                <Heading style={styles.heading}>{t("emails.aiFinancialAdvice", {}, "AI Financial Advice")}</Heading>
                 {data.advice.map((tip, index) =>
               <Text key={index} style={styles.text}>
                     • {tip}

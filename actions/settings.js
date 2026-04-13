@@ -4,6 +4,23 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+function normalizePhoneNumber(phoneNumber) {
+  if (!phoneNumber || typeof phoneNumber !== "string") {
+    return null;
+  }
+
+  const compact = phoneNumber.replace(/[\s()-]/g, "").trim();
+  if (!compact) {
+    return null;
+  }
+
+  if (compact.startsWith("00")) {
+    return `+${compact.slice(2)}`;
+  }
+
+  return compact;
+}
+
 export async function updatePhoneNumber(phoneNumber) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
@@ -15,7 +32,7 @@ export async function updatePhoneNumber(phoneNumber) {
   if (!user) throw new Error("User not found");
 
 
-  const sanitized = phoneNumber?.trim() || null;
+  const sanitized = normalizePhoneNumber(phoneNumber);
 
 
   if (sanitized && !/^\+[1-9]\d{6,14}$/.test(sanitized)) {

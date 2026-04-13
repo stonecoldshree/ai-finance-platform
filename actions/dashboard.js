@@ -10,6 +10,7 @@ import { sendEmail } from "./send-email";
 import { sendSMS } from "@/lib/twilio";
 import { formatSMS } from "@/lib/sms-templates";
 import EmailTemplate from "@/emails/template";
+import { getTranslator } from "@/lib/i18n/translations";
 
 const isDbConnectivityError = (error) => {
   const message = String(error?.message || "").toLowerCase();
@@ -104,6 +105,8 @@ export async function createAccount(data) {
       throw new Error("User not found");
     }
 
+    const t = getTranslator(user.locale || "en");
+
 
     const balanceFloat = parseFloat(data.balance);
     if (isNaN(balanceFloat)) {
@@ -139,14 +142,15 @@ export async function createAccount(data) {
     });
 
     try {
+      const subject = t("notifications.accountSub", {}, "Account Created - Gullak");
       await sendEmail({
         to: user.email,
-        subject: "Account Created - Gullak",
+        subject,
         templateParams: {
           name: user.name,
           userName: user.name,
-          alert_title: "Account Created - Gullak",
-          alert_message: `Your account ${account.name} was created successfully.`,
+          alert_title: subject,
+          alert_message: t("notifications.accountAlertMessage", { accountName: account.name }, `Your account ${account.name} was created successfully.`),
           amount: account.balance.toNumber(),
           category: account.type,
           description: account.name
@@ -154,6 +158,7 @@ export async function createAccount(data) {
         react: EmailTemplate({
           userName: user.name,
           type: "account-created",
+          locale: user.locale,
           data: {
             accountName: account.name,
             balance: account.balance.toNumber(),
@@ -174,7 +179,7 @@ export async function createAccount(data) {
             accountName: account.name,
             accountType: account.type,
             balance: account.balance.toNumber()
-          })
+          }, user.locale)
         });
       } catch (smsError) {
         console.error("Error sending account creation SMS:", smsError);

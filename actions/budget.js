@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { generateAIContent } from "@/lib/gemini";
 import { sendEmail } from "./send-email";
 import EmailTemplate from "@/emails/template";
+import { getTranslator } from "@/lib/i18n/translations";
 
 /**
  * Returns the current month string in "YYYY-MM" format.
@@ -195,6 +196,8 @@ export async function updateBudget(amount, accountId) {
 
     if (!user) throw new Error("User not found");
 
+    const t = getTranslator(user.locale || "en");
+
     if (!accountId) throw new Error("Account is required");
 
     const account = await db.account.findFirst({
@@ -271,15 +274,15 @@ export async function updateBudget(amount, accountId) {
 
       await sendEmail({
         to: user.email,
-        subject: "Budget Set - Financial Advice",
+        subject: t("notifications.budgetSetSub", {}, "Budget Set - Financial Advice"),
         templateParams: {
           name: user.name,
           userName: user.name,
-          alert_title: "Budget Set - Financial Advice",
-          alert_message: "Your monthly budget is set. Review your balance and follow the tips below.",
+          alert_title: t("notifications.budgetSetSub", {}, "Budget Set - Financial Advice"),
+          alert_message: t("notifications.budgetSetAlertMessage", {}, "Your monthly budget is set. Review your balance and follow the tips below."),
           amount,
-          category: "Monthly Budget",
-          description: `Current balance: ${balance}`,
+          category: t("budget.monthlyBudget", {}, "Monthly Budget"),
+          description: t("notifications.currentBalanceDesc", { balance }, `Current balance: ${balance}`),
           advice1: advice?.[0] || "",
           advice2: advice?.[1] || "",
           advice3: advice?.[2] || ""
@@ -287,6 +290,7 @@ export async function updateBudget(amount, accountId) {
         react: EmailTemplate({
           userName: user.name,
           type: "budget-created",
+          locale: user.locale,
           data: {
             budgetAmount: amount,
             balance,

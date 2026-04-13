@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatDateValue, formatMonthValue, toMonthValue } from "@/lib/month-range";
 import { useLanguage } from "@/components/language-provider";
+import { getCategoryColor, normalizeCategoryKey } from "@/lib/category-utils";
 
 const COLORS = [
 "#FF6B6B",
@@ -60,7 +61,7 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
 
 
   const expensesByCategory = selectedMonthExpenses.reduce((acc, transaction) => {
-    const category = transaction.category;
+    const category = normalizeCategoryKey(transaction.category);
     if (!acc[category]) {
       acc[category] = 0;
     }
@@ -71,6 +72,7 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
 
   const pieChartData = Object.entries(expensesByCategory).map(
     ([category, amount]) => ({
+      id: category,
       name: t(`categories.${category}`, {}, category),
       value: amount
     })
@@ -109,7 +111,9 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
             {recentTransactions.length === 0 ?
             <div className="text-center py-6">
               <p className="text-muted-foreground">{t("dashboard.noActivity")}</p>
-              <p className="text-sm mt-2 font-medium text-primary">Your financial story starts here. Let&apos;s log your first transaction to unlock insights!</p>
+              <p className="text-sm mt-2 font-medium text-primary">
+                {t("analytics.storyStart", {}, "Your financial story starts here. Let&apos;s log your first transaction to unlock insights!")}
+              </p>
             </div> :
 
             recentTransactions.map((transaction) =>
@@ -160,7 +164,9 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
           {pieChartData.length === 0 ?
           <div className="text-center py-6">
             <p className="text-muted-foreground">{t("dashboard.noExpenseData")}</p>
-            <p className="text-sm mt-2 font-medium text-primary">Your financial story starts here. Let&apos;s log your first transaction to unlock insights!</p>
+            <p className="text-sm mt-2 font-medium text-primary">
+              {t("analytics.storyStart", {}, "Your financial story starts here. Let&apos;s log your first transaction to unlock insights!")}
+            </p>
           </div> :
 
           <div className="h-[300px]" role="img" aria-label="Pie chart illustrating the breakdown of expenses by category">
@@ -178,7 +184,7 @@ export function DashboardOverview({ accounts, transactions, selectedMonth }) {
                     {pieChartData.map((entry, index) =>
                   <Cell
                     key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]} />
+                    fill={getCategoryColor(entry.id, COLORS[index % COLORS.length])} />
 
                   )}
                   </Pie>

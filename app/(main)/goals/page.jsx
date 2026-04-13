@@ -104,7 +104,7 @@ export default async function GoalsPage() {
             <div>
               <p className="text-sm text-muted-foreground">{t("goals.nextGoalToHit") || "Next Goal to Hit"}</p>
               <p className="text-lg font-bold text-foreground truncate max-w-[150px]">
-                {nextGoal ? nextGoal.name : "None"}
+                {nextGoal ? nextGoal.name : t("common.none", {}, "None")}
               </p>
             </div>
           </CardContent>
