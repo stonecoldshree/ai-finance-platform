@@ -16,13 +16,13 @@ export function BudgetProgress({
   currentExpenses,
   accountId,
   accountName,
+  accountBalance = 0,
   periodLabel
 }) {
   const { t } = useLanguage();
 
-  // 50% rule: effective spending budget is half the total budget
   const totalBudget = initialBudget?.amount || 0;
-  const savingsTarget = totalBudget / 2;
+  const savingsTarget = accountBalance > 0 ? Math.max(0, accountBalance - totalBudget) : 0;
 
   // Keep UI budget totals consistent across dashboard/settings using full monthly budget.
   const percentUsed = totalBudget > 0

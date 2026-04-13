@@ -317,6 +317,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
         currentExpenses={selectedMonthExpenses}
         accountId={selectedAccountId}
         accountName={selectedAccount?.name}
+        accountBalance={selectedAccount ? parseFloat(selectedAccount.balance) : 0}
         periodLabel={periodLabel} />
       
 

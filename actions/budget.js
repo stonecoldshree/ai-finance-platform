@@ -239,13 +239,13 @@ export async function updateBudget(amount, accountId) {
 
     try {
       const balance = account.balance.toNumber();
-      const effectiveBudget = amount / 2;
+      const savingsSecured = Math.max(0, balance - amount);
       const fallbackAdvice = buildBudgetSpecificAdvice({ amount, balance });
 
       const prompt = `
         A user has set a monthly budget of ₹${amount}.
         Their current default account balance is ₹${balance}.
-        The effective spending budget is ₹${effectiveBudget} (50% rule applied — the other 50% is recommended for savings/investment).
+        The user has correctly secured at least 50% of their balance (₹${savingsSecured}) for savings/investments.
         
         Provide exactly 3 concise, friendly, and actionable financial tips.
         Each tip must include at least one concrete number (₹ amount, %, or days) and one clear action.

@@ -188,8 +188,8 @@ export default function SettingsPage() {
       return;
     }
     const account = accounts.find(a => a.id === accountId);
-    if (amount > account.balance) {
-      toast.error(`Budget cannot exceed balance of ₹${account.balance}`);
+    if (amount > account.balance * 0.5) {
+      toast.error(`Budget cannot exceed 50% of balance (₹${(account.balance * 0.5).toFixed(2)})`);
       return;
     }
 

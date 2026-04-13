@@ -180,8 +180,8 @@ export function OnboardingWizard({ hasAccounts = false }) {
     }
 
     const balance = parseFloat(createdAccount.balance);
-    if (amount > balance) {
-      setBudgetError(`Budget cannot exceed your account balance of ₹${balance.toFixed(2)}`);
+    if (amount > balance * 0.5) {
+      setBudgetError(`Budget cannot exceed 50% of your account balance (₹${(balance * 0.5).toFixed(2)})`);
       return;
     }
 
@@ -204,7 +204,6 @@ export function OnboardingWizard({ hasAccounts = false }) {
     router.refresh();
   };
 
-  const effectiveBudget = parseFloat(budgetAmount || 0) / 2;
 
   const steps = [
     { icon: Sparkles, label: t("onboarding.welcome") || "Welcome" },
@@ -518,18 +517,8 @@ export function OnboardingWizard({ hasAccounts = false }) {
                           {t("budget.fiftyRuleTitle") || "Smart 50/50 Budget Rule"}
                         </p>
                         <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
-                          {t("budget.fiftyRuleDesc") || "Gullak will consider only 50% of your budget for spending. The remaining 50% should be saved or invested."}
+                          Gullak ensures you budget safely! Your spending is capped at 50% of your total balance. The remaining balance will be untouched for your savings and investments.
                         </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 pt-1">
-                      <div className="rounded-lg bg-white/70 dark:bg-background/50 p-3 text-center">
-                        <p className="text-xs text-muted-foreground">{t("budget.spendingBudget") || "Spending"}</p>
-                        <p className="text-lg font-bold text-orange-600">₹{effectiveBudget.toFixed(2)}</p>
-                      </div>
-                      <div className="rounded-lg bg-white/70 dark:bg-background/50 p-3 text-center">
-                        <p className="text-xs text-muted-foreground">{t("budget.savingsTarget") || "Save / Invest"}</p>
-                        <p className="text-lg font-bold text-green-600">₹{effectiveBudget.toFixed(2)}</p>
                       </div>
                     </div>
                   </div>

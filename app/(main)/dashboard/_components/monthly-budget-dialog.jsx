@@ -85,9 +85,9 @@ export function MonthlyBudgetDialog({ accountsNeedingBudget = [] }) {
       return;
     }
 
-    if (amount > currentAccount.balance) {
+    if (amount > currentAccount.balance * 0.5) {
       setError(
-        `Budget cannot exceed your account balance of ₹${currentAccount.balance.toFixed(2)}`
+        `Budget cannot exceed 50% of your account balance (₹${(currentAccount.balance * 0.5).toFixed(2)})`
       );
       return;
     }
@@ -107,7 +107,7 @@ export function MonthlyBudgetDialog({ accountsNeedingBudget = [] }) {
     setOpen(false);
   };
 
-  const effectiveBudget = parseFloat(budgetAmounts[currentAccount.id] || 0) / 2;
+
 
   return (
     <AlertDialog open={open}>
@@ -179,26 +179,7 @@ export function MonthlyBudgetDialog({ accountsNeedingBudget = [] }) {
                       {t("budget.fiftyRuleTitle") || "Smart 50/50 Budget Rule"}
                     </p>
                     <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
-                      {t("budget.fiftyRuleDesc") || "Gullak will consider only 50% of your budget for spending. The remaining 50% should be saved or invested for a healthier financial future."}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  <div className="rounded-lg bg-white/70 dark:bg-background/50 p-3 text-center">
-                    <p className="text-xs text-muted-foreground">
-                      {t("budget.spendingBudget") || "Spending Budget"}
-                    </p>
-                    <p className="text-lg font-bold text-orange-600">
-                      ₹{effectiveBudget.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-white/70 dark:bg-background/50 p-3 text-center">
-                    <p className="text-xs text-muted-foreground">
-                      {t("budget.savingsTarget") || "Save / Invest"}
-                    </p>
-                    <p className="text-lg font-bold text-green-600">
-                      ₹{effectiveBudget.toFixed(2)}
+                      Gullak ensures you budget safely! Your spending is capped at 50% of your total balance. The remaining balance will be untouched for your savings and investments.
                     </p>
                   </div>
                 </div>
