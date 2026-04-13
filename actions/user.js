@@ -3,9 +3,11 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { resolveLocale } from "@/lib/i18n/config";
 
 export async function updateUserLocale(locale) {
   try {
+    const safeLocale = resolveLocale(locale);
     const { userId } = await auth();
     if (!userId) {
       return { success: false, error: "Unauthorized" };
@@ -13,7 +15,7 @@ export async function updateUserLocale(locale) {
 
     const updatedUser = await db.user.update({
       where: { clerkUserId: userId },
-      data: { locale },
+      data: { locale: safeLocale },
     });
 
     if (!updatedUser) {

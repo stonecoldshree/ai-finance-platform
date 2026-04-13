@@ -5,9 +5,10 @@ import { getAuthUser } from "@/lib/cachedAuth";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { generateAIContent } from "@/lib/gemini";
-import { sendEmail } from "./send-email";
+import { sendEmailWithRetry } from "@/lib/notification-delivery";
 import EmailTemplate from "@/emails/template";
 import { getTranslator } from "@/lib/i18n/translations";
+import { getLocaleFromCookie } from "@/lib/i18n/server";
 
 /**
  * Returns the current month string in "YYYY-MM" format.
@@ -196,7 +197,9 @@ export async function updateBudget(amount, accountId) {
 
     if (!user) throw new Error("User not found");
 
-    const t = getTranslator(user.locale || "en");
+    const requestLocale = await getLocaleFromCookie();
+    const effectiveLocale = requestLocale || user.locale || "en";
+    const t = getTranslator(effectiveLocale);
 
     if (!accountId) throw new Error("Account is required");
 
@@ -260,7 +263,7 @@ export async function updateBudget(amount, accountId) {
       try {
         const aiPromise = generateAIContent(prompt);
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("AI generation timed out")), 8000)
+          setTimeout(() => reject(new Error("AI generation timed out")), 3000)
         );
         const text = await Promise.race([aiPromise, timeoutPromise]);
         
@@ -272,31 +275,36 @@ export async function updateBudget(amount, accountId) {
         advice = fallbackAdvice;
       }
 
-      await sendEmail({
-        to: user.email,
-        subject: t("notifications.budgetSetSub", {}, "Budget Set - Financial Advice"),
-        templateParams: {
-          name: user.name,
-          userName: user.name,
-          alert_title: t("notifications.budgetSetSub", {}, "Budget Set - Financial Advice"),
-          alert_message: t("notifications.budgetSetAlertMessage", {}, "Your monthly budget is set. Review your balance and follow the tips below."),
-          amount,
-          category: t("budget.monthlyBudget", {}, "Monthly Budget"),
-          description: t("notifications.currentBalanceDesc", { balance }, `Current balance: ${balance}`),
-          advice1: advice?.[0] || "",
-          advice2: advice?.[1] || "",
-          advice3: advice?.[2] || ""
+      void sendEmailWithRetry(
+        {
+          to: user.email,
+          subject: t("notifications.budgetSetSub", {}, "Budget Set - Financial Advice"),
+          templateParams: {
+            name: user.name,
+            userName: user.name,
+            alert_title: t("notifications.budgetSetSub", {}, "Budget Set - Financial Advice"),
+            alert_message: t("notifications.budgetSetAlertMessage", {}, "Your monthly budget is set. Review your balance and follow the tips below."),
+            amount,
+            category: t("budget.monthlyBudget", {}, "Monthly Budget"),
+            description: t("notifications.currentBalanceDesc", { balance }, `Current balance: ${balance}`),
+            advice1: advice?.[0] || "",
+            advice2: advice?.[1] || "",
+            advice3: advice?.[2] || ""
+          },
+          react: EmailTemplate({
+            userName: user.name,
+            type: "budget-created",
+            locale: effectiveLocale,
+            data: {
+              budgetAmount: amount,
+              balance,
+              advice
+            }
+          })
         },
-        react: EmailTemplate({
-          userName: user.name,
-          type: "budget-created",
-          locale: user.locale,
-          data: {
-            budgetAmount: amount,
-            balance,
-            advice
-          }
-        })
+        { attempts: 2, timeoutMs: 7000, baseDelayMs: 300 }
+      ).catch((emailError) => {
+        console.error("Error sending budget email:", emailError.message || emailError);
       });
     } catch (emailError) {
       console.error("Error sending budget email:", emailError);

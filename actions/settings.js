@@ -14,6 +14,16 @@ function normalizePhoneNumber(phoneNumber) {
     return null;
   }
 
+  const defaultCountryCode = process.env.DEFAULT_PHONE_COUNTRY_CODE || "+91";
+
+  if (/^\d{10}$/.test(compact)) {
+    return `${defaultCountryCode}${compact}`;
+  }
+
+  if (/^0\d{10}$/.test(compact)) {
+    return `${defaultCountryCode}${compact.slice(1)}`;
+  }
+
   if (compact.startsWith("00")) {
     return `+${compact.slice(2)}`;
   }

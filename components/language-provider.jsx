@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from "react
 import { useRouter } from "next/navigation";
 import { DEFAULT_LOCALE, resolveLocale } from "@/lib/i18n/config";
 import { translate } from "@/lib/i18n/translations";
+import { updateUserLocale } from "@/actions/user";
 
 const LanguageContext = createContext({
   locale: DEFAULT_LOCALE,
@@ -21,13 +22,9 @@ export const LanguageProvider = ({ initialLocale = DEFAULT_LOCALE, children }) =
     document.cookie = `locale=${safeLocale}; path=/; max-age=31536000; SameSite=Lax`;
     router.refresh();
 
-    // Fire-and-forget sync to backend
-    try {
-      const { updateUserLocale } = await import("@/actions/user");
-      await updateUserLocale(safeLocale);
-    } catch (e) {
-      console.error("Failed to sync locale to DB", e);
-    }
+    updateUserLocale(safeLocale).catch((error) => {
+      console.error("Failed to sync locale to DB", error);
+    });
   }, [router]);
 
   const value = useMemo(

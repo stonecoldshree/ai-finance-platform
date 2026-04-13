@@ -127,16 +127,24 @@ export function AddTransactionForm({
   };
 
   const handleScanComplete = (scannedData) => {
-    if (scannedData) {
-      setValue("amount", scannedData.amount.toString());
-      setValue("date", new Date(scannedData.date));
-      if (scannedData.description) {
-        setValue("description", scannedData.description);
-      }
-      if (scannedData.category) {
-        setValue("category", scannedData.category);
-      }
-      toast.success(t("transaction.scanSuccess"));
+    if (!scannedData || typeof scannedData !== "object") return;
+
+    const scannedAmount = Number(scannedData.amount);
+    const scannedDate = new Date(scannedData.date);
+
+    if (!Number.isFinite(scannedAmount) || scannedAmount <= 0 || Number.isNaN(scannedDate.getTime())) {
+      toast.error(t("transaction.scanInvalid", {}, "Scanned data was incomplete. Please fill the fields manually."));
+      return;
+    }
+
+    setValue("amount", scannedAmount.toString(), { shouldValidate: true });
+    setValue("date", scannedDate, { shouldValidate: true });
+
+    if (typeof scannedData.description === "string" && scannedData.description.trim().length > 0) {
+      setValue("description", scannedData.description.trim(), { shouldValidate: true });
+    }
+    if (typeof scannedData.category === "string" && scannedData.category.trim().length > 0) {
+      setValue("category", scannedData.category.trim(), { shouldValidate: true });
     }
   };
 

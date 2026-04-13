@@ -6,11 +6,11 @@ import { getAuthUser } from "@/lib/cachedAuth";
 import { request } from "@arcjet/next";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { sendEmail } from "./send-email";
-import { sendSMS } from "@/lib/twilio";
+import { sendEmailWithRetry, sendSMSWithRetry } from "@/lib/notification-delivery";
 import { formatSMS } from "@/lib/sms-templates";
 import EmailTemplate from "@/emails/template";
 import { getTranslator } from "@/lib/i18n/translations";
+import { getLocaleFromCookie } from "@/lib/i18n/server";
 
 const isDbConnectivityError = (error) => {
   const message = String(error?.message || "").toLowerCase();
@@ -42,12 +42,15 @@ export async function getUserAccounts() {
     const accounts = await db.account.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
-      include: {
-        _count: {
-          select: {
-            transactions: true
-          }
-        }
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        balance: true,
+        isDefault: true,
+        createdAt: true,
+        updatedAt: true,
+        userId: true
       }
     });
 
@@ -63,6 +66,24 @@ export async function getUserAccounts() {
       console.error("getUserAccounts failed:", error.message);
     }
     return [];
+  }
+}
+
+export async function hasUserAccounts() {
+  try {
+    const user = await getAuthUser();
+    const count = await db.account.count({
+      where: { userId: user.id }
+    });
+    return count > 0;
+  } catch (error) {
+    if (error?.digest === "DYNAMIC_SERVER_USAGE" || error?.message?.includes("Dynamic server usage")) {
+      throw error;
+    }
+    if (!isDbConnectivityError(error)) {
+      console.error("hasUserAccounts failed:", error.message);
+    }
+    return false;
   }
 }
 
@@ -105,7 +126,9 @@ export async function createAccount(data) {
       throw new Error("User not found");
     }
 
-    const t = getTranslator(user.locale || "en");
+    const requestLocale = await getLocaleFromCookie();
+    const effectiveLocale = requestLocale || user.locale || "en";
+    const t = getTranslator(effectiveLocale);
 
 
     const balanceFloat = parseFloat(data.balance);
@@ -141,50 +164,59 @@ export async function createAccount(data) {
       }
     });
 
-    try {
-      const subject = t("notifications.accountSub", {}, "Account Created - Gullak");
-      await sendEmail({
-        to: user.email,
-        subject,
-        templateParams: {
-          name: user.name,
-          userName: user.name,
-          alert_title: subject,
-          alert_message: t("notifications.accountAlertMessage", { accountName: account.name }, `Your account ${account.name} was created successfully.`),
-          amount: account.balance.toNumber(),
-          category: account.type,
-          description: account.name
+    const subject = t("notifications.accountSub", {}, "Account Created - Gullak");
+    const notificationTasks = [
+      sendEmailWithRetry(
+        {
+          to: user.email,
+          subject,
+          templateParams: {
+            name: user.name,
+            userName: user.name,
+            alert_title: subject,
+            alert_message: t("notifications.accountAlertMessage", { accountName: account.name }, `Your account ${account.name} was created successfully.`),
+            amount: account.balance.toNumber(),
+            category: account.type,
+            description: account.name
+          },
+          react: EmailTemplate({
+            userName: user.name,
+            type: "account-created",
+            locale: effectiveLocale,
+            data: {
+              accountName: account.name,
+              balance: account.balance.toNumber(),
+              type: account.type
+            }
+          })
         },
-        react: EmailTemplate({
-          userName: user.name,
-          type: "account-created",
-          locale: user.locale,
-          data: {
-            accountName: account.name,
-            balance: account.balance.toNumber(),
-            type: account.type
-          }
-        })
-      });
-    } catch (emailError) {
-      console.error("Error sending account creation email:", emailError);
-    }
-
+        { attempts: 2, timeoutMs: 7000, baseDelayMs: 300 }
+      ).catch((emailError) => {
+        console.error("Error sending account creation email:", emailError.message || emailError);
+        return null;
+      })
+    ];
 
     if (user.phoneNumber) {
-      try {
-        await sendSMS({
-          to: user.phoneNumber,
-          body: formatSMS("account-created", {
-            accountName: account.name,
-            accountType: account.type,
-            balance: account.balance.toNumber()
-          }, user.locale)
-        });
-      } catch (smsError) {
-        console.error("Error sending account creation SMS:", smsError);
-      }
+      notificationTasks.push(
+        sendSMSWithRetry(
+          {
+            to: user.phoneNumber,
+            body: formatSMS("account-created", {
+              accountName: account.name,
+              accountType: account.type,
+              balance: account.balance.toNumber()
+            }, effectiveLocale)
+          },
+          { attempts: 2, timeoutMs: 7000, baseDelayMs: 300 }
+        ).catch((smsError) => {
+          console.error("Error sending account creation SMS:", smsError.message || smsError);
+          return null;
+        })
+      );
     }
+
+    void Promise.allSettled(notificationTasks);
 
 
     const serializedAccount = serializeTransaction(account);
@@ -223,13 +255,22 @@ export async function getDashboardData(options = {}) {
 
     const query = {
       where,
-      orderBy: { date: "desc" }
+      orderBy: { date: "desc" },
+      select: {
+        id: true,
+        date: true,
+        type: true,
+        amount: true,
+        category: true,
+        description: true,
+        accountId: true
+      }
     };
 
     if (!includeAllMonths) {
       query.take = 500;
     } else {
-      query.take = 10000;
+      query.take = 3000;
     }
 
     const transactions = await db.transaction.findMany(query);

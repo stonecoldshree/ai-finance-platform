@@ -41,7 +41,17 @@ export function ReceiptScanner({ onScanComplete }) {
 
     const reader = new FileReader();
     reader.onloadend = async () => {
+      if (typeof reader.result !== "string") {
+        toast.error(t("transaction.scanFailed", {}, "Could not read the selected file. Please try again."));
+        return;
+      }
+
       const base64String = reader.result.split(",")[1];
+      if (!base64String) {
+        toast.error(t("transaction.scanFailed", {}, "Could not read the selected file. Please try again."));
+        return;
+      }
+
       await scanReceiptFn({ base64: base64String, mimeType: file.type });
     };
     reader.readAsDataURL(file);
@@ -64,7 +74,10 @@ export function ReceiptScanner({ onScanComplete }) {
         accept="image/*,.pdf,application/pdf"
         onChange={(e) => {
           const file = e.target.files?.[0];
-          if (file) handleReceiptScan(file);
+          if (file) {
+            handleReceiptScan(file);
+          }
+          e.target.value = "";
         }} />
       
       <Button

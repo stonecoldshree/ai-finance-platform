@@ -3,7 +3,7 @@ import { getCachedUser } from "@/lib/cachedUser";
 import PhonePromptBanner from "@/components/phone-prompt-banner";
 import { DesktopSidebar } from "@/components/app-sidebar";
 import { OnboardingWizard } from "@/components/onboarding-wizard";
-import { getUserAccounts } from "@/actions/dashboard";
+import { hasUserAccounts } from "@/actions/dashboard";
 
 const MainLayout = async ({ children }) => {
   const user = await getCachedUser();
@@ -11,8 +11,7 @@ const MainLayout = async ({ children }) => {
 
   let hasAccounts = false;
   try {
-    const accounts = await getUserAccounts();
-    hasAccounts = accounts && accounts.length > 0;
+    hasAccounts = await hasUserAccounts();
   } catch (error) {
     if (error?.digest === "DYNAMIC_SERVER_USAGE" || error?.message?.includes("Dynamic server usage")) {
       throw error;

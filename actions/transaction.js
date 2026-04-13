@@ -14,6 +14,7 @@ import EmailTemplate from "@/emails/template";
 import { add } from "date-fns";
 import { getTranslator } from "@/lib/i18n/translations";
 import { normalizeCategoryKey } from "@/lib/category-utils";
+import { getLocaleFromCookie } from "@/lib/i18n/server";
 
 function buildRuleBasedAdvice({ transaction, newBalance, recentTransactions }) {
   const tips = [];
@@ -120,7 +121,9 @@ export async function createTransaction(data) {
       throw new Error("User not found");
     }
 
-    const t = getTranslator(user.locale || "en");
+    const requestLocale = await getLocaleFromCookie();
+    const effectiveLocale = requestLocale || user.locale || "en";
+    const t = getTranslator(effectiveLocale);
 
     const account = await db.account.findUnique({
       where: {
@@ -209,7 +212,12 @@ export async function createTransaction(data) {
           Return a JSON array of exactly 3 strings.
         `;
 
-        const text = await generateAIContent(prompt);
+        const aiPromise = generateAIContent(prompt);
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("AI advice timed out")), 3000)
+        );
+
+        const text = await Promise.race([aiPromise, timeoutPromise]);
         const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
         const rewrittenAdvice = JSON.parse(cleanedText);
         advice = mergeSpecificAdvice(rewrittenAdvice, fallbackAdvice);
@@ -218,66 +226,72 @@ export async function createTransaction(data) {
       }
     }
 
-    try {
-      if (shouldSendEmail("transaction-success")) {
-        const normalizedCategory = normalizeCategoryKey(transaction.category);
-        const localizedCategory = t(`categories.${normalizedCategory}`, {}, transaction.category);
-        const subject = t("notifications.txSub", {}, "New Transaction Logged - Gullak");
+    const normalizedCategory = normalizeCategoryKey(transaction.category);
+    const localizedCategory = t(`categories.${normalizedCategory}`, {}, transaction.category);
+    const subject = t("notifications.txSub", {}, "New Transaction Logged - Gullak");
 
-        await sendEmailWithRetry({
-          to: user.email,
-          subject,
-          templateParams: {
-            name: user.name,
-            userName: user.name,
-            alert_title: subject,
-            alert_message: t("notifications.txAlertMessage", {}, "A new transaction has been recorded in your account."),
-            amount: transaction.amount.toNumber(),
-            category: localizedCategory,
-            description: transaction.description,
-            advice1: advice?.[0] || "",
-            advice2: advice?.[1] || "",
-            advice3: advice?.[2] || ""
-          },
-          react: EmailTemplate({
-            userName: user.name,
-            type: "transaction-success",
-            locale: user.locale,
-            data: {
+    const notificationTasks = [];
+
+    if (shouldSendEmail("transaction-success")) {
+      notificationTasks.push(
+        sendEmailWithRetry(
+          {
+            to: user.email,
+            subject,
+            templateParams: {
+              name: user.name,
+              userName: user.name,
+              alert_title: subject,
+              alert_message: t("notifications.txAlertMessage", {}, "A new transaction has been recorded in your account."),
               amount: transaction.amount.toNumber(),
-              description: transaction.description,
               category: localizedCategory,
-              advice
-            }
-          })
-        });
-      }
-    } catch (emailError) {
-      console.error("Error sending transaction email:", emailError.message);
+              description: transaction.description,
+              advice1: advice?.[0] || "",
+              advice2: advice?.[1] || "",
+              advice3: advice?.[2] || ""
+            },
+            react: EmailTemplate({
+              userName: user.name,
+              type: "transaction-success",
+              locale: effectiveLocale,
+              data: {
+                amount: transaction.amount.toNumber(),
+                description: transaction.description,
+                category: localizedCategory,
+                advice
+              }
+            })
+          },
+          { attempts: 2, timeoutMs: 7000, baseDelayMs: 300 }
+        ).catch((emailError) => {
+          console.error("Error sending transaction email:", emailError.message);
+          return null;
+        })
+      );
     }
 
-
-    console.log("SMS CHECK - user.phoneNumber:", user.phoneNumber, "user.email:", user.email);
     if (shouldSendSMS("transaction-success", Boolean(user.phoneNumber))) {
-      try {
-        console.log("Attempting to send SMS to:", user.phoneNumber);
-        const smsResult = await sendSMSWithRetry({
-          to: user.phoneNumber,
-          body: formatSMS("transaction-success", {
-            amount: transaction.amount.toNumber(),
-            description: transaction.description,
-            category: t(`categories.${normalizeCategoryKey(transaction.category)}`, {}, transaction.category),
-            advice
-          }, user.locale)
-        });
-        if (smsResult.success) {
-          console.log("Transaction SMS sent:", smsResult.data?.sid);
-        } else {
-          console.error("SMS failed:", smsResult.error);
-        }
-      } catch (smsError) {
-        console.error("Error sending transaction SMS:", smsError.message);
-      }
+      notificationTasks.push(
+        sendSMSWithRetry(
+          {
+            to: user.phoneNumber,
+            body: formatSMS("transaction-success", {
+              amount: transaction.amount.toNumber(),
+              description: transaction.description,
+              category: transaction.category,
+              advice
+            }, effectiveLocale)
+          },
+          { attempts: 2, timeoutMs: 7000, baseDelayMs: 300 }
+        ).catch((smsError) => {
+          console.error("Error sending transaction SMS:", smsError.message);
+          return null;
+        })
+      );
+    }
+
+    if (notificationTasks.length > 0) {
+      void Promise.allSettled(notificationTasks);
     }
 
     revalidatePath("/dashboard");
@@ -620,7 +634,52 @@ export async function exportTransactionsCsv({ monthValue = null, accountId = nul
 
 
 export async function scanReceipt(fileData) {
+  const allowedCategories = new Set([
+    "housing",
+    "transportation",
+    "groceries",
+    "utilities",
+    "entertainment",
+    "food",
+    "shopping",
+    "healthcare",
+    "education",
+    "personal",
+    "travel",
+    "insurance",
+    "gifts",
+    "bills",
+    "other-expense"
+  ]);
+
+  const sanitizeAmount = (rawAmount) => {
+    if (typeof rawAmount === "number" && Number.isFinite(rawAmount)) {
+      return rawAmount;
+    }
+    const normalized = String(rawAmount ?? "").replace(/[^0-9.-]/g, "");
+    const parsed = Number.parseFloat(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const sanitizeDate = (rawDate) => {
+    const parsedDate = new Date(rawDate);
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+  };
+
+  const extractJsonPayload = (rawText) => {
+    const withoutMarkdown = String(rawText || "").replace(/```(?:json)?\n?/gi, "").trim();
+    const jsonMatch = withoutMarkdown.match(/\{[\s\S]*\}/);
+    return jsonMatch ? jsonMatch[0] : withoutMarkdown;
+  };
+
   try {
+    if (!fileData?.base64 || !fileData?.mimeType) {
+      return {
+        success: false,
+        error: "Invalid file payload. Please upload the receipt again."
+      };
+    }
+
     const prompt = `
       Analyze this receipt image or PDF and extract the following information in JSON format:
       - Total amount (just the number)
@@ -654,19 +713,57 @@ export async function scanReceipt(fileData) {
 
     const text = await Promise.race([aiPromise, timeoutPromise]);
     console.log("Gemini response:", text);
-    const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+    const cleanedText = extractJsonPayload(text);
+
+    if (!cleanedText || cleanedText === "{}") {
+      return {
+        success: false,
+        error: "No receipt details were detected. Please try a clearer image or PDF."
+      };
+    }
 
     const data = JSON.parse(cleanedText);
+
+    if (!data || typeof data !== "object" || Object.keys(data).length === 0) {
+      return {
+        success: false,
+        error: "No receipt details were detected. Please try a clearer image or PDF."
+      };
+    }
+
+    const amount = sanitizeAmount(data.amount);
+    const parsedDate = sanitizeDate(data.date);
+    const merchantName = typeof data.merchantName === "string" ? data.merchantName.trim() : "";
+    const description =
+      typeof data.description === "string" && data.description.trim().length > 0 ?
+      data.description.trim() :
+      merchantName ?
+      `Purchase at ${merchantName}` :
+      "Scanned receipt";
+
+    if (amount === null || amount <= 0 || !parsedDate) {
+      return {
+        success: false,
+        error: "Could not read amount/date from this receipt. Please try another image."
+      };
+    }
+
+    const normalizedCategory = normalizeCategoryKey(data.category);
+    const category = allowedCategories.has(normalizedCategory) ? normalizedCategory : "other-expense";
+
     return {
-      amount: parseFloat(data.amount),
-      date: new Date(data.date),
-      description: data.description,
-      category: data.category,
-      merchantName: data.merchantName
+      amount,
+      date: parsedDate,
+      description,
+      category,
+      merchantName
     };
   } catch (error) {
     console.error("Failed to scan receipt:", error.message, error.stack);
-    throw new Error("Failed to scan receipt. Please try again.");
+    return {
+      success: false,
+      error: "Failed to scan receipt. Please try again."
+    };
   }
 }
 
