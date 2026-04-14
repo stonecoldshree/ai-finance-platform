@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "i18n:notifications": "node --experimental-specifier-resolution=node scripts/generate-notification-locales.mjs",
     "check:launch": "node scripts/launch-check.mjs",
     "email": "email dev",
     "postinstall": "prisma generate"

@@ -1,0 +1,204 @@
+{
+  "summary": {
+    "hi": {
+      "missingSections": 0,
+      "missingKeys": 0,
+      "extraKeys": 0,
+      "placeholderMismatches": 0,
+      "artifactHits": 0,
+      "likelyUntranslated": 0,
+      "qaFlags": 0
+    },
+    "ta": {
+      "missingSections": 0,
+      "missingKeys": 0,
+      "extraKeys": 0,
+      "placeholderMismatches": 0,
+      "artifactHits": 0,
+      "likelyUntranslated": 0,
+      "qaFlags": 0
+    },
+    "te": {
+      "missingSections": 0,
+      "missingKeys": 0,
+      "extraKeys": 0,
+      "placeholderMismatches": 0,
+      "artifactHits": 0,
+      "likelyUntranslated": 0,
+      "qaFlags": 0
+    },
+    "kn": {
+      "missingSections": 0,
+      "missingKeys": 0,
+      "extraKeys": 0,
+      "placeholderMismatches": 0,
+      "artifactHits": 0,
+      "likelyUntranslated": 0,
+      "qaFlags": 0
+    },
+    "ml": {
+      "missingSections": 0,
+      "missingKeys": 0,
+      "extraKeys": 0,
+      "placeholderMismatches": 0,
+      "artifactHits": 0,
+      "likelyUntranslated": 0,
+      "qaFlags": 0
+    },
+    "mr": {
+      "missingSections": 0,
+      "missingKeys": 0,
+      "extraKeys": 0,
+      "placeholderMismatches": 0,
+      "artifactHits": 0,
+      "likelyUntranslated": 0,
+      "qaFlags": 0
+    },
+    "raj": {
+      "missingSections": 0,
+      "missingKeys": 0,
+      "extraKeys": 0,
+      "placeholderMismatches": 0,
+      "artifactHits": 0,
+      "likelyUntranslated": 0,
+      "qaFlags": 0
+    },
+    "bn": {
+      "missingSections": 0,
+      "missingKeys": 0,
+      "extraKeys": 0,
+      "placeholderMismatches": 0,
+      "artifactHits": 0,
+      "likelyUntranslated": 0,
+      "qaFlags": 0
+    },
+    "gu": {
+      "missingSections": 0,
+      "missingKeys": 0,
+      "extraKeys": 0,
+      "placeholderMismatches": 0,
+      "artifactHits": 0,
+      "likelyUntranslated": 0,
+      "qaFlags": 0
+    },
+    "pa": {
+      "missingSections": 0,
+      "missingKeys": 0,
+      "extraKeys": 0,
+      "placeholderMismatches": 0,
+      "artifactHits": 0,
+      "likelyUntranslated": 0,
+      "qaFlags": 0
+    },
+    "or": {
+      "missingSections": 0,
+      "missingKeys": 0,
+      "extraKeys": 0,
+      "placeholderMismatches": 0,
+      "artifactHits": 0,
+      "likelyUntranslated": 0,
+      "qaFlags": 0
+    }
+  },
+  "qaReport": {
+    "hi": {
+      "missingSections": [],
+      "missingKeys": {},
+      "extraKeys": {},
+      "placeholderMismatches": [],
+      "artifactHits": [],
+      "likelyUntranslated": [],
+      "qaFlags": []
+    },
+    "ta": {
+      "missingSections": [],
+      "missingKeys": {},
+      "extraKeys": {},
+      "placeholderMismatches": [],
+      "artifactHits": [],
+      "likelyUntranslated": [],
+      "qaFlags": []
+    },
+    "te": {
+      "missingSections": [],
+      "missingKeys": {},
+      "extraKeys": {},
+      "placeholderMismatches": [],
+      "artifactHits": [],
+      "likelyUntranslated": [],
+      "qaFlags": []
+    },
+    "kn": {
+      "missingSections": [],
+      "missingKeys": {},
+      "extraKeys": {},
+      "placeholderMismatches": [],
+      "artifactHits": [],
+      "likelyUntranslated": [],
+      "qaFlags": []
+    },
+    "ml": {
+      "missingSections": [],
+      "missingKeys": {},
+      "extraKeys": {},
+      "placeholderMismatches": [],
+      "artifactHits": [],
+      "likelyUntranslated": [],
+      "qaFlags": []
+    },
+    "mr": {
+      "missingSections": [],
+      "missingKeys": {},
+      "extraKeys": {},
+      "placeholderMismatches": [],
+      "artifactHits": [],
+      "likelyUntranslated": [],
+      "qaFlags": []
+    },
+    "raj": {
+      "missingSections": [],
+      "missingKeys": {},
+      "extraKeys": {},
+      "placeholderMismatches": [],
+      "artifactHits": [],
+      "likelyUntranslated": [],
+      "qaFlags": []
+    },
+    "bn": {
+      "missingSections": [],
+      "missingKeys": {},
+      "extraKeys": {},
+      "placeholderMismatches": [],
+      "artifactHits": [],
+      "likelyUntranslated": [],
+      "qaFlags": []
+    },
+    "gu": {
+      "missingSections": [],
+      "missingKeys": {},
+      "extraKeys": {},
+      "placeholderMismatches": [],
+      "artifactHits": [],
+      "likelyUntranslated": [],
+      "qaFlags": []
+    },
+    "pa": {
+      "missingSections": [],
+      "missingKeys": {},
+      "extraKeys": {},
+      "placeholderMismatches": [],
+      "artifactHits": [],
+      "likelyUntranslated": [],
+      "qaFlags": []
+    },
+    "or": {
+      "missingSections": [],
+      "missingKeys": {},
+      "extraKeys": {},
+      "placeholderMismatches": [],
+      "artifactHits": [],
+      "likelyUntranslated": [],
+      "qaFlags": []
+    }
+  }
+}

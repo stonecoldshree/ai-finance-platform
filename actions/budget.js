@@ -9,6 +9,7 @@ import { sendEmailWithRetry } from "@/lib/notification-delivery";
 import EmailTemplate from "@/emails/template";
 import { getTranslator } from "@/lib/i18n/translations";
 import { getLocaleFromCookie } from "@/lib/i18n/server";
+import { getLocalePromptName } from "@/lib/i18n/config";
 
 /**
  * Returns the current month string in "YYYY-MM" format.
@@ -20,7 +21,8 @@ function getCurrentMonth() {
   return `${year}-${month}`;
 }
 
-function buildBudgetSpecificAdvice({ amount, balance }) {
+function buildBudgetSpecificAdvice({ amount, balance, t }) {
+  const translate = typeof t === "function" ? t : (_key, _values, fallback) => fallback;
   const now = new Date();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const daysLeft = Math.max(1, daysInMonth - now.getDate() + 1);
@@ -32,9 +34,21 @@ function buildBudgetSpecificAdvice({ amount, balance }) {
   const nonEssentialThreshold = Math.max(250, Math.round(amount * 0.1));
 
   return [
-    `For the next ${weeksLeft} week(s), keep total spending below ₹${weeklyCap} per week (about ₹${dailyCap}/day).`,
-    `Maintain a safety buffer of at least ₹${bufferTarget}; pause non-essential purchases whenever balance nears this level.`,
-    `Apply a 24-hour pause to any non-essential spend above ₹${nonEssentialThreshold} to reduce impulse purchases.`
+    translate(
+      "notifications.adviceBudgetWeeklyCap",
+      { weeksLeft, weeklyCap, dailyCap },
+      `For the next ${weeksLeft} week(s), keep total spending below ₹${weeklyCap} per week (about ₹${dailyCap}/day).`
+    ),
+    translate(
+      "notifications.adviceBudgetBuffer",
+      { bufferTarget },
+      `Maintain a safety buffer of at least ₹${bufferTarget}; pause non-essential purchases whenever balance nears this level.`
+    ),
+    translate(
+      "notifications.adviceBudgetPause",
+      { nonEssentialThreshold },
+      `Apply a 24-hour pause to any non-essential spend above ₹${nonEssentialThreshold} to reduce impulse purchases.`
+    )
   ];
 }
 
@@ -200,6 +214,7 @@ export async function updateBudget(amount, accountId) {
     const requestLocale = await getLocaleFromCookie();
     const effectiveLocale = requestLocale || user.locale || "en";
     const t = getTranslator(effectiveLocale);
+    const promptLanguage = getLocalePromptName(effectiveLocale);
 
     if (!accountId) throw new Error("Account is required");
 
@@ -246,17 +261,19 @@ export async function updateBudget(amount, accountId) {
     try {
       const balance = account.balance.toNumber();
       const savingsSecured = Math.max(0, balance - amount);
-      const fallbackAdvice = buildBudgetSpecificAdvice({ amount, balance });
+      const fallbackAdvice = buildBudgetSpecificAdvice({ amount, balance, t });
 
       const prompt = `
         A user has set a monthly budget of ₹${amount}.
         Their current default account balance is ₹${balance}.
         The user has correctly secured at least 50% of their balance (₹${savingsSecured}) for savings/investments.
+        Write all advice only in ${promptLanguage} (locale code: ${effectiveLocale}).
+        Do not mix in English unless locale code is en.
         
         Provide exactly 3 concise, friendly, and actionable financial tips.
         Each tip must include at least one concrete number (₹ amount, %, or days) and one clear action.
         Avoid vague wording such as "save more" without a numeric target.
-        Format strictly as JSON array of strings: ["tip 1", "tip 2", "tip 3"]
+        Format strictly as JSON array of strings in the target locale language: ["tip 1", "tip 2", "tip 3"]
       `;
 
       let advice = [];

@@ -15,33 +15,71 @@ import { add } from "date-fns";
 import { getTranslator } from "@/lib/i18n/translations";
 import { normalizeCategoryKey } from "@/lib/category-utils";
 import { getLocaleFromCookie } from "@/lib/i18n/server";
+import { getLocalePromptName } from "@/lib/i18n/config";
 
-function buildRuleBasedAdvice({ transaction, newBalance, recentTransactions }) {
+function buildRuleBasedAdvice({ transaction, newBalance, recentTransactions, t, localizedCategory }) {
+  const translate = typeof t === "function" ? t : (_key, _values, fallback) => fallback;
   const tips = [];
   const amount = transaction.amount.toNumber();
-  const category = transaction.category || "this category";
+  const category = localizedCategory || transaction.category || "this category";
 
   if (transaction.type === "EXPENSE") {
     const sevenDayCap = Math.max(300, Math.round(amount * 1.2));
-    tips.push(`You spent ₹${amount} on ${category}. Keep ${category} spend under ₹${sevenDayCap} over the next 7 days.`);
+    tips.push(
+      translate(
+        "notifications.adviceExpenseSpendCap",
+        { amount, category, sevenDayCap },
+        `You spent ₹${amount} on ${category}. Keep ${category} spend under ₹${sevenDayCap} over the next 7 days.`
+      )
+    );
   } else {
     const saveNow = Math.max(300, Math.round(amount * 0.2));
-    tips.push(`Income of ₹${amount} recorded. Move at least ₹${saveNow} to savings within 24 hours.`);
+    tips.push(
+      translate(
+        "notifications.adviceIncomeSaveNow",
+        { amount, saveNow },
+        `Income of ₹${amount} recorded. Move at least ₹${saveNow} to savings within 24 hours.`
+      )
+    );
   }
 
   if (newBalance < 1000) {
     const dailyLimit = Math.max(100, Math.round(newBalance / 7));
-    tips.push(`Current balance is ₹${newBalance}. Keep daily non-essential spend under ₹${dailyLimit} for the next 7 days.`);
+    tips.push(
+      translate(
+        "notifications.adviceLowBalanceDailyLimit",
+        { newBalance, dailyLimit },
+        `Current balance is ₹${newBalance}. Keep daily non-essential spend under ₹${dailyLimit} for the next 7 days.`
+      )
+    );
   } else {
     const reserve = Math.max(500, Math.round(newBalance * 0.2));
-    tips.push(`Balance is ₹${newBalance}. Protect at least ₹${reserve} as a reserve before discretionary spending.`);
+    tips.push(
+      translate(
+        "notifications.adviceReserveProtect",
+        { newBalance, reserve },
+        `Balance is ₹${newBalance}. Protect at least ₹${reserve} as a reserve before discretionary spending.`
+      )
+    );
   }
 
   const recentExpenseCount = recentTransactions.filter((t) => t.type === "EXPENSE").length;
   if (recentExpenseCount >= 4) {
-    tips.push(`You logged ${recentExpenseCount} recent expense entries. Audit subscriptions today and cut 1 recurring charge this week.`);
+    tips.push(
+      translate(
+        "notifications.adviceFrequentExpenseAudit",
+        { recentExpenseCount },
+        `You logged ${recentExpenseCount} recent expense entries. Audit subscriptions today and cut 1 recurring charge this week.`
+      )
+    );
   } else {
-    tips.push(`Recent expense frequency is ${recentExpenseCount} entries. Keep this pace and do a 10-minute spend review every Sunday.`);
+    tips.push(
+      translate(
+        "notifications.adviceSteadyExpenseReview",
+        { recentExpenseCount },
+        `Recent expense frequency is ${recentExpenseCount} entries. Keep this pace and do a 10-minute spend review every Sunday.`
+      )
+    );
   }
 
   return tips.slice(0, 3);
@@ -124,6 +162,7 @@ export async function createTransaction(data) {
     const requestLocale = await getLocaleFromCookie();
     const effectiveLocale = requestLocale || user.locale || "en";
     const t = getTranslator(effectiveLocale);
+    const promptLanguage = getLocalePromptName(effectiveLocale);
 
     const account = await db.account.findUnique({
       where: {
@@ -190,13 +229,28 @@ export async function createTransaction(data) {
       take: 8
     });
 
-    advice = buildRuleBasedAdvice({ transaction, newBalance, recentTransactions });
+    const adviceCategoryKey = normalizeCategoryKey(transaction.category);
+    const localizedCategoryForAdvice = t(
+      `categories.${adviceCategoryKey}`,
+      {},
+      transaction.category || t("common.none", {}, "this category")
+    );
+
+    advice = buildRuleBasedAdvice({
+      transaction,
+      newBalance,
+      recentTransactions,
+      t,
+      localizedCategory: localizedCategoryForAdvice
+    });
     const fallbackAdvice = advice;
 
     if (shouldUseRealtimeAIAdvice(transaction)) {
       try {
         const prompt = `
           Rewrite these financial tips in a concise and friendly way.
+          Write all tips only in ${promptLanguage} (locale code: ${effectiveLocale}).
+          Do not mix in English unless locale code is en.
           Keep exactly 3 bullet points.
           Each bullet must include at least one number (₹ amount, %, or days) and one concrete action.
           Avoid generic phrases like "save more" without a target.
@@ -209,7 +263,7 @@ export async function createTransaction(data) {
           Base Tips:
           ${advice.map((tip) => `- ${tip}`).join("\n")}
 
-          Return a JSON array of exactly 3 strings.
+          Return a JSON array of exactly 3 strings in the target locale language.
         `;
 
         const aiPromise = generateAIContent(prompt);
