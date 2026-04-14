@@ -16,7 +16,7 @@
     "@arcjet/next": "^1.0.0-alpha.34",
     "@clerk/nextjs": "^6.6.0",
     "@emailjs/nodejs": "^5.0.2",
-    "@google/generative-ai": "^0.21.0",
+    "@google/genai": "^1.50.0",
     "@hookform/resolvers": "^3.9.1",
     "@prisma/client": "^6.0.1",
     "@radix-ui/react-alert-dialog": "^1.1.15",

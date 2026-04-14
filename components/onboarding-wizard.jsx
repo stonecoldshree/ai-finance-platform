@@ -318,7 +318,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
                   {t("onboarding.phoneTitle", {}, "Add Phone Number")}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {t("settings.phoneNumberDesc")}
+                  {t("onboarding.phoneDesc", {}, t("settings.phoneNumberDesc"))}
                 </p>
               </div>
 
@@ -337,7 +337,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
                   }}
                   autoFocus
                 />
-                <p className="text-xs text-muted-foreground">{t("settings.phoneFormat")}</p>
+                <p className="text-xs text-muted-foreground">{t("onboarding.phoneFormat", {}, t("settings.phoneFormat"))}</p>
                 {phoneError && <p className="text-xs text-red-500">{phoneError}</p>}
               </div>
 
@@ -354,7 +354,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
                   {savingPhone ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("settings.saving") || "Saving..."}
+                      {t("onboarding.saving", {}, t("settings.saving", {}, "Saving..."))}
                     </>
                   ) : (
                     <>

@@ -11,6 +11,7 @@ import { useLanguage } from "@/components/language-provider";
 export function ReceiptScanner({ onScanComplete }) {
   const { t } = useLanguage();
   const fileInputRef = useRef(null);
+  const MAX_RECEIPT_MB = 3;
 
   const {
     loading: scanReceiptLoading,
@@ -19,8 +20,14 @@ export function ReceiptScanner({ onScanComplete }) {
   } = useFetch(scanReceipt);
 
   const handleReceiptScan = async (file) => {
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error(t("transaction.fileSizeError"));
+    if (file.size > MAX_RECEIPT_MB * 1024 * 1024) {
+      toast.error(
+        t(
+          "transaction.fileSizeLimit",
+          { maxSizeMB: MAX_RECEIPT_MB },
+          `File size should be less than ${MAX_RECEIPT_MB}MB`
+        )
+      );
       return;
     }
 

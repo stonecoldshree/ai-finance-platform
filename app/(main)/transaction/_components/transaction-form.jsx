@@ -31,6 +31,7 @@ import { createTransaction, updateTransaction } from "@/actions/transaction";
 import { transactionSchema } from "@/app/lib/schema";
 import { ReceiptScanner } from "./recipt-scanner";
 import { useLanguage } from "@/components/language-provider";
+import { normalizeCategoryKey } from "@/lib/category-utils";
 
 const QUICK_ADD_PREFS_KEY = "gullak.quickAddPrefs";
 const LAST_DRAFT_KEY = "gullak.lastTransactionDraft";
@@ -144,7 +145,7 @@ export function AddTransactionForm({
       setValue("description", scannedData.description.trim(), { shouldValidate: true });
     }
     if (typeof scannedData.category === "string" && scannedData.category.trim().length > 0) {
-      setValue("category", scannedData.category.trim(), { shouldValidate: true });
+      setValue("category", normalizeCategoryKey(scannedData.category), { shouldValidate: true });
     }
   };
 
@@ -203,7 +204,10 @@ export function AddTransactionForm({
 
       const recentCategoriesRaw = window.localStorage.getItem(RECENT_CATEGORIES_KEY);
       const recentByType = recentCategoriesRaw ? JSON.parse(recentCategoriesRaw) : {};
-      setRecentCategories(recentByType[resolvedPrefs.defaultType || "EXPENSE"] || []);
+      const normalizedRecent = (recentByType[resolvedPrefs.defaultType || "EXPENSE"] || [])
+        .map((value) => normalizeCategoryKey(value))
+        .filter((value, index, arr) => value && arr.indexOf(value) === index);
+      setRecentCategories(normalizedRecent);
     } catch (error) {
       console.error("Failed to load quick-add preferences:", error.message);
     }
@@ -233,7 +237,10 @@ export function AddTransactionForm({
     try {
       const recentCategoriesRaw = window.localStorage.getItem(RECENT_CATEGORIES_KEY);
       const recentByType = recentCategoriesRaw ? JSON.parse(recentCategoriesRaw) : {};
-      setRecentCategories(recentByType[type] || []);
+      const normalizedRecent = (recentByType[type] || [])
+        .map((value) => normalizeCategoryKey(value))
+        .filter((value, index, arr) => value && arr.indexOf(value) === index);
+      setRecentCategories(normalizedRecent);
     } catch (error) {
       console.error("Failed to load recent categories:", error.message);
     }
@@ -244,10 +251,17 @@ export function AddTransactionForm({
     if (!category) return;
 
     try {
+      const normalizedCategory = normalizeCategoryKey(category);
       const recentCategoriesRaw = window.localStorage.getItem(RECENT_CATEGORIES_KEY);
       const recentByType = recentCategoriesRaw ? JSON.parse(recentCategoriesRaw) : {};
       const existing = recentByType[type] || [];
-      const updated = [category, ...existing.filter((item) => item !== category)].slice(0, 5);
+      const updated = [
+        normalizedCategory,
+        ...existing
+          .map((item) => normalizeCategoryKey(item))
+          .filter((item) => item !== normalizedCategory)]
+        .filter((item, index, arr) => item && arr.indexOf(item) === index)
+        .slice(0, 5);
       const nextState = { ...recentByType, [type]: updated };
       window.localStorage.setItem(RECENT_CATEGORIES_KEY, JSON.stringify(nextState));
       setRecentCategories(updated);
@@ -387,16 +401,17 @@ export function AddTransactionForm({
         <div className="flex flex-wrap items-center gap-2">
             <p className="text-xs text-muted-foreground">{t("transaction.recent")}</p>
             {recentCategories.map((recentCategoryId) => {
-            const categoryMeta = categories.find((item) => item.id === recentCategoryId);
+            const normalizedRecentCategoryId = normalizeCategoryKey(recentCategoryId);
+            const categoryMeta = categories.find((item) => item.id === normalizedRecentCategoryId);
             return (
               <Button
-                  key={recentCategoryId}
+                  key={normalizedRecentCategoryId}
                   type="button"
                   size="sm"
                   variant="outline"
                   className="h-7 rounded-full px-3 text-xs"
-                  onClick={() => setValue("category", recentCategoryId, { shouldValidate: true })}>
-                    {t(`categories.${recentCategoryId}`, {}, categoryMeta?.name || recentCategoryId)}
+                  onClick={() => setValue("category", normalizedRecentCategoryId, { shouldValidate: true })}>
+                    {t(`categories.${normalizedRecentCategoryId}`, {}, categoryMeta?.name || normalizedRecentCategoryId)}
               </Button>
             );
 

@@ -36,6 +36,20 @@ export const defaultCategories = [
   icon: "Home"
 },
 {
+  id: "bonus",
+  name: "Bonus",
+  type: "INCOME",
+  color: "#10b981",
+  icon: "BadgeIndianRupee"
+},
+{
+  id: "refund",
+  name: "Refund",
+  type: "INCOME",
+  color: "#0ea5e9",
+  icon: "RotateCcw"
+},
+{
   id: "other-income",
   name: "Other Income",
   type: "INCOME",
@@ -136,6 +150,45 @@ export const defaultCategories = [
   color: "#64748b",
   icon: "Shield",
   subcategories: ["Life", "Home", "Vehicle"]
+},
+{
+  id: "subscriptions",
+  name: "Subscriptions",
+  type: "EXPENSE",
+  color: "#7c3aed",
+  icon: "Tv",
+  subcategories: ["OTT", "Software", "Memberships"]
+},
+{
+  id: "pets",
+  name: "Pets",
+  type: "EXPENSE",
+  color: "#f59e0b",
+  icon: "PawPrint",
+  subcategories: ["Food", "Vet", "Accessories"]
+},
+{
+  id: "childcare",
+  name: "Childcare",
+  type: "EXPENSE",
+  color: "#06b6d4",
+  icon: "Baby",
+  subcategories: ["Daycare", "School Supplies", "Babysitting"]
+},
+{
+  id: "taxes",
+  name: "Taxes",
+  type: "EXPENSE",
+  color: "#dc2626",
+  icon: "Landmark"
+},
+{
+  id: "electronics",
+  name: "Electronics",
+  type: "EXPENSE",
+  color: "#4f46e5",
+  icon: "Laptop",
+  subcategories: ["Gadgets", "Accessories", "Repairs"]
 },
 {
   id: "gifts",

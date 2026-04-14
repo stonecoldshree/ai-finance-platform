@@ -701,10 +701,16 @@ export async function scanReceipt(fileData) {
     "personal",
     "travel",
     "insurance",
+    "subscriptions",
+    "pets",
+    "childcare",
+    "taxes",
+    "electronics",
     "gifts",
     "bills",
     "other-expense"
   ]);
+  const allowedCategoryList = Array.from(allowedCategories).join(",");
 
   const sanitizeAmount = (rawAmount) => {
     if (typeof rawAmount === "number" && Number.isFinite(rawAmount)) {
@@ -734,13 +740,28 @@ export async function scanReceipt(fileData) {
       };
     }
 
+    if (!process.env.GEMINI_API_KEY) {
+      return {
+        success: false,
+        error: "Receipt scanner is not configured. Add GEMINI_API_KEY in environment variables."
+      };
+    }
+
+    const estimatedBytes = Math.floor(String(fileData.base64).length * 0.75);
+    if (estimatedBytes > 4_500_000) {
+      return {
+        success: false,
+        error: "Receipt file is too large to process reliably. Please upload an image under 3MB."
+      };
+    }
+
     const prompt = `
       Analyze this receipt image or PDF and extract the following information in JSON format:
       - Total amount (just the number)
       - Date (in ISO format)
       - Description or items purchased (brief summary)
       - Merchant/store name
-      - Suggested category (one of: housing,transportation,groceries,utilities,entertainment,food,shopping,healthcare,education,personal,travel,insurance,gifts,bills,other-expense )
+      - Suggested category (one of: ${allowedCategoryList})
       
       Only respond with valid JSON in this exact format:
       {
@@ -751,7 +772,7 @@ export async function scanReceipt(fileData) {
         "category": "string"
       }
 
-      If its not a recipt, return an empty object
+      If it is not a receipt, return an empty object
     `;
 
     const aiPromise = generateAIContent(prompt, {
@@ -762,7 +783,7 @@ export async function scanReceipt(fileData) {
     });
 
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("AI scan timed out")), 12000)
+      setTimeout(() => reject(new Error("AI scan timed out")), 18000)
     );
 
     const text = await Promise.race([aiPromise, timeoutPromise]);
