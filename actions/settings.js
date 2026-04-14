@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -71,4 +72,39 @@ export async function getPhoneNumber() {
   });
 
   return user?.phoneNumber || null;
+}
+
+export async function deleteCurrentUserAccount() {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+      select: { id: true }
+    });
+
+    if (user) {
+      await db.user.delete({
+        where: { id: user.id }
+      });
+    }
+
+    const clerk = await clerkClient();
+    await clerk.users.deleteUser(userId);
+
+    revalidatePath("/", "layout");
+    revalidatePath("/settings");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete user account:", error);
+    return {
+      success: false,
+      error:
+        "Failed to fully delete account. If this keeps happening, please delete from Clerk dashboard and contact support."
+    };
+  }
 }

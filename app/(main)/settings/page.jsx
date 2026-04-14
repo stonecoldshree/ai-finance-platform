@@ -13,7 +13,11 @@ import {
   SelectValue } from
 "@/components/ui/select";
 import { toast } from "sonner";
-import { updatePhoneNumber, getPhoneNumber } from "@/actions/settings";
+import {
+  updatePhoneNumber,
+  getPhoneNumber,
+  deleteCurrentUserAccount } from
+"@/actions/settings";
 import { getUserAccounts } from "@/actions/dashboard";
 import { deleteAccount, updateDefaultAccount } from "@/actions/account";
 import { getAccountsBudgetStatus, updateBudget } from "@/actions/budget";
@@ -96,6 +100,13 @@ export default function SettingsPage() {
     error: defaultError
   } = useFetch(updateDefaultAccount);
 
+  const {
+    loading: deletingUser,
+    fn: deleteUserFn,
+    data: deleteUserResult,
+    error: deleteUserError
+  } = useFetch(deleteCurrentUserAccount);
+
   useEffect(() => {
     if (deleteResult?.success) {
       toast.success(t("settings.accountDeleted"));
@@ -126,6 +137,31 @@ export default function SettingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultError]);
 
+  useEffect(() => {
+    if (deleteUserResult?.success) {
+      toast.success(
+        t(
+          "settings.profileDeleted",
+          {},
+          "Your account has been deleted. Redirecting..."
+        )
+      );
+
+      window.setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
+    }
+  }, [deleteUserResult, t]);
+
+  useEffect(() => {
+    if (deleteUserError) {
+      toast.error(
+        deleteUserError.message ||
+        t("settings.failedDeleteProfile", {}, "Failed to delete account")
+      );
+    }
+  }, [deleteUserError, t]);
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -150,6 +186,22 @@ export default function SettingsPage() {
     if (!window.confirm(t("settings.confirmDelete", { name })))
     return;
     await deleteFn(id);
+  };
+
+  const handleDeleteProfile = async () => {
+    const confirmed = window.confirm(
+      t(
+        "settings.confirmDeleteProfile",
+        {},
+        "This will permanently delete your entire account and all data. This cannot be undone. Continue?"
+      )
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    await deleteUserFn();
   };
 
   const handleSetDefaultAccount = async (account) => {
@@ -525,6 +577,32 @@ export default function SettingsPage() {
               {t("settings.respondTime")}
             </p>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-red-300">
+        <CardHeader>
+          <CardTitle className="text-lg text-red-600">
+            {t("settings.dangerZone", {}, "Danger Zone")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            {t(
+              "settings.deleteProfileDescription",
+              {},
+              "Delete your account from both Clerk and the app database. This will permanently remove all accounts, transactions, budgets, and goals."
+            )}
+          </p>
+          <Button
+            variant="destructive"
+            onClick={handleDeleteProfile}
+            disabled={deletingUser}>
+
+            {deletingUser ?
+            t("settings.deletingProfile", {}, "Deleting account...") :
+            t("settings.deleteProfile", {}, "Delete my account")}
+          </Button>
         </CardContent>
       </Card>
     </div>);

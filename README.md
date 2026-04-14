@@ -15,6 +15,7 @@ NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/onboarding
 NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/onboarding
+CLERK_WEBHOOK_SIGNING_SECRET=
 
 GEMINI_API_KEY=
 
@@ -42,6 +43,17 @@ TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_PHONE_NUMBER=
 ```
+
+### Clerk Webhook Setup
+
+1. In Clerk Dashboard, create a webhook endpoint for:
+	- `user.deleted`
+2. Set endpoint URL to:
+	- `https://<your-domain>/api/webhooks/clerk`
+3. Copy the webhook signing secret from Clerk and set:
+	- `CLERK_WEBHOOK_SIGNING_SECRET`
+
+This keeps Prisma in sync when a user is deleted directly from Clerk.
 
 ### Launch Readiness
 
