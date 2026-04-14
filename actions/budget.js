@@ -149,29 +149,33 @@ export async function getAccountsBudgetStatus() {
     const user = await getAuthUser();
     const currentMonth = getCurrentMonth();
 
-    const accounts = await db.account.findMany({
-      where: { userId: user.id },
-      select: {
-        id: true,
-        name: true,
-        type: true,
-        balance: true
-      }
-    });
+    const [accounts, budgets, legacyBudgets] = await Promise.all([
+      db.account.findMany({
+        where: { userId: user.id },
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          balance: true
+        }
+      }),
+      db.budget.findMany({
+        where: {
+          userId: user.id,
+          budgetMonth: currentMonth
+        }
+      }),
+      db.budget.findMany({
+        where: {
+          userId: user.id,
+          budgetMonth: null
+        }
+      })
+    ]);
 
-    const budgets = await db.budget.findMany({
-      where: {
-        userId: user.id,
-        budgetMonth: currentMonth
-      }
-    });
-
-    const legacyBudgets = await db.budget.findMany({
-      where: {
-        userId: user.id,
-        budgetMonth: null
-      }
-    });
+    if (accounts.length === 0) {
+      return [];
+    }
 
     const budgetMap = {};
     for (const b of budgets) {

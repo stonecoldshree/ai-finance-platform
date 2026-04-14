@@ -67,6 +67,7 @@ model Transaction {
   updatedAt        DateTime          @updatedAt
 
   @@index([userId])
+  @@index([userId, date])
   @@index([accountId])
   @@index([date])
   @@index([accountId, date])

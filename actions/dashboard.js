@@ -6,6 +6,7 @@ import { getAuthUser } from "@/lib/cachedAuth";
 import { request } from "@arcjet/next";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { cache } from "react";
 import { sendEmailWithRetry, sendSMSWithRetry } from "@/lib/notification-delivery";
 import { formatSMS } from "@/lib/sms-templates";
 import EmailTemplate from "@/emails/template";
@@ -33,6 +34,15 @@ const serializeTransaction = (obj) => {
   }
   return JSON.parse(JSON.stringify(serialized));
 };
+
+const hasUserAccountsByUserId = cache(async (userId) => {
+  const account = await db.account.findFirst({
+    where: { userId },
+    select: { id: true }
+  });
+
+  return !!account;
+});
 
 export async function getUserAccounts() {
   try {
@@ -69,13 +79,15 @@ export async function getUserAccounts() {
   }
 }
 
-export async function hasUserAccounts() {
+export async function hasUserAccounts(userIdOverride) {
   try {
-    const user = await getAuthUser();
-    const count = await db.account.count({
-      where: { userId: user.id }
-    });
-    return count > 0;
+    const userId = userIdOverride || (await getAuthUser()).id;
+
+    if (!userId) {
+      return false;
+    }
+
+    return await hasUserAccountsByUserId(userId);
   } catch (error) {
     if (error?.digest === "DYNAMIC_SERVER_USAGE" || error?.message?.includes("Dynamic server usage")) {
       throw error;
@@ -229,7 +241,12 @@ export async function createAccount(data) {
 }
 
 export async function getDashboardData(options = {}) {
-  const { includePreviousMonth = false, includeAllMonths = false } = options;
+  const {
+    includePreviousMonth = false,
+    includeAllMonths = false,
+    monthsBack,
+    maxRows
+  } = options;
 
   const now = new Date();
   const startOfMonth = includePreviousMonth ?
@@ -245,10 +262,16 @@ export async function getDashboardData(options = {}) {
       userId: user.id
     };
 
-    // includeAllMonths powers reports/analytics and should use full user history.
     if (!includeAllMonths) {
       where.date = {
         gte: startOfMonth,
+        lte: endOfMonth
+      };
+    } else if (typeof monthsBack === "number" && monthsBack > 0) {
+      // Bounded history is useful for faster initial dashboard loads.
+      const boundedStart = new Date(now.getFullYear(), now.getMonth() - (monthsBack - 1), 1);
+      where.date = {
+        gte: boundedStart,
         lte: endOfMonth
       };
     }
@@ -267,11 +290,8 @@ export async function getDashboardData(options = {}) {
       }
     };
 
-    if (!includeAllMonths) {
-      query.take = 500;
-    } else {
-      query.take = 3000;
-    }
+    const fallbackRows = includeAllMonths ? 3000 : 500;
+    query.take = typeof maxRows === "number" && maxRows > 0 ? maxRows : fallbackRows;
 
     const transactions = await db.transaction.findMany(query);
 

@@ -9,9 +9,9 @@ import { GoalCard } from "./_components/goal-card";
 import { PiggyBank, Target, Flag } from "lucide-react";
 
 export default async function GoalsPage() {
-  const [goals, allTransactions, locale] = await Promise.all([
+  const [goals, monthTransactions, locale] = await Promise.all([
     getUserGoals(),
-    getDashboardData({ includeAllMonths: true }),
+    getDashboardData(),
     getLocaleFromCookie()
   ]);
   const t = getTranslator(locale);
@@ -33,16 +33,7 @@ export default async function GoalsPage() {
     }
   });
 
-  // Calculate current month's global savings rate to pass down to predictive UI
-  const now = new Date();
-  const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-  
-  const monthTransactions = (allTransactions || []).filter((t) => {
-    const d = new Date(t.date);
-    return d >= startMonth && d <= endMonth;
-  });
-
+  // Calculate current month's global savings rate to pass down to predictive UI.
   const monthIncome = monthTransactions
     .filter(t => t.type === "INCOME")
     .reduce((sum, t) => sum + t.amount, 0);

@@ -10,14 +10,16 @@ const MainLayout = async ({ children }) => {
   const hasPhone = !!user?.phoneNumber;
 
   let hasAccounts = false;
-  try {
-    hasAccounts = await hasUserAccounts();
-  } catch (error) {
-    if (error?.digest === "DYNAMIC_SERVER_USAGE" || error?.message?.includes("Dynamic server usage")) {
-      throw error;
+  if (user?.id) {
+    try {
+      hasAccounts = await hasUserAccounts(user.id);
+    } catch (error) {
+      if (error?.digest === "DYNAMIC_SERVER_USAGE" || error?.message?.includes("Dynamic server usage")) {
+        throw error;
+      }
+      // If fetch fails, assume no accounts
+      hasAccounts = false;
     }
-    // If fetch fails, assume no accounts
-    hasAccounts = false;
   }
 
   return (
