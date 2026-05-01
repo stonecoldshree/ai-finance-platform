@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/language-provider";
 
 export default function NotFound() {
+  const { t } = useLanguage();
+
   return (
     <div className="flex h-screen w-full flex-col items-center justify-center bg-background px-4">
       <div className="flex max-w-md flex-col items-center space-y-6 text-center">
@@ -14,13 +17,12 @@ export default function NotFound() {
         <div className="space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">404</h1>
           <p className="text-muted-foreground">
-            Oops! The page you&apos;re looking for seems to have wandered off.
-            Let&apos;s get you back to your finances.
+            {t("notFound.description")}
           </p>
         </div>
         <Link href="/">
           <Button variant="default" size="lg">
-            Return to Dashboard
+            {t("notFound.returnDashboard")}
           </Button>
         </Link>
       </div>

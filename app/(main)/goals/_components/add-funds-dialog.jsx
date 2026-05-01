@@ -24,11 +24,11 @@ export function AddFundsDialog({ goal, open, onOpenChange }) {
     setLoading(false);
 
     if (res.success) {
-      toast.success(`Successfully added ₹${amount} to ${goal.name}`);
+      toast.success(t("goals.addedFundsSuccess", { amount, name: goal.name }));
       setAmount("");
       onOpenChange(false);
     } else {
-      toast.error(res.error || "Failed to add funds");
+      toast.error(res.error || t("goals.failedAddFunds"));
     }
   };
 

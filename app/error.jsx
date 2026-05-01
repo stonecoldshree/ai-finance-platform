@@ -3,8 +3,11 @@
 import { useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/language-provider";
 
 export default function Error({ error, reset }) {
+  const { t } = useLanguage();
+
   useEffect(() => {
     // Log the error to an error reporting service
     console.error(error);
@@ -17,18 +20,17 @@ export default function Error({ error, reset }) {
           <AlertTriangle className="h-10 w-10 text-red-500" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Something went wrong</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("errorPage.title")}</h1>
           <p className="text-muted-foreground">
-            We encountered an unexpected error. Our team has been notified.
-            Please try reloading the page.
+            {t("errorPage.description")}
           </p>
         </div>
         <div className="flex space-x-4">
           <Button onClick={() => reset()} variant="default">
-            Try again
+            {t("errorPage.tryAgain")}
           </Button>
           <Button onClick={() => window.location.href = '/'} variant="outline">
-            Return to Dashboard
+            {t("errorPage.returnDashboard")}
           </Button>
         </div>
       </div>

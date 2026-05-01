@@ -241,7 +241,7 @@ export default function SettingsPage() {
     }
     const account = accounts.find(a => a.id === accountId);
     if (amount > account.balance * 0.5) {
-      toast.error(`Budget cannot exceed 50% of balance (₹${(account.balance * 0.5).toFixed(2)})`);
+      toast.error(t("budgetValidation.exceedsFiftyPercent", { maxAmount: (account.balance * 0.5).toFixed(2) }));
       return;
     }
 
@@ -509,14 +509,14 @@ export default function SettingsPage() {
                 <div className="pt-1">
                   {editingBudget === account.id ? (
                     <div className="flex items-center gap-2 mt-2 bg-muted/30 p-2 rounded-md">
-                      <span className="text-xs font-medium text-muted-foreground w-16">Budget:</span>
+                      <span className="text-xs font-medium text-muted-foreground w-16">{t("settings.budgetLabel")}</span>
                       <Input 
                         type="number" 
                         step="0.01" 
                         value={editBudgetAmount} 
                         onChange={e => setEditBudgetAmount(e.target.value)} 
                         className="h-8 w-24 text-sm" 
-                        placeholder="Amt"
+                        placeholder={t("settings.budgetAmtPlaceholder")}
                       />
                       <Button size="sm" onClick={() => handleSaveBudget(account.id)} disabled={savingBudget} className="h-8">
                         {savingBudget ? t("settings.saving") : t("settings.save")}

@@ -126,7 +126,7 @@ export function CreateAccountDrawer({ children }) {
     const balance = parseFloat(newAccountData.balance);
     if (amount > balance * 0.5) {
       setBudgetError(
-        `Budget cannot exceed 50% of your account balance (₹${(balance * 0.5).toFixed(2)})`
+        t("budgetValidation.exceedsFiftyPercent", { maxAmount: (balance * 0.5).toFixed(2) })
       );
       return;
     }
@@ -338,7 +338,7 @@ export function CreateAccountDrawer({ children }) {
                           {t("budget.fiftyRuleTitle") || "Smart 50/50 Budget Rule"}
                         </p>
                         <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
-                          Gullak ensures you budget safely! Your spending is capped at 50% of your total balance. The remaining balance will be untouched for your savings and investments.
+                          {t("budgetValidation.fiftyRuleDescription")}
                         </p>
                       </div>
                     </div>

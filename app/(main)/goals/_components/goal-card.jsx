@@ -27,14 +27,14 @@ export function GoalCard({ goal, globalMonthlySavingsRate = 0 }) {
       const monthsToComplete = remainingAmount / globalMonthlySavingsRate;
       
       const estimatedDate = addMonths(new Date(), monthsToComplete);
-      pacingText = `At your current savings rate, projected to hit target by ${format(estimatedDate, "MMM yyyy")}`;
+      pacingText = t("goals.pacingProjection", { date: format(estimatedDate, "MMM yyyy") });
     } else {
-      pacingText = "Boost your monthly savings to unlock AI completion projections.";
+      pacingText = t("goals.pacingBoost");
     }
   }
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this goal?")) return;
+    if (!confirm(t("goals.confirmDelete"))) return;
     setIsDeleting(true);
     const res = await deleteGoal(goal.id);
     setIsDeleting(false);
@@ -62,8 +62,8 @@ export function GoalCard({ goal, globalMonthlySavingsRate = 0 }) {
               {goal.name}
             </CardTitle>
             <CardDescription className="mt-1">
-              Target: ₹{goal.targetAmount.toFixed(2)}
-              {goal.targetDate && ` • by ${format(new Date(goal.targetDate), "MMM dd, yyyy")}`}
+              {t("goals.targetLabel", { amount: goal.targetAmount.toFixed(2) })}
+              {goal.targetDate && ` • ${t("goals.targetByDate", { date: format(new Date(goal.targetDate), "MMM dd, yyyy") })}`}
             </CardDescription>
           </div>
           <Button 
@@ -81,7 +81,7 @@ export function GoalCard({ goal, globalMonthlySavingsRate = 0 }) {
           <div className="space-y-1 mt-2">
             <div className="flex justify-between text-sm mb-1">
               <span className="font-medium text-foreground">
-                ₹{goal.currentAmount.toFixed(2)} saved
+                {t("goals.savedAmount", { amount: goal.currentAmount.toFixed(2) })}
               </span>
               <span className="text-muted-foreground">
                 {progressPercentage.toFixed(1)}%
@@ -101,7 +101,7 @@ export function GoalCard({ goal, globalMonthlySavingsRate = 0 }) {
               </div>
             ) : (
               <p className="text-green-600 dark:text-green-400 font-medium">
-                🎯 Goal Achieved! Congratulations on hitting your target.
+                {t("goals.goalAchieved")}
               </p>
             )}
           </div>

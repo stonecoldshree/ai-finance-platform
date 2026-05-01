@@ -71,7 +71,7 @@ export function TransactionTable({ transactions }) {
   const [recurringFilter, setRecurringFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
 
   const RECURRING_INTERVALS = {
     DAILY: t("transactionTable.daily"),
@@ -261,7 +261,7 @@ export function TransactionTable({ transactions }) {
               <SelectItem value="all">{t("transactionTable.allMonths")}</SelectItem>
               {availableMonths.map((m) => {
                 const [y, mo] = m.split("-");
-                const label = new Date(y, mo - 1).toLocaleDateString("en-US", {
+                const label = new Date(y, mo - 1).toLocaleDateString(locale || "en-US", {
                   month: "short",
                   year: "numeric"
                 });

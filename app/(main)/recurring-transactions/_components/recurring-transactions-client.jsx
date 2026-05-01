@@ -106,7 +106,7 @@ export default function RecurringTransactionsClient({ initialItems = [] }) {
         <CardContent className="space-y-4 py-10 text-center text-sm">
           <p className="text-muted-foreground">{t("recurring.noTemplates")}</p>
           <p className="mt-2 text-primary font-medium">
-            No subscriptions tracked yet. Add your Netflix or gym memberships so you never face a surprise charge!
+            {t("recurring.emptyMotivation")}
           </p>
           <Link href="/transaction/create" className="inline-flex mt-4">
             <Button size="sm">{t("recurring.createTemplate")}</Button>
