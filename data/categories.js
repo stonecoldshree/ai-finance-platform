@@ -206,6 +206,94 @@ export const defaultCategories = [
   subcategories: ["Bank Fees", "Late Fees", "Service Charges"]
 },
 {
+  id: "dining-out",
+  name: "Dining Out",
+  type: "EXPENSE",
+  color: "#f59e0b",
+  icon: "Coffee",
+  subcategories: ["Restaurants", "Cafes", "Bars"]
+},
+{
+  id: "fitness",
+  name: "Fitness",
+  type: "EXPENSE",
+  color: "#2dd4bf",
+  icon: "Dumbbell",
+  subcategories: ["Gym Membership", "Equipment", "Classes"]
+},
+{
+  id: "debt-repayment",
+  name: "Debt Repayment",
+  type: "EXPENSE",
+  color: "#b91c1c",
+  icon: "CreditCard",
+  subcategories: ["Credit Card", "Loan", "Mortgage Extra"]
+},
+{
+  id: "home-improvement",
+  name: "Home Improvement",
+  type: "EXPENSE",
+  color: "#10b981",
+  icon: "Hammer",
+  subcategories: ["Furniture", "Repairs", "Decor"]
+},
+{
+  id: "hobbies",
+  name: "Hobbies",
+  type: "EXPENSE",
+  color: "#8b5cf6",
+  icon: "Palette",
+  subcategories: ["Crafts", "Sports", "Collections"]
+},
+{
+  id: "beauty-wellness",
+  name: "Beauty & Wellness",
+  type: "EXPENSE",
+  color: "#fda4af",
+  icon: "Sparkles",
+  subcategories: ["Spa", "Cosmetics", "Massage"]
+},
+{
+  id: "professional-services",
+  name: "Professional Services",
+  type: "EXPENSE",
+  color: "#9ca3af",
+  icon: "Briefcase",
+  subcategories: ["Legal", "Accounting", "Consulting", "Cleaning"]
+},
+{
+  id: "vehicle-maintenance",
+  name: "Vehicle Maintenance",
+  type: "EXPENSE",
+  color: "#6b7280",
+  icon: "Wrench",
+  subcategories: ["Oil Change", "Repairs", "Wash", "Tolls"]
+},
+{
+  id: "events",
+  name: "Events & Festivals",
+  type: "EXPENSE",
+  color: "#fde047",
+  icon: "Ticket",
+  subcategories: ["Concerts", "Festivals", "Exhibitions"]
+},
+{
+  id: "software",
+  name: "Software & Tools",
+  type: "EXPENSE",
+  color: "#38bdf8",
+  icon: "AppWindow",
+  subcategories: ["Cloud Storage", "Productivity Apps", "Web Hosting"]
+},
+{
+  id: "apparel",
+  name: "Apparel & Accessories",
+  type: "EXPENSE",
+  color: "#fb923c",
+  icon: "Shirt",
+  subcategories: ["Clothing", "Shoes", "Jewelry"]
+},
+{
   id: "other-expense",
   name: "Other Expenses",
   type: "EXPENSE",
