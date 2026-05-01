@@ -20,7 +20,6 @@ export default async function GoalsPage() {
   const safeGoals = goals || [];
   const totalLocked = safeGoals.reduce((sum, g) => sum + g.currentAmount, 0);
   const activeGoals = safeGoals.filter(g => g.status === "IN_PROGRESS");
-  const achievedGoals = safeGoals.filter(g => g.status === "ACHIEVED");
 
   // Determine the next goal to hit (the one with the highest progress percentage)
   let nextGoal = null;

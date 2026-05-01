@@ -2,8 +2,7 @@
 
 import { ArrowUpRight, ArrowDownRight, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import useFetch from "@/hooks/use-fetch";
 import {
   Card,
@@ -69,13 +68,13 @@ export function AccountCard({ account }) {
     if (updatedAccount?.success) {
       toast.success(t("accountCard.defaultUpdated"));
     }
-  }, [updatedAccount]);
+  }, [updatedAccount, t]);
 
   useEffect(() => {
     if (error) {
       toast.error(error.message || t("accountCard.failedUpdateDefault"));
     }
-  }, [error]);
+  }, [error, t]);
 
   useEffect(() => {
     if (deleteResult?.success) {
@@ -83,13 +82,13 @@ export function AccountCard({ account }) {
     } else if (deleteResult && !deleteResult.success) {
       toast.error(deleteResult.error || t("accountCard.failedDelete"));
     }
-  }, [deleteResult]);
+  }, [deleteResult, t]);
 
   useEffect(() => {
     if (deleteError) {
       toast.error(deleteError.message || t("accountCard.failedDelete"));
     }
-  }, [deleteError]);
+  }, [deleteError, t]);
 
   return (
     <Card className="hover:shadow-md transition-shadow group relative">

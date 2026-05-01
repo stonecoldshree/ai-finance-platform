@@ -211,7 +211,7 @@ export function TransactionTable({ transactions }) {
     if (deleted && !deleteLoading) {
       toast.success(t("transactionTable.deletedSuccess"));
     }
-  }, [deleted, deleteLoading]);
+  }, [deleted, deleteLoading, t]);
 
   const handleClearFilters = () => {
     setSearchTerm("");

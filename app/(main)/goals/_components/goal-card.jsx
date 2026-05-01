@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { format, differenceInDays, addMonths } from "date-fns";
+import { format, addMonths } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,6 @@ export function GoalCard({ goal, globalMonthlySavingsRate = 0 }) {
 
   const progressPercentage = Math.min(100, (goal.currentAmount / goal.targetAmount) * 100);
   const isAchieved = goal.status === "ACHIEVED" || progressPercentage >= 100;
-  const remainingString = `₹${Math.max(0, goal.targetAmount - goal.currentAmount).toFixed(2)}`;
 
   // AI/Predictive pacing logic
   let pacingText = null;

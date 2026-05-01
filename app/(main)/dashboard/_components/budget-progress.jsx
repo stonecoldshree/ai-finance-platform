@@ -14,7 +14,6 @@ import { useLanguage } from "@/components/language-provider";
 export function BudgetProgress({
   initialBudget,
   currentExpenses,
-  accountId,
   accountName,
   accountBalance = 0,
   periodLabel

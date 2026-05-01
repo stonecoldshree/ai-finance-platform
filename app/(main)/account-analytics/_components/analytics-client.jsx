@@ -174,7 +174,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
     reduce((sum, t) => sum + t.amount, 0);
 
     return { income, expense, net: income - expense, count: monthTxns.length };
-  }, [accountTransactions, analysisMonth, analysisYear]);
+  }, [accountTransactions, analysisMonth, analysisYear, isInAnalysisMonth]);
 
   const selectedMonthExpenses = useMemo(
     () => monthStats.expense,
@@ -196,7 +196,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
     return Object.entries(grouped).
     map(([name, value]) => ({ id: name, name: t(`categories.${name}`, {}, name), value })).
     sort((a, b) => b.value - a.value);
-  }, [accountTransactions, analysisMonth, analysisYear]);
+  }, [accountTransactions, analysisMonth, analysisYear, isInAnalysisMonth, t]);
 
   const previousCategoryTotals = useMemo(() => {
     const previousExpenses = accountTransactions.filter(
@@ -208,7 +208,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
       totals[categoryKey] = (totals[categoryKey] || 0) + transaction.amount;
       return totals;
     }, {});
-  }, [accountTransactions, previousMonth, previousYear]);
+  }, [accountTransactions, previousMonth, previousYear, isInPreviousMonth]);
 
 
   const dailyData = useMemo(() => {
@@ -234,7 +234,7 @@ export default function AccountAnalyticsClient({ accounts, transactions, budgets
     return Object.values(grouped).sort(
       (a, b) => new Date(a.dateKey) - new Date(b.dateKey)
     );
-  }, [accountTransactions, analysisMonth, analysisYear]);
+  }, [accountTransactions, analysisMonth, analysisYear, isInAnalysisMonth]);
 
   const selectedAccount = accounts.find((a) => a.id === selectedAccountId);
 

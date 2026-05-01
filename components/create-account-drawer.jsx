@@ -144,8 +144,6 @@ export function CreateAccountDrawer({ children }) {
     handleClose();
   };
 
-  const effectiveBudget = parseFloat(budgetAmount || 0) / 2;
-
   return (
     <Drawer open={open} onOpenChange={(isOpen) => {
       if (!isOpen) handleClose();
