@@ -19,7 +19,7 @@ export function GoalCard({ goal, globalMonthlySavingsRate = 0 }) {
   const progressPercentage = Math.min(100, (goal.currentAmount / goal.targetAmount) * 100);
   const isAchieved = goal.status === "ACHIEVED" || progressPercentage >= 100;
 
-  // AI/Predictive pacing logic
+  
   let pacingText = null;
   if (!isAchieved) {
     if (globalMonthlySavingsRate > 0) {

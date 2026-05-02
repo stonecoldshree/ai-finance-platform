@@ -16,12 +16,12 @@ export default async function GoalsPage() {
   ]);
   const t = getTranslator(locale);
 
-  // Compute metrics
+  
   const safeGoals = goals || [];
   const totalLocked = safeGoals.reduce((sum, g) => sum + g.currentAmount, 0);
   const activeGoals = safeGoals.filter(g => g.status === "IN_PROGRESS");
 
-  // Determine the next goal to hit (the one with the highest progress percentage)
+  
   let nextGoal = null;
   let maxProgress = -1;
   activeGoals.forEach(g => {
@@ -32,7 +32,7 @@ export default async function GoalsPage() {
     }
   });
 
-  // Calculate current month's global savings rate to pass down to predictive UI.
+  
   const monthIncome = monthTransactions
     .filter(t => t.type === "INCOME")
     .reduce((sum, t) => sum + t.amount, 0);

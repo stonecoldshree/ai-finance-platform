@@ -268,7 +268,7 @@ export async function getDashboardData(options = {}) {
         lte: endOfMonth
       };
     } else if (typeof monthsBack === "number" && monthsBack > 0) {
-      // Bounded history is useful for faster initial dashboard loads.
+      
       const boundedStart = new Date(now.getFullYear(), now.getMonth() - (monthsBack - 1), 1);
       where.date = {
         gte: boundedStart,

@@ -32,7 +32,7 @@ import { useLanguage } from "@/components/language-provider";
 
 export function CreateAccountDrawer({ children }) {
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState("account"); // "account" | "budget"
+  const [step, setStep] = useState("account"); 
   const [newAccountData, setNewAccountData] = useState(null);
   const [budgetAmount, setBudgetAmount] = useState("");
   const [budgetError, setBudgetError] = useState("");
@@ -80,30 +80,30 @@ export function CreateAccountDrawer({ children }) {
       setNewAccountData(newAccount.data);
       setStep("budget");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [newAccount]);
 
-  // When budget is saved, close drawer
+  
   useEffect(() => {
     if (budgetResult?.success) {
       toast.success(t("budget.updatedSuccess") || "Budget set successfully!");
       handleClose();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [budgetResult]);
 
   useEffect(() => {
     if (error) {
       toast.error(error.message || t("createAccountDrawer.failedCreate"));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [error]);
 
   useEffect(() => {
     if (budgetSaveError) {
       setBudgetError(budgetSaveError.message || t("budget.failedUpdate"));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [budgetSaveError]);
 
   const handleClose = () => {
@@ -166,8 +166,7 @@ export function CreateAccountDrawer({ children }) {
         </DrawerHeader>
         <div className="px-4 pb-4">
           {step === "account" ? (
-            /* Step 1: Create Account */
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <label
                   htmlFor="name"
@@ -270,9 +269,8 @@ export function CreateAccountDrawer({ children }) {
               </div>
             </form>
           ) : (
-            /* Step 2: Set Budget for New Account */
-            <div className="space-y-4">
-              {/* Account info card */}
+                        <div className="space-y-4">
+              {}
               <div className="rounded-xl border bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/10 p-4">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">
                   {t("budget.newAccountCreated") || "Account Created Successfully!"}
@@ -328,8 +326,7 @@ export function CreateAccountDrawer({ children }) {
                   </div>
                 </>
               ) : (
-                /* 50% Rule Info */
-                <>
+                                <>
                   <div className="rounded-xl border border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20 p-4 space-y-3">
                     <div className="flex items-start gap-2">
                       <Sparkles className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />

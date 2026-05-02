@@ -18,10 +18,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-/**
- * Monthly budget dialog that appears at the start of each month
- * when the user has accounts without budgets set for the current month.
- */
 export function MonthlyBudgetDialog({ accountsNeedingBudget = [] }) {
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
@@ -63,14 +59,14 @@ export function MonthlyBudgetDialog({ accountsNeedingBudget = [] }) {
         setOpen(false);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [saveResult]);
 
   useEffect(() => {
     if (saveError) {
       setError(saveError.message || t("budget.failedUpdate") || "Failed to set budget");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [saveError]);
 
   if (accountsNeedingBudget.length === 0) return null;
@@ -122,7 +118,7 @@ export function MonthlyBudgetDialog({ accountsNeedingBudget = [] }) {
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        {/* Account info */}
+        {}
         <div className="space-y-4 py-2">
           <div className="rounded-xl border bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/10 p-4">
             <p className="text-xs text-muted-foreground uppercase tracking-wide">
@@ -169,8 +165,7 @@ export function MonthlyBudgetDialog({ accountsNeedingBudget = [] }) {
               )}
             </>
           ) : (
-            /* 50% Rule Info */
-            <div className="space-y-3">
+                        <div className="space-y-3">
               <div className="rounded-xl border border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20 p-4 space-y-3">
                 <div className="flex items-start gap-2">
                   <Sparkles className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />

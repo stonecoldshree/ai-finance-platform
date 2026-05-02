@@ -66,13 +66,13 @@ export default function DashboardClient({ accounts = [], transactions = [], budg
     [transactions, selectedMonth, monthlyStats.totalBalance, t]
   );
 
-  // Filter accounts that need budgets this month
+  
   const accountsNeedingBudget = useMemo(
     () => budgetStatus.filter((a) => !a.hasBudgetThisMonth),
     [budgetStatus]
   );
 
-  // Empty state for new users with no accounts
+  
   if (accounts.length === 0) {
     return (
       <div className="space-y-8">
@@ -103,7 +103,7 @@ export default function DashboardClient({ accounts = [], transactions = [], budg
 
   return (
     <div className="space-y-8">
-      {/* Monthly Budget Popup */}
+      {}
       <MonthlyBudgetDialog accountsNeedingBudget={accountsNeedingBudget} />
 
       <div className="flex flex-col gap-4 rounded-2xl border bg-card/70 p-4 md:flex-row md:items-center md:justify-between">

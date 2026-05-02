@@ -333,7 +333,10 @@ export async function createTransaction(data) {
               amount: transaction.amount.toNumber(),
               description: transaction.description,
               category: transaction.category,
-              advice
+              advice,
+              balance: newBalance,
+              accountName: account.name,
+              type: transaction.type
             }, effectiveLocale)
           },
           { attempts: 2, timeoutMs: 7000, baseDelayMs: 300 }

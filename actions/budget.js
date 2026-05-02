@@ -11,9 +11,6 @@ import { getTranslator } from "@/lib/i18n/translations";
 import { getLocaleFromCookie } from "@/lib/i18n/server";
 import { getLocalePromptName } from "@/lib/i18n/config";
 
-/**
- * Returns the current month string in "YYYY-MM" format.
- */
 function getCurrentMonth() {
   const now = new Date();
   const year = now.getFullYear();
@@ -140,10 +137,6 @@ export async function getCurrentBudget(accountId) {
   }
 }
 
-/**
- * Returns budget status for all user accounts for the current month.
- * Used by the dashboard to decide whether to show the monthly budget popup.
- */
 export async function getAccountsBudgetStatus() {
   try {
     const user = await getAuthUser();

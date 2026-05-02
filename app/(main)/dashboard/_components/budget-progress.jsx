@@ -23,7 +23,7 @@ export function BudgetProgress({
   const totalBudget = initialBudget?.amount || 0;
   const savingsTarget = accountBalance > 0 ? Math.max(0, accountBalance - totalBudget) : 0;
 
-  // Keep UI budget totals consistent across dashboard/settings using full monthly budget.
+  
   const percentUsed = totalBudget > 0
     ? (currentExpenses / totalBudget) * 100
     : 0;
@@ -51,7 +51,7 @@ export function BudgetProgress({
       <CardContent>
         {initialBudget &&
           <div className="space-y-3">
-            {/* Spending progress bar */}
+            {}
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{t("budget.monthlyBudget") || "Monthly Budget"}</span>
@@ -71,7 +71,7 @@ export function BudgetProgress({
               </p>
             </div>
 
-            {/* 50% Rule Info Strip */}
+            {}
             <div className="flex items-center gap-2 rounded-lg bg-orange-50/70 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/40 px-3 py-2">
               <Sparkles className="h-3.5 w-3.5 text-orange-500 shrink-0" />
               <p className="text-xs text-orange-700 dark:text-orange-300">

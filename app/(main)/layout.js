@@ -17,7 +17,7 @@ const MainLayout = async ({ children }) => {
       if (error?.digest === "DYNAMIC_SERVER_USAGE" || error?.message?.includes("Dynamic server usage")) {
         throw error;
       }
-      // If fetch fails, assume no accounts
+      
       hasAccounts = false;
     }
   }

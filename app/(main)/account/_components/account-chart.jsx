@@ -16,7 +16,7 @@ import { useLanguage } from "@/components/language-provider";
 const LazyBarChart = dynamic(
   () => import("recharts").then((mod) => {
     const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = mod;
-    // Return a wrapper component that renders the chart
+    
     const ChartWrapper = ({ data, incomeLabel, expenseLabel }) => (
       <div role="img" aria-label="Line chart demonstrating income and expenses over the selected date range" style={{ width: "100%", height: "100%" }}>
         <ResponsiveContainer width="100%" height="100%">

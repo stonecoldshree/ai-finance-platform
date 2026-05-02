@@ -42,19 +42,11 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES } from "@/lib/i18n/config";
 
 const ONBOARDED_KEY = "gullak.onboarded";
 
-/**
- * 5-step onboarding wizard for new users:
- * 1. Welcome
- * 2. Choose language
- * 3. Add phone number
- * 4. Add first bank account
- * 5. Set budget (with 50% rule)
- */
 export function OnboardingWizard({ hasAccounts = false }) {
   const { t, locale, setLocale } = useLanguage();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState(0); // 0=welcome, 1=language, 2=phone, 3=account, 4=budget
+  const [step, setStep] = useState(0); 
   const [createdAccount, setCreatedAccount] = useState(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phoneError, setPhoneError] = useState("");
@@ -109,9 +101,9 @@ export function OnboardingWizard({ hasAccounts = false }) {
     if (newAccount?.success && newAccount?.data) {
       toast.success(t("createAccountDrawer.createdSuccess") || "Account created!");
       setCreatedAccount(newAccount.data);
-      setStep(4); // Go to budget step
+      setStep(4); 
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [newAccount]);
 
   useEffect(() => {
@@ -120,13 +112,13 @@ export function OnboardingWizard({ hasAccounts = false }) {
     }
   }, [accountError]);
 
-  // Budget save success
+  
   useEffect(() => {
     if (budgetResult?.success) {
       toast.success(t("budget.updatedSuccess") || "Budget set!");
       completeOnboarding();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [budgetResult]);
 
   useEffect(() => {
@@ -143,7 +135,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
     if (selectedLocale !== locale) {
       setLocale(selectedLocale);
     }
-    setStep(2); // Go to phone step
+    setStep(2); 
   };
 
   const handlePhoneContinue = async () => {
@@ -216,7 +208,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
   return (
     <AlertDialog open={open}>
       <AlertDialogContent className="max-w-lg p-0 overflow-hidden">
-        {/* Step indicator */}
+        {}
         <div className="flex items-center justify-center gap-2 px-6 pt-6">
           {steps.map((s, i) => (
             <div key={i} className="flex items-center gap-1">
@@ -239,7 +231,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
         </div>
 
         <div className="px-6 pb-6 pt-4">
-          {/* Step 0: Welcome */}
+          {}
           {step === 0 && (
             <div className="space-y-6 text-center py-4">
               <div className="mx-auto rounded-full bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-950/40 dark:to-amber-950/30 p-8 w-fit">
@@ -264,7 +256,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
             </div>
           )}
 
-          {/* Step 1: Choose Language */}
+          {}
           {step === 1 && (
             <div className="space-y-5 py-2">
               <div className="text-center space-y-1">
@@ -309,7 +301,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
             </div>
           )}
 
-          {/* Step 2: Add Phone Number */}
+          {}
           {step === 2 && (
             <div className="space-y-5 py-2">
               <div className="text-center space-y-1">
@@ -368,7 +360,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
           )}
 
 
-          {/* Step 3: Add Account */}
+          {}
           {step === 3 && (
             <div className="space-y-4">
               <div className="text-center space-y-1">
@@ -448,7 +440,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
           )}
 
 
-          {/* Step 4: Set Budget */}
+          {}
           {step === 4 && (
             <div className="space-y-4 py-2">
               <div className="text-center space-y-1">
@@ -460,7 +452,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
                 </p>
               </div>
 
-              {/* Account info */}
+              {}
               <div className="rounded-xl border bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/10 p-3">
                 <p className="text-xs text-muted-foreground">{t("budget.account") || "Account"}</p>
                 <p className="text-sm font-semibold capitalize">{createdAccount?.name}</p>

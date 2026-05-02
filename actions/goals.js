@@ -8,7 +8,7 @@ export async function getUserGoals() {
   try {
     const user = await getAuthUser();
     
-    // Sort goals logically (in progress first, then achieved)
+    
     const goals = await db.goal.findMany({
       where: { userId: user.id },
       orderBy: [
@@ -17,7 +17,7 @@ export async function getUserGoals() {
       ]
     });
 
-    // Serialize decimal values
+    
     return goals.map(goal => ({
       ...goal,
       targetAmount: goal.targetAmount.toNumber(),
@@ -59,7 +59,7 @@ export async function updateGoalFund(id, amountToAdd) {
   try {
     const user = await getAuthUser();
 
-    // Verify ownership
+    
     const goal = await db.goal.findUnique({
       where: { id }
     });

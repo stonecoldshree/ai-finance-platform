@@ -159,7 +159,7 @@ export function AddTransactionForm({
       reset();
       router.push(`/account/${transactionResult.data.accountId}`);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [transactionResult, transactionLoading, editMode]);
 
   const type = watch("type");

@@ -22,7 +22,7 @@ export async function updateUserLocale(locale) {
       return { success: false, error: "User not found" };
     }
 
-    // Standard layout invalidation to force Next.js to rerender with new locale config limits
+    
     revalidatePath("/", "layout");
     
     return { success: true };
