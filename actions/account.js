@@ -22,7 +22,7 @@ export async function getAccountWithTransactions(accountId) {
   const user = await getAuthUser();
 
 
-  const account = await db.account.findUnique({
+  const account = await db.account.findFirst({
     where: {
       id: accountId,
       userId: user.id
@@ -142,16 +142,26 @@ export async function updateDefaultAccount(accountId) {
     });
 
 
-    const account = await db.account.update({
+    const account = await db.account.findFirst({
       where: {
         id: accountId,
         userId: user.id
+      }
+    });
+
+    if (!account) {
+      throw new Error(t("errors.accountNotFound", {}, "Account not found"));
+    }
+
+    const updatedAccount = await db.account.update({
+      where: {
+        id: accountId
       },
       data: { isDefault: true }
     });
 
     revalidatePath("/dashboard");
-    return { success: true, data: serializeTransaction(account) };
+    return { success: true, data: serializeTransaction(updatedAccount) };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -172,7 +182,7 @@ export async function deleteAccount(accountId) {
     if (!user) throw new Error(t("errors.userNotFound", {}, "User not found"));
 
 
-    const account = await db.account.findUnique({
+    const account = await db.account.findFirst({
       where: {
         id: accountId,
         userId: user.id
@@ -188,8 +198,7 @@ export async function deleteAccount(accountId) {
 
     await db.account.delete({
       where: {
-        id: accountId,
-        userId: user.id
+        id: accountId
       }
     });
 

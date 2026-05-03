@@ -21,9 +21,9 @@ import { toast } from "sonner";
 import useFetch from "@/hooks/use-fetch";
 
 import {
-  AlertDialog,
-  AlertDialogContent,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -204,10 +204,25 @@ export function OnboardingWizard({ hasAccounts = false }) {
   ];
 
   return (
-    <AlertDialog open={open}>
-      <AlertDialogContent className="max-w-lg p-0 overflow-hidden">
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) {
+        completeOnboarding();
+      } else {
+        setOpen(true);
+      }
+    }}>
+      <DialogContent className="max-w-lg p-0 overflow-hidden" hideCloseButton>
         {}
-        <div className="flex items-center justify-center gap-2 px-6 pt-6">
+        <div className="flex items-center justify-center gap-2 px-6 pt-6 relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+            onClick={() => completeOnboarding()}
+          >
+            <span className="sr-only">Close</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </Button>
           {steps.map((s, i) => (
             <div key={i} className="flex items-center gap-1">
               <div className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-all ${
@@ -548,7 +563,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
             </div>
           )}
         </div>
-      </AlertDialogContent>
-    </AlertDialog>
+      </DialogContent>
+    </Dialog>
   );
 }

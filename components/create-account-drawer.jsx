@@ -9,13 +9,13 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-  DrawerClose } from
-"@/components/ui/drawer";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose } from
+"@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -144,14 +144,14 @@ export function CreateAccountDrawer({ children }) {
   };
 
   return (
-    <Drawer open={open} onOpenChange={(isOpen) => {
+    <Dialog open={open} onOpenChange={(isOpen) => {
       if (!isOpen) handleClose();
       else setOpen(true);
     }}>
-      <DrawerTrigger asChild>{children}</DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
             {step === "account"
               ? t("createAccountDrawer.title")
               : (
@@ -161,8 +161,8 @@ export function CreateAccountDrawer({ children }) {
                 </span>
               )
             }
-          </DrawerTitle>
-        </DrawerHeader>
+          </DialogTitle>
+        </DialogHeader>
         <div className="px-4 pb-4">
           {step === "account" ? (
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -246,11 +246,11 @@ export function CreateAccountDrawer({ children }) {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <DrawerClose asChild>
+                <DialogClose asChild>
                   <Button type="button" variant="outline" className="flex-1">
                     {t("createAccountDrawer.cancel")}
                   </Button>
-                </DrawerClose>
+                </DialogClose>
                 <Button
                   type="submit"
                   className="flex-1"
@@ -376,7 +376,8 @@ export function CreateAccountDrawer({ children }) {
             </div>
           )}
         </div>
-      </DrawerContent>
-    </Drawer>);
+      </DialogContent>
+    </Dialog>);
 
 }
+
