@@ -33,10 +33,8 @@ export function MonthlyBudgetDialog({ accountsNeedingBudget = [] }) {
     error: saveError
   } = useFetch(updateBudget);
 
-  // Show dialog if there are accounts that need budgets
   useEffect(() => {
     if (accountsNeedingBudget.length > 0) {
-      // Check if user already dismissed this month
       const currentMonth = new Date().toISOString().slice(0, 7);
       const dismissedMonth = localStorage.getItem("gullak.budgetDismissed");
       const isOnboarded = localStorage.getItem("gullak.onboarded");
@@ -54,7 +52,6 @@ export function MonthlyBudgetDialog({ accountsNeedingBudget = [] }) {
         setError("");
         setShowFiftyRule(false);
       } else {
-        // All accounts done
         toast.success(t("budget.allBudgetsSet") || "All monthly budgets have been set! 🎉");
         setOpen(false);
       }

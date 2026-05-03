@@ -122,6 +122,10 @@ const serializeAmount = (obj) => ({
 
 export async function createTransaction(data) {
   try {
+    if (typeof data.amount !== "number" || data.amount <= 0) {
+      throw new Error("Amount must be a positive number");
+    }
+
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
@@ -384,6 +388,10 @@ export async function getTransaction(id) {
 
 export async function updateTransaction(id, data) {
   try {
+    if (typeof data.amount !== "number" || data.amount <= 0) {
+      throw new Error("Amount must be a positive number");
+    }
+
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
@@ -407,18 +415,53 @@ export async function updateTransaction(id, data) {
     if (!originalTransaction) throw new Error("Transaction not found");
 
 
-    const oldBalanceChange =
-    originalTransaction.type === "EXPENSE" ?
-    -originalTransaction.amount.toNumber() :
-    originalTransaction.amount.toNumber();
-
-    const newBalanceChange =
-    data.type === "EXPENSE" ? -data.amount : data.amount;
-
-    const netBalanceChange = newBalanceChange - oldBalanceChange;
-
-
     const transaction = await db.$transaction(async (tx) => {
+      if (originalTransaction.type === "EXPENSE") {
+        await tx.account.update({
+          where: { id: originalTransaction.accountId },
+          data: { balance: { increment: originalTransaction.amount } }
+        });
+      } else if (originalTransaction.type === "INCOME") {
+        await tx.account.update({
+          where: { id: originalTransaction.accountId },
+          data: { balance: { decrement: originalTransaction.amount } }
+        });
+      } else if (originalTransaction.type === "TRANSFER") {
+        await tx.account.update({
+          where: { id: originalTransaction.accountId },
+          data: { balance: { increment: originalTransaction.amount } }
+        });
+        if (originalTransaction.toAccountId) {
+          await tx.account.update({
+            where: { id: originalTransaction.toAccountId },
+            data: { balance: { decrement: originalTransaction.amount } }
+          });
+        }
+      }
+
+      if (data.type === "EXPENSE") {
+        await tx.account.update({
+          where: { id: data.accountId },
+          data: { balance: { decrement: data.amount } }
+        });
+      } else if (data.type === "INCOME") {
+        await tx.account.update({
+          where: { id: data.accountId },
+          data: { balance: { increment: data.amount } }
+        });
+      } else if (data.type === "TRANSFER") {
+        await tx.account.update({
+          where: { id: data.accountId },
+          data: { balance: { decrement: data.amount } }
+        });
+        if (data.toAccountId) {
+          await tx.account.update({
+            where: { id: data.toAccountId },
+            data: { balance: { increment: data.amount } }
+          });
+        }
+      }
+
       const updated = await tx.transaction.update({
         where: {
           id,
@@ -430,16 +473,6 @@ export async function updateTransaction(id, data) {
           data.isRecurring && data.recurringInterval ?
           calculateNextRecurringDate(data.date, data.recurringInterval) :
           null
-        }
-      });
-
-
-      await tx.account.update({
-        where: { id: data.accountId },
-        data: {
-          balance: {
-            increment: netBalanceChange
-          }
         }
       });
 

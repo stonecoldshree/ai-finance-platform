@@ -86,7 +86,6 @@ export function OnboardingWizard({ hasAccounts = false }) {
     error: budgetSaveError
   } = useFetch(updateBudget);
 
-  // Show wizard only for users without accounts, and not already onboarded
   useEffect(() => {
     if (!hasAccounts) {
       const onboarded = localStorage.getItem(ONBOARDED_KEY);
@@ -96,7 +95,6 @@ export function OnboardingWizard({ hasAccounts = false }) {
     }
   }, [hasAccounts]);
 
-  // Account creation success
   useEffect(() => {
     if (newAccount?.success && newAccount?.data) {
       toast.success(t("createAccountDrawer.createdSuccess") || "Account created!");

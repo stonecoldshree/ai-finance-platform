@@ -73,7 +73,6 @@ export function CreateAccountDrawer({ children }) {
     await createAccountFn(data);
   };
 
-  // When account is created successfully, move to budget step
   useEffect(() => {
     if (newAccount?.success && newAccount?.data) {
       toast.success(t("createAccountDrawer.createdSuccess"));

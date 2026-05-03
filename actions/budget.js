@@ -78,7 +78,6 @@ export async function getCurrentBudget(accountId) {
     const user = await getAuthUser();
     const currentMonth = getCurrentMonth();
 
-    // Try to find a budget for the current month first
     let budget = await db.budget.findFirst({
       where: {
         userId: user.id,
@@ -87,7 +86,6 @@ export async function getCurrentBudget(accountId) {
       }
     });
 
-    // Fallback: if no monthly budget exists, check for legacy budget (null budgetMonth)
     if (!budget) {
       budget = await db.budget.findFirst({
         where: {
@@ -201,6 +199,10 @@ export async function updateBudget(amount, accountId) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+
+    if (typeof amount !== "number" || amount <= 0) {
+      throw new Error("Amount must be a positive number");
+    }
 
     const user = await db.user.findUnique({
       where: { clerkUserId: userId }

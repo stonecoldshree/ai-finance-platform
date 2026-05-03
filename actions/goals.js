@@ -36,6 +36,10 @@ export async function createGoal(data) {
   try {
     const user = await getAuthUser();
 
+    if (typeof data.targetAmount !== "number" || data.targetAmount <= 0) {
+      throw new Error("Target amount must be a positive number");
+    }
+
     const newGoal = await db.goal.create({
       data: {
         userId: user.id,
@@ -58,6 +62,10 @@ export async function createGoal(data) {
 export async function updateGoalFund(id, amountToAdd) {
   try {
     const user = await getAuthUser();
+
+    if (typeof amountToAdd !== "number" || amountToAdd <= 0) {
+      throw new Error("Funding amount must be a positive number");
+    }
 
     
     const goal = await db.goal.findUnique({

@@ -164,9 +164,11 @@ export function AddTransactionForm({
 
   const type = watch("type");
   const accountId = watch("accountId");
+  const toAccountId = watch("toAccountId");
   const category = watch("category");
   const description = watch("description");
   const isRecurring = watch("isRecurring");
+  const recurringInterval = watch("recurringInterval");
   const date = watch("date");
 
   useEffect(() => {
@@ -293,7 +295,7 @@ export function AddTransactionForm({
         <label className="text-sm font-medium">{t("transaction.type")}</label>
         <Select
           onValueChange={(value) => setValue("type", value)}
-          defaultValue={type}>
+          value={type}>
           
           <SelectTrigger>
             <SelectValue placeholder={t("transaction.selectType")} />
@@ -343,7 +345,7 @@ export function AddTransactionForm({
           <label className="text-sm font-medium">{type === "TRANSFER" ? t("transaction.fromAccount") : t("transaction.account")}</label>
           <Select
             onValueChange={(value) => setValue("accountId", value)}
-            defaultValue={getValues("accountId")}>
+            value={accountId}>
             
             <SelectTrigger>
               <SelectValue placeholder={t("transaction.selectAccount")} />
@@ -374,7 +376,7 @@ export function AddTransactionForm({
             <label className="text-sm font-medium">{t("transaction.toAccount")}</label>
             <Select
               onValueChange={(value) => setValue("toAccountId", value)}
-              defaultValue={getValues("toAccountId")}>
+              value={toAccountId}>
               
               <SelectTrigger>
                 <SelectValue placeholder={t("transaction.selectDestAccount")} />
@@ -420,7 +422,7 @@ export function AddTransactionForm({
         }
         <Select
           onValueChange={(value) => setValue("category", value)}
-          defaultValue={getValues("category")}>
+          value={category}>
           
           <SelectTrigger>
             <SelectValue placeholder={t("transaction.selectCategory")} />
@@ -529,7 +531,7 @@ export function AddTransactionForm({
           <label className="text-sm font-medium">{t("transaction.recurringInterval")}</label>
           <Select
           onValueChange={(value) => setValue("recurringInterval", value)}
-          defaultValue={getValues("recurringInterval")}>
+          value={recurringInterval}>
           
             <SelectTrigger>
               <SelectValue placeholder={t("transaction.selectInterval")} />

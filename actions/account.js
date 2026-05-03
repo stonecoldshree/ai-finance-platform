@@ -69,11 +69,16 @@ export async function bulkDeleteTransactions(transactionIds) {
 
 
     const accountBalanceChanges = transactions.reduce((acc, transaction) => {
-      const change =
-      transaction.type === "EXPENSE" ?
-      transaction.amount :
-      -transaction.amount;
-      acc[transaction.accountId] = (acc[transaction.accountId] || 0) + change;
+      if (transaction.type === "EXPENSE") {
+        acc[transaction.accountId] = (acc[transaction.accountId] || 0) + transaction.amount.toNumber();
+      } else if (transaction.type === "INCOME") {
+        acc[transaction.accountId] = (acc[transaction.accountId] || 0) - transaction.amount.toNumber();
+      } else if (transaction.type === "TRANSFER") {
+        acc[transaction.accountId] = (acc[transaction.accountId] || 0) + transaction.amount.toNumber();
+        if (transaction.toAccountId) {
+          acc[transaction.toAccountId] = (acc[transaction.toAccountId] || 0) - transaction.amount.toNumber();
+        }
+      }
       return acc;
     }, {});
 
