@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useClerk } from "@clerk/nextjs";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +48,7 @@ export default function SettingsPage() {
   const [savingBudget, setSavingBudget] = useState(false);
   const [quickPrefs, setQuickPrefs] = useState(DEFAULT_QUICK_PREFS);
   const { theme, setTheme } = useTheme();
+  const { signOut } = useClerk();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -147,11 +149,16 @@ export default function SettingsPage() {
         )
       );
 
-      window.setTimeout(() => {
+      window.setTimeout(async () => {
+        try {
+          await signOut();
+        } catch (e) {
+          console.warn("signOut after delete:", e.message);
+        }
         window.location.href = "/";
       }, 1000);
     }
-  }, [deleteUserResult, t]);
+  }, [deleteUserResult, t, signOut]);
 
   useEffect(() => {
     if (deleteUserError) {

@@ -95,9 +95,6 @@ export async function deleteCurrentUserAccount() {
     const clerk = await clerkClient();
     await clerk.users.deleteUser(userId);
 
-    revalidatePath("/", "layout");
-    revalidatePath("/settings");
-
     return { success: true };
   } catch (error) {
     console.error("Failed to delete user account:", error);
