@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import {
   Loader2,
   PiggyBank,
-  Globe,
   Phone,
   Sparkles,
   ArrowRight,
@@ -15,7 +14,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Wallet,
-  Languages
+  Languages,
+  Globe
 } from "lucide-react";
 import { toast } from "sonner";
 import useFetch from "@/hooks/use-fetch";
@@ -23,6 +23,8 @@ import useFetch from "@/hooks/use-fetch";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,8 +33,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue } from
-"@/components/ui/select";
+  SelectValue
+} from "@/components/ui/select";
 import { createAccount } from "@/actions/dashboard";
 import { updateBudget } from "@/actions/budget";
 import { updatePhoneNumber } from "@/actions/settings";
@@ -46,7 +48,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
   const { t, locale, setLocale } = useLanguage();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState(0); 
+  const [step, setStep] = useState(0);
   const [createdAccount, setCreatedAccount] = useState(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phoneError, setPhoneError] = useState("");
@@ -55,6 +57,8 @@ export function OnboardingWizard({ hasAccounts = false }) {
   const [budgetError, setBudgetError] = useState("");
   const [showFiftyRule, setShowFiftyRule] = useState(false);
   const [selectedLocale, setSelectedLocale] = useState(locale);
+  const [direction, setDirection] = useState("forward");
+  const completedRef = useRef(false);
 
   const {
     register,
@@ -76,14 +80,12 @@ export function OnboardingWizard({ hasAccounts = false }) {
     loading: createAccountLoading,
     fn: createAccountFn,
     data: newAccount,
-    error: accountError
   } = useFetch(createAccount);
 
   const {
     loading: budgetLoading,
     fn: saveBudgetFn,
     data: budgetResult,
-    error: budgetSaveError
   } = useFetch(updateBudget);
 
   useEffect(() => {
@@ -99,31 +101,21 @@ export function OnboardingWizard({ hasAccounts = false }) {
     if (newAccount?.success && newAccount?.data) {
       toast.success(t("createAccountDrawer.createdSuccess") || "Account created!");
       setCreatedAccount(newAccount.data);
-      setStep(4); 
+      goToStep(4);
     }
-    
   }, [newAccount]);
 
   useEffect(() => {
-    if (accountError) {
-      toast.error(accountError.message || t("createAccountDrawer.failedCreate"));
-    }
-  }, [accountError]);
-
-  
-  useEffect(() => {
-    if (budgetResult?.success) {
+    if (budgetResult?.success && !completedRef.current) {
       toast.success(t("budget.updatedSuccess") || "Budget set!");
       completeOnboarding();
     }
-    
   }, [budgetResult]);
 
-  useEffect(() => {
-    if (budgetSaveError) {
-      setBudgetError(budgetSaveError.message || "Failed to set budget");
-    }
-  }, [budgetSaveError]);
+  const goToStep = useCallback((target) => {
+    setDirection(target > step ? "forward" : "backward");
+    setStep(target);
+  }, [step]);
 
   const onAccountSubmit = async (data) => {
     await createAccountFn(data);
@@ -133,7 +125,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
     if (selectedLocale !== locale) {
       setLocale(selectedLocale);
     }
-    setStep(2); 
+    goToStep(2);
   };
 
   const handlePhoneContinue = async () => {
@@ -150,7 +142,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
       const result = await updatePhoneNumber(sanitized);
       if (result?.success) {
         toast.success(t("settings.phoneSaved", {}, "Phone number saved!"));
-        setStep(3);
+        goToStep(3);
         return;
       }
 
@@ -169,8 +161,8 @@ export function OnboardingWizard({ hasAccounts = false }) {
       return;
     }
 
-    const balance = parseFloat(createdAccount.balance);
-    if (amount > balance * 0.5) {
+    const balance = parseFloat(createdAccount?.balance ?? 0);
+    if (balance > 0 && amount > balance * 0.5) {
       setBudgetError(t("budgetValidation.exceedsFiftyPercent", { maxAmount: (balance * 0.5).toFixed(2) }));
       return;
     }
@@ -180,6 +172,10 @@ export function OnboardingWizard({ hasAccounts = false }) {
   };
 
   const handleConfirmBudget = async () => {
+    if (!createdAccount?.id) {
+      setBudgetError(t("budget.invalidAmount") || "No account found. Please go back and create an account.");
+      return;
+    }
     const amount = parseFloat(budgetAmount);
     await saveBudgetFn(amount, createdAccount.id);
   };
@@ -188,12 +184,25 @@ export function OnboardingWizard({ hasAccounts = false }) {
     completeOnboarding();
   };
 
-  const completeOnboarding = () => {
+  const completeOnboarding = useCallback(() => {
+    if (completedRef.current) return;
+    completedRef.current = true;
     localStorage.setItem(ONBOARDED_KEY, "true");
     setOpen(false);
     router.refresh();
-  };
+  }, [router]);
 
+  const handleDialogOpenChange = useCallback((isOpen) => {
+    if (!isOpen) {
+      if (step >= 3 || hasAccounts) {
+        completeOnboarding();
+      } else {
+        setOpen(false);
+        localStorage.setItem(ONBOARDED_KEY, "true");
+        router.refresh();
+      }
+    }
+  }, [step, hasAccounts, completeOnboarding, router]);
 
   const steps = [
     { icon: Sparkles, label: t("onboarding.welcome") || "Welcome" },
@@ -203,39 +212,58 @@ export function OnboardingWizard({ hasAccounts = false }) {
     { icon: PiggyBank, label: t("onboarding.budget") || "Budget" },
   ];
 
+  const stepTitles = [
+    t("onboarding.welcomeTitle") || "Welcome to Gullak!",
+    t("onboarding.chooseLanguage") || "Choose Your Language",
+    t("onboarding.phoneTitle", {}, "Add Phone Number"),
+    t("onboarding.addAccountTitle", {}, "Add Your Bank Account"),
+    t("onboarding.setBudgetTitle") || "Set Your Monthly Budget",
+  ];
+
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      if (!isOpen) {
-        completeOnboarding();
-      } else {
-        setOpen(true);
-      }
-    }}>
-      <DialogContent className="max-w-lg p-0 overflow-hidden" hideCloseButton>
-        {}
-        <div className="flex items-center justify-center gap-2 px-6 pt-6 relative">
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
+      <DialogContent
+        className="max-w-lg p-0 overflow-hidden [&>button:last-child]:hidden"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => {
+          if (step < 3 && !hasAccounts) {
+            e.preventDefault();
+          }
+        }}
+      >
+        <DialogTitle className="sr-only">
+          {stepTitles[step] || "Onboarding"}
+        </DialogTitle>
+        <DialogDescription className="sr-only">
+          {t("onboarding.welcomeDesc") || "Set up your Gullak profile step by step."}
+        </DialogDescription>
+
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-6 pt-5 pb-1 relative">
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
-            onClick={() => completeOnboarding()}
+            className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-foreground rounded-full"
+            onClick={() => handleDialogOpenChange(false)}
+            aria-label="Close onboarding"
           >
-            <span className="sr-only">Close</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </Button>
+
           {steps.map((s, i) => (
-            <div key={i} className="flex items-center gap-1">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-all ${
-                i === step
-                  ? "bg-orange-500 text-white scale-110"
-                  : i < step
-                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                    : "bg-muted text-muted-foreground"
-              }`}>
-                {i < step ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+            <div key={i} className="flex items-center gap-0.5 sm:gap-1">
+              <div
+                className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs font-medium transition-all duration-300 ${
+                  i === step
+                    ? "bg-orange-500 text-white scale-110 shadow-md shadow-orange-500/25"
+                    : i < step
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                      : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {i < step ? <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : i + 1}
               </div>
               {i < steps.length - 1 && (
-                <div className={`h-0.5 w-6 transition-colors ${
+                <div className={`h-0.5 w-3 sm:w-6 transition-colors duration-300 rounded-full ${
                   i < step ? "bg-green-400" : "bg-muted"
                 }`} />
               )}
@@ -243,10 +271,10 @@ export function OnboardingWizard({ hasAccounts = false }) {
           ))}
         </div>
 
-        <div className="px-6 pb-6 pt-4">
-          {}
+        <div className="px-4 sm:px-6 pb-6 pt-2">
+          {/* Step 0: Welcome */}
           {step === 0 && (
-            <div className="space-y-6 text-center py-4">
+            <div className="space-y-6 text-center py-4 animate-in fade-in-0 slide-in-from-right-4 duration-300">
               <div className="mx-auto rounded-full bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-950/40 dark:to-amber-950/30 p-8 w-fit">
                 <PiggyBank className="h-16 w-16 text-orange-500" />
               </div>
@@ -261,7 +289,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
               <Button
                 size="lg"
                 className="bg-orange-600 hover:bg-orange-700 gap-2"
-                onClick={() => setStep(1)}
+                onClick={() => goToStep(1)}
               >
                 {t("onboarding.getStarted") || "Get Started"}
                 <ArrowRight className="h-4 w-4" />
@@ -269,9 +297,9 @@ export function OnboardingWizard({ hasAccounts = false }) {
             </div>
           )}
 
-          {}
+          {/* Step 1: Language */}
           {step === 1 && (
-            <div className="space-y-5 py-2">
+            <div className="space-y-5 py-2 animate-in fade-in-0 slide-in-from-right-4 duration-300">
               <div className="text-center space-y-1">
                 <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
                   <Globe className="h-5 w-5 text-orange-500" />
@@ -282,12 +310,12 @@ export function OnboardingWizard({ hasAccounts = false }) {
                 </p>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2 max-h-[240px] overflow-y-auto pr-1 scrollbar-thin">
                 {SUPPORTED_LOCALES.map((code) => (
                   <button
                     key={code}
                     onClick={() => setSelectedLocale(code)}
-                    className={`rounded-lg border p-3 text-sm font-medium transition-all text-center ${
+                    className={`rounded-lg border p-2.5 sm:p-3 text-sm font-medium transition-all text-center ${
                       selectedLocale === code
                         ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-300 ring-2 ring-orange-500/20"
                         : "border-border hover:border-orange-200 hover:bg-orange-50/50 dark:hover:bg-orange-950/10"
@@ -299,7 +327,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(0)} className="flex-1">
+                <Button variant="outline" onClick={() => goToStep(0)} className="flex-1">
                   <ArrowLeft className="h-4 w-4 mr-1" />
                   {t("onboarding.back") || "Back"}
                 </Button>
@@ -314,9 +342,9 @@ export function OnboardingWizard({ hasAccounts = false }) {
             </div>
           )}
 
-          {}
+          {/* Step 2: Phone */}
           {step === 2 && (
-            <div className="space-y-5 py-2">
+            <div className="space-y-5 py-2 animate-in fade-in-0 slide-in-from-right-4 duration-300">
               <div className="text-center space-y-1">
                 <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
                   <Phone className="h-5 w-5 text-orange-500" />
@@ -343,11 +371,16 @@ export function OnboardingWizard({ hasAccounts = false }) {
                   autoFocus
                 />
                 <p className="text-xs text-muted-foreground">{t("onboarding.phoneFormat", {}, t("settings.phoneFormat"))}</p>
-                {phoneError && <p className="text-xs text-red-500">{phoneError}</p>}
+                {phoneError && (
+                  <div className="flex items-center gap-2 text-xs text-red-500 bg-red-50 dark:bg-red-950/30 rounded-md p-2 animate-in fade-in-0 duration-200">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    <p>{phoneError}</p>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(1)} className="flex-1" disabled={savingPhone}>
+                <Button variant="outline" onClick={() => goToStep(1)} className="flex-1" disabled={savingPhone}>
                   <ArrowLeft className="h-4 w-4 mr-1" />
                   {t("onboarding.back") || "Back"}
                 </Button>
@@ -372,12 +405,12 @@ export function OnboardingWizard({ hasAccounts = false }) {
             </div>
           )}
 
-
-          {}
+          {/* Step 3: Account */}
           {step === 3 && (
-            <div className="space-y-4">
+            <div className="space-y-4 animate-in fade-in-0 slide-in-from-right-4 duration-300">
               <div className="text-center space-y-1">
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
+                  <Wallet className="h-5 w-5 text-orange-500" />
                   {t("onboarding.addAccountTitle", {}, "Add Your Bank Account")}
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -431,33 +464,45 @@ export function OnboardingWizard({ hasAccounts = false }) {
                   {errors.balance && <p className="text-xs text-red-500">{errors.balance.message}</p>}
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full bg-orange-600 hover:bg-orange-700 gap-2"
-                  disabled={createAccountLoading}
-                >
-                  {createAccountLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("createAccountDrawer.creating")}
-                    </>
-                  ) : (
-                    <>
-                      {t("createAccountDrawer.createAccount")}
-                      <ArrowRight className="h-4 w-4" />
-                    </>
-                  )}
-                </Button>
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => goToStep(2)}
+                    disabled={createAccountLoading}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-1" />
+                    {t("onboarding.back") || "Back"}
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1 bg-orange-600 hover:bg-orange-700 gap-2"
+                    disabled={createAccountLoading}
+                  >
+                    {createAccountLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t("createAccountDrawer.creating")}
+                      </>
+                    ) : (
+                      <>
+                        {t("createAccountDrawer.createAccount")}
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+                </div>
               </form>
             </div>
           )}
 
-
-          {}
+          {/* Step 4: Budget */}
           {step === 4 && (
-            <div className="space-y-4 py-2">
+            <div className="space-y-4 py-2 animate-in fade-in-0 slide-in-from-right-4 duration-300">
               <div className="text-center space-y-1">
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
+                  <PiggyBank className="h-5 w-5 text-orange-500" />
                   {t("onboarding.setBudgetTitle") || "Set Your Monthly Budget"}
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -465,14 +510,15 @@ export function OnboardingWizard({ hasAccounts = false }) {
                 </p>
               </div>
 
-              {}
-              <div className="rounded-xl border bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/10 p-3">
-                <p className="text-xs text-muted-foreground">{t("budget.account") || "Account"}</p>
-                <p className="text-sm font-semibold capitalize">{createdAccount?.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {t("budget.balance") || "Balance"}: ₹{parseFloat(createdAccount?.balance || 0).toFixed(2)}
-                </p>
-              </div>
+              {createdAccount && (
+                <div className="rounded-xl border bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/10 p-3">
+                  <p className="text-xs text-muted-foreground">{t("budget.account") || "Account"}</p>
+                  <p className="text-sm font-semibold capitalize">{createdAccount.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("budget.balance") || "Balance"}: ₹{parseFloat(createdAccount.balance ?? 0).toFixed(2)}
+                  </p>
+                </div>
+              )}
 
               {!showFiftyRule ? (
                 <>
@@ -494,7 +540,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
                   </div>
 
                   {budgetError && (
-                    <div className="flex items-center gap-2 text-sm text-red-500 bg-red-50 dark:bg-red-950/30 rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-sm text-red-500 bg-red-50 dark:bg-red-950/30 rounded-lg p-3 animate-in fade-in-0 duration-200">
                       <AlertTriangle className="h-4 w-4 shrink-0" />
                       <p>{budgetError}</p>
                     </div>
@@ -514,7 +560,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
                 </>
               ) : (
                 <>
-                  <div className="rounded-xl border border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20 p-4 space-y-3">
+                  <div className="rounded-xl border border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20 p-4 space-y-3 animate-in fade-in-0 duration-300">
                     <div className="flex items-start gap-2">
                       <Sparkles className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
                       <div>
@@ -529,7 +575,7 @@ export function OnboardingWizard({ hasAccounts = false }) {
                   </div>
 
                   {budgetError && (
-                    <div className="flex items-center gap-2 text-sm text-red-500 bg-red-50 dark:bg-red-950/30 rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-sm text-red-500 bg-red-50 dark:bg-red-950/30 rounded-lg p-3 animate-in fade-in-0 duration-200">
                       <AlertTriangle className="h-4 w-4 shrink-0" />
                       <p>{budgetError}</p>
                     </div>

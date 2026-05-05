@@ -25,7 +25,8 @@ export default function PhonePromptBanner({ hasPhone, isExistingUser }) {
   }, []);
 
   useEffect(() => {
-    setOpen(Boolean(isExistingUser && !hasPhone && !dismissed));
+    const onboarded = typeof window !== "undefined" && localStorage.getItem("gullak.onboarded") === "true";
+    setOpen(Boolean(isExistingUser && !hasPhone && !dismissed && onboarded));
   }, [hasPhone, isExistingUser, dismissed]);
 
   if (hasPhone || dismissed || !isExistingUser) return null;
