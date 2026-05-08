@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useClerk } from "@clerk/nextjs";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +47,6 @@ export default function SettingsPage() {
   const [savingBudget, setSavingBudget] = useState(false);
   const [quickPrefs, setQuickPrefs] = useState(DEFAULT_QUICK_PREFS);
   const { theme, setTheme } = useTheme();
-  const { signOut } = useClerk();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -102,12 +100,7 @@ export default function SettingsPage() {
     error: defaultError
   } = useFetch(updateDefaultAccount);
 
-  const {
-    loading: deletingUser,
-    fn: deleteUserFn,
-    data: deleteUserResult,
-    error: deleteUserError
-  } = useFetch(deleteCurrentUserAccount);
+  const [deletingUser, setDeletingUser] = useState(false);
 
   useEffect(() => {
     if (deleteResult?.success) {
@@ -138,37 +131,6 @@ export default function SettingsPage() {
     }
     
   }, [defaultError]);
-
-  useEffect(() => {
-    if (deleteUserResult?.success) {
-      toast.success(
-        t(
-          "settings.profileDeleted",
-          {},
-          "Your account has been deleted. Redirecting..."
-        )
-      );
-
-      localStorage.removeItem("gullak.onboarded");
-      localStorage.removeItem(QUICK_ADD_PREFS_KEY);
-      document.cookie = "locale=; path=/; max-age=0";
-
-      window.setTimeout(() => {
-        signOut({ redirectUrl: "/" }).catch(() => {
-          window.location.href = "/";
-        });
-      }, 800);
-    }
-  }, [deleteUserResult, t, signOut]);
-
-  useEffect(() => {
-    if (deleteUserError) {
-      toast.error(
-        deleteUserError.message ||
-        t("settings.failedDeleteProfile", {}, "Failed to delete account")
-      );
-    }
-  }, [deleteUserError, t]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -209,7 +171,28 @@ export default function SettingsPage() {
       return;
     }
 
-    await deleteUserFn();
+    setDeletingUser(true);
+
+    try {
+      const result = await deleteCurrentUserAccount();
+
+      localStorage.removeItem("gullak.onboarded");
+      localStorage.removeItem(QUICK_ADD_PREFS_KEY);
+      document.cookie = "locale=; path=/; max-age=0";
+
+      if (result?.success) {
+        window.location.href = "/";
+        return;
+      }
+
+      toast.error(result?.error || t("settings.failedDeleteProfile", {}, "Failed to delete account"));
+      setDeletingUser(false);
+    } catch (err) {
+      localStorage.removeItem("gullak.onboarded");
+      localStorage.removeItem(QUICK_ADD_PREFS_KEY);
+      document.cookie = "locale=; path=/; max-age=0";
+      window.location.href = "/";
+    }
   };
 
   const handleSetDefaultAccount = async (account) => {
