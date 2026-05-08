@@ -149,14 +149,15 @@ export default function SettingsPage() {
         )
       );
 
-      window.setTimeout(async () => {
-        try {
-          await signOut();
-        } catch (e) {
-          console.warn("signOut after delete:", e.message);
-        }
-        window.location.href = "/";
-      }, 1000);
+      localStorage.removeItem("gullak.onboarded");
+      localStorage.removeItem(QUICK_ADD_PREFS_KEY);
+      document.cookie = "locale=; path=/; max-age=0";
+
+      window.setTimeout(() => {
+        signOut({ redirectUrl: "/" }).catch(() => {
+          window.location.href = "/";
+        });
+      }, 800);
     }
   }, [deleteUserResult, t, signOut]);
 
