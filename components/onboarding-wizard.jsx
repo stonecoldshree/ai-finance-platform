@@ -90,10 +90,8 @@ export function OnboardingWizard({ hasAccounts = false }) {
 
   useEffect(() => {
     if (!hasAccounts) {
-      const onboarded = localStorage.getItem(ONBOARDED_KEY);
-      if (!onboarded) {
-        setOpen(true);
-      }
+      localStorage.removeItem(ONBOARDED_KEY);
+      setOpen(true);
     }
   }, [hasAccounts]);
 
